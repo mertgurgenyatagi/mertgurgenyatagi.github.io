@@ -1,0 +1,23 @@
+Greetings Claude. The World Cup 2026 knockout stage is underway, and the moment the last group matches concluded at 05.00 Turkey time, I started a massive campaign to collect predictions from my 19 friends before the kickoff for the first RO32 game happened at 22.00 Turkey time. In our folder you fill find these predictions, all standardized.
+
+Now, here is what I want you to do. I want you to create all the files necessary for a very slick, aesthetic and detailed Turkish website within this very repository called "#kupatakip" where me and my friends can follow our predictions and much more. Here is how the scoring works:
+
+- 1 points for every team correctly guessed to make it to the RO16
+- 2 points for every team correctly guessed to make the QF
+- 3 points for every team correctly guessed to make the SF
+- 5 points for every team correctly guessed to make the final
+- 8 points for correctly guessing the champion
+
+As you can tell, it's the fibonacci numbers. Now, you might ask, how do we update who won which games as the tournament goes on? Well, I was thinking you could include a sheet, perhaps a csv or xlsx file, where I can manually fill out by going to the backdoor for wherever the files are hosted (which will most likely just be github). The first 16 matches have teams/matchups already specified, but for the rest you can just label them as "match_17" and so on, where it goes top to bottom. For example Germany v France would be match_17. When it happens I just go into the sheet and type "1" for home win and "2" for away win. No draws, obviously. Not necessarily chronological. Anyway. The website would look at this file upon boot (doesn't need to update in real time) and alter its contents accordingly.
+
+That's the kinks out of the way. Now for the content. In our docs, you will see a variety of files. A list of the names of the participants, their pictures, and various assets such as flags and dramatic pictures of some favorites (in case you want to develop sort of a sliding card graphic sort of thing kind of like "Katılımcıların yüzde bilmemkaçı arjantini finale çıkardı").
+
+I want you to absolutely use your creativity for the website and create components. You are encouraged to use your own ideas but here are some things that I definitely want (not necessarily in this order at the page):
+
+1. The bracket itself, showing who backed whom by displaying little circular profile pictures of our participants next to the teams they said would win (obviously not in cases where the team they said would win was eliminated in a previous round).
+2. A leaderboard.
+3. Sliding card thingy.
+4. A timeline graph of our participants and their accumulated points. The time steps should not be the rounds, as that would be too big a step size. Make it match by match if you can.
+5. A sort of possibility grid? You know, depicting what the likelihood of some of our participants winning is? This would also show who is mathematically out of the race.
+
+That's all I got. You may start.
