@@ -19,5 +19,8 @@ I want you to absolutely use your creativity for the website and create componen
 3. Sliding card thingy.
 4. A timeline graph of our participants and their accumulated points. The time steps should not be the rounds, as that would be too big a step size. Make it match by match if you can.
 5. A sort of possibility grid? You know, depicting what the likelihood of some of our participants winning is? This would also show who is mathematically out of the race.
+6. All sorts of interesting statistics such as which teams were picked to advance the most, which teams went against the predictions... I don't know. I'm just talking shit. Come up with some stuff.
+
+You are encouraged to use your own design intuition at all times and add other components if you feel like they would be cool.
 
 That's all I got. You may start.
