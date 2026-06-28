@@ -2,9 +2,10 @@
 //  KupaTakip — Ana Uygulama
 // ============================================================
 
-let RESULTS = {};       // results.json'dan yüklenir
-let STATE  = {};        // türetilmiş turnuva durumu
-let SCORES = {};        // katılımcı → puan bilgisi
+let RESULTS  = {};      // results.json'dan yüklenir
+let SIM_DATA = null;    // sim_results.json'dan yüklenir (simulate.js çalıştırıldıktan sonra)
+let STATE    = {};      // türetilmiş turnuva durumu
+let SCORES   = {};      // katılımcı → puan bilgisi
 let timelineChart = null;
 
 // ── Türkçe yardımcılar ────────────────────────────────────
@@ -320,16 +321,15 @@ function renderLeaderboard() {
     return diff !== 0 ? diff : SCORES[b].maxPts - SCORES[a].maxPts;
   });
 
-  const maxPossible = Math.max(...sorted.map(n => SCORES[n].maxPts));
-  const maxScore    = Math.max(...sorted.map(n => SCORES[n].pts), 1);
-  const leaderMax   = SCORES[sorted[0]].maxPts;
+  const maxScore      = Math.max(...sorted.map(n => SCORES[n].pts), 1);
+  const currentTopPts = maxScore; // highest actual score right now
 
   el.innerHTML = '';
 
   sorted.forEach((name, i) => {
     const s = SCORES[name];
     const rank = i + 1;
-    const isOut = s.maxPts < leaderMax; // mathematically eliminated
+    const isOut = s.maxPts < currentTopPts; // can't reach the current leader's score
     const rowClass = rank === 1 ? 'lb-gold' : rank === 2 ? 'lb-silver' : rank === 3 ? 'lb-bronze' : isOut ? 'lb-out' : '';
 
     const champEn  = TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion;
@@ -371,7 +371,7 @@ function renderLeaderboard() {
       </div>
       <div class="lb-pts-col">
         <div class="max-val">Maks: ${s.maxPts}</div>
-        ${isOut ? '<div class="badge-out" style="margin-top:2px">ELİMİNE</div>' : ''}
+        ${isOut ? '<div class="badge-out" style="margin-top:2px">dışarıda</div>' : ''}
       </div>`;
     el.appendChild(row);
   });
@@ -510,13 +510,13 @@ function renderPossibility() {
   if (!el) return;
 
   const sorted = [...PARTICIPANTS].sort((a,b) => SCORES[b].pts - SCORES[a].pts);
-  const leaderMaxPts = Math.max(...sorted.map(n => SCORES[n].maxPts));
+  const currentTopPts = Math.max(...sorted.map(n => SCORES[n].pts), 0);
 
   el.innerHTML = '';
 
   sorted.forEach((name, i) => {
     const s = SCORES[name];
-    const isOut = s.maxPts < leaderMaxPts;
+    const isOut = s.maxPts < currentTopPts;
     const isLeader = i === 0 && s.pts > 0;
     const champEn  = TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion;
     const champTR  = toTR(champEn);
@@ -530,7 +530,7 @@ function renderPossibility() {
           <img class="poss-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">
           <span>${name}</span>
           ${isLeader ? '<span class="badge-leader" style="margin-left:6px">LİDER</span>' : ''}
-          ${isOut ? '<span class="badge-out" style="margin-left:6px">ELİMİNE</span>' : ''}
+          ${isOut ? '<span class="badge-out" style="margin-left:6px">dışarıda</span>' : ''}
         </div>
       </td>
       <td class="pts-current">${s.pts}</td>
