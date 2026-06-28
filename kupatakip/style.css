@@ -12,7 +12,8 @@
   --bg2:         #0d1120;
   --bg3:         #141828;
   --glass:       rgba(255,255,255,0.04);
-  --glass-border:rgba(212,175,55,0.18);
+  --glass-border:rgba(255,255,255,0.07);
+  --gold-border: rgba(212,175,55,0.22);
   --text:        #e8eaf0;
   --text-muted:  #6b7280;
   --red:         #ef4444;
@@ -55,7 +56,7 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   z-index: 100;
   background: rgba(7,9,15,0.85);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--gold-border);
   padding: 0 2rem;
   display: flex;
   align-items: center;
@@ -105,7 +106,7 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
 /* ── Hero / Sliding Cards ── */
 .hero {
   position: relative;
-  height: 480px;
+  height: 400px;
   overflow: hidden;
 }
 
@@ -226,7 +227,7 @@ section {
 }
 
 .section-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: var(--gold);
 }
 
@@ -249,7 +250,7 @@ section {
 .leaderboard-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .lb-row {
@@ -257,22 +258,22 @@ section {
   grid-template-columns: 44px 1fr 80px 80px 80px 80px 80px 100px;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: var(--radius);
-  background: var(--glass);
-  border: 1px solid transparent;
-  transition: border-color var(--transition), transform var(--transition);
+  padding: 10px 16px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background var(--transition);
   cursor: default;
 }
 
 .lb-row:hover {
-  border-color: var(--glass-border);
-  transform: translateX(4px);
+  background: rgba(255,255,255,0.03);
 }
 
-.lb-row.lb-gold   { background: rgba(212,175,55,0.10); border-color: rgba(212,175,55,0.35); }
-.lb-row.lb-silver { background: rgba(192,192,192,0.07); border-color: rgba(192,192,192,0.25); }
-.lb-row.lb-bronze { background: rgba(205,127,50,0.07); border-color: rgba(205,127,50,0.25); }
+.lb-row.lb-gold   { background: rgba(212,175,55,0.07); }
+.lb-row.lb-silver { background: rgba(192,192,192,0.04); }
+.lb-row.lb-bronze { background: rgba(205,127,50,0.04); }
 .lb-row.lb-out    { opacity: 0.45; }
 
 .lb-rank {
@@ -391,7 +392,7 @@ section {
   text-transform: uppercase;
   color: var(--gold);
   padding: 8px 0;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--gold-border);
   margin-bottom: 8px;
 }
 
@@ -749,7 +750,7 @@ section {
 
 .section-body-inner {
   overflow: hidden;
-  padding-top: 1.6rem;
+  padding-top: 1.2rem;
   padding-bottom: 0.4rem;
 }
 
@@ -819,7 +820,7 @@ section {
   text-transform: uppercase;
   color: var(--gold);
   padding: 8px 0;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--gold-border);
   margin-bottom: 8px;
 }
 
