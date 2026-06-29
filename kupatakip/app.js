@@ -2,8 +2,9 @@
 //  KupaTakip — Ana Uygulama
 // ============================================================
 
-let RESULTS  = {};      // results.json'dan yüklenir
-let SIM_DATA = null;    // sim_results.json'dan yüklenir (simulate.js çalıştırıldıktan sonra)
+let RESULTS   = {};      // results.json'dan yüklenir
+let FORM_DATA = null;    // form.json'dan yüklenir (form.js çalıştırıldıktan sonra)
+let SIM_DATA  = null;    // sim_results.json'dan yüklenir (simulate.js çalıştırıldıktan sonra)
 let STATE    = {};      // türetilmiş turnuva durumu
 let SCORES   = {};      // katılımcı → puan bilgisi
 let timelineChart = null;
@@ -39,6 +40,13 @@ async function init() {
     RESULTS = {};
   }
   delete RESULTS._comment;
+
+  try {
+    const res = await fetch('form.json?t=' + Date.now());
+    FORM_DATA = await res.json();
+  } catch(e) {
+    FORM_DATA = null;
+  }
 
   STATE  = computeState(RESULTS);
   SCORES = computeScores(STATE);
@@ -338,7 +346,13 @@ function renderLeaderboard() {
     const champFlag= flagUrl(champEn);
     const champTR  = toTR(champEn);
 
-    const barWidth = Math.round((s.pts / maxScore) * 100);
+    const formCircles = (() => {
+      const dots = FORM_DATA?.participants?.[name] ?? [null,null,null,null,null];
+      return dots.map(v => {
+        const cls = v === null ? 'form-dot-empty' : v ? 'form-dot-green' : 'form-dot-red';
+        return `<span class="form-dot ${cls}"></span>`;
+      }).join('');
+    })();
 
     const row = document.createElement('div');
     row.className = `lb-row ${rowClass}`;
@@ -348,7 +362,7 @@ function renderLeaderboard() {
         <img class="lb-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">
         <div style="min-width:0">
           <div class="lb-name">${name}</div>
-          <div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${barWidth}%"></div></div></div>
+          <div class="lb-form">${formCircles}</div>
         </div>
       </div>
       <div class="lb-champ">
