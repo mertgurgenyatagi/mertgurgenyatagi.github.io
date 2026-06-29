@@ -164,7 +164,7 @@ const PREDICTIONS = {
   "Kuzey Emre": {
     ro16:     ["Almanya","Fransa","Kanada","Fas","Portekiz","İspanya","ABD","Belçika","Brezilya","Norveç","Meksika","İngiltere","Arjantin","Mısır","İsviçre","Kolombiya"],
     qf:       ["Fransa","Fas","İspanya","ABD","Brezilya","İngiltere","Arjantin","İsviçre"],
-    sf:       ["Fransa","İspanya","Norveç","Arjantin"],
+    sf:       ["Fransa","İspanya","Brezilya","Arjantin"],
     final:    ["Fransa","Arjantin"],
     champion: "Arjantin"
   },
