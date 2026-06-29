@@ -80,9 +80,9 @@ const FLAG_FILES = {
 // Dramatik fotoğraflar
 const DRAMATIC_PHOTOS = {
   "Argentina": "../docs_for_claude/asset_pictures/argentina_dramatic.jpg",
-  "England":   "../docs_for_claude/asset_pictures/england_dramatic.jpg",
   "France":    "../docs_for_claude/asset_pictures/france_dramatic.jpg",
-  "Spain":     "../docs_for_claude/asset_pictures/spain_dramatic.jpg"
+  "Spain":     "../docs_for_claude/asset_pictures/spain_dramatic.jpg",
+  "Paraguay":  "../docs_for_claude/asset_pictures/paraguay_dramatic.jpg"
 };
 
 // Katılımcı profil resimleri

@@ -269,6 +269,17 @@ function renderHero() {
     },
     {
       type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/paraguay_dramatic.jpg',
+      bgPos: 'center 15%',
+      content: `
+        <div class="hero-label">Son 32 · 29 Haziran</div>
+        <div class="hero-stat">PARAGUAY<br><span>İMKANSIZI BAŞARDI</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          Penaltılarla Almanya'yı eleyen Paraguay 17 üye için<br>puan kaybına sebep olurken Emin ve Emre'yi üste taşıdı.
+        </div>`
+    },
+    {
+      type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/netherlands_v_morocco_dramatic.jpg',
       bgPos: 'center 35%',
       content: `
