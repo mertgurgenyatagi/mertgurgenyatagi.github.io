@@ -386,8 +386,9 @@ function renderUpcomingMatches() {
   const el = document.getElementById('upcoming-strip');
   if (!el) return;
 
-  const now   = Date.now();
-  const in24h = now + 24 * 60 * 60 * 1000;
+  const now        = Date.now();
+  const in24h      = now + 24 * 60 * 60 * 1000;
+  const twoHoursMs = 2 * 60 * 60 * 1000;
 
   const upcoming = Object.entries(BRACKET)
     .filter(([id, m]) => {
@@ -395,7 +396,7 @@ function renderUpcomingMatches() {
       if (RESULTS[id] != null) return false;
       if (!m.datetime) return false;
       const t = new Date(m.datetime).getTime();
-      return t >= now && t <= in24h;
+      return t >= now - twoHoursMs && t <= in24h;
     })
     .sort(([, a], [, b]) => new Date(a.datetime) - new Date(b.datetime));
 
@@ -409,11 +410,13 @@ function renderUpcomingMatches() {
     const awayFlag = flagUrl(m.away);
     const homeTR   = toTR(m.home);
     const awayTR   = toTR(m.away);
-    const timeStr  = m.time || '';
+    const kickoff  = new Date(m.datetime).getTime();
+    const isLive   = kickoff <= now;
+    const timeStr  = isLive ? 'CANLI' : (m.time || '');
 
     return `
-      <button class="upcoming-card" onclick="openMatchModal('${id}')">
-        <div class="upcoming-time">${timeStr}</div>
+      <button class="upcoming-card${isLive ? ' live' : ''}" onclick="openMatchModal('${id}')">
+        <div class="upcoming-time${isLive ? ' live-label' : ''}">${timeStr}</div>
         <div class="upcoming-matchup">
           <div class="upcoming-team">
             ${homeFlag ? `<img class="upcoming-flag" src="${homeFlag}" alt="${homeTR}" onerror="this.style.display='none'">` : ''}

@@ -257,6 +257,47 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   background: rgba(212,175,55,0.04);
 }
 
+.upcoming-card.live {
+  border-color: rgba(239,68,68,0.5);
+  background: rgba(239,68,68,0.05);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+.upcoming-card.live:hover {
+  border-color: rgba(239,68,68,0.8);
+  background: rgba(239,68,68,0.09);
+}
+
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0.12); }
+}
+
+.upcoming-time.live-label {
+  color: #ef4444;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.upcoming-time.live-label::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: live-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
 .upcoming-time {
   font-size: 11px;
   color: var(--gold);
