@@ -82,7 +82,6 @@ const DRAMATIC_PHOTOS = {
   "Argentina": "../docs_for_claude/asset_pictures/argentina_dramatic.jpg",
   "England":   "../docs_for_claude/asset_pictures/england_dramatic.jpg",
   "France":    "../docs_for_claude/asset_pictures/france_dramatic.jpg",
-  "Portugal":  "../docs_for_claude/asset_pictures/portugal_dramatic.jpg",
   "Spain":     "../docs_for_claude/asset_pictures/spain_dramatic.jpg"
 };
 

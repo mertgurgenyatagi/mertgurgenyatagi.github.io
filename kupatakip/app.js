@@ -254,16 +254,36 @@ function renderHero() {
   const dotsEl    = document.getElementById('hero-dots');
   if (!container) return;
 
-  // Build slides: for teams that have dramatic photos
+  // Editorial slides (prepended before team slides)
+  const editorialSlides = [
+    {
+      type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/canada_goal_dramatic.jpg',
+      bgPos: 'center bottom',
+      content: `
+        <div class="hero-label">Son 32 · İlk 48 Saat</div>
+        <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          İlk iki maç da son dakika golleri ile belirlendi.<br>Martinelli'nin golü 8 katılımcıyı 2 puanla<br>listenin üst kısmında tuttu.
+        </div>`
+    },
+    {
+      type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/netherlands_v_morocco_dramatic.jpg',
+      bgPos: 'center top',
+      content: `
+        <div class="hero-label">Son 32 · 30 Haziran</div>
+        <div class="hero-stat">13'E 6:<br><span>FAS</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          19 katılımcıdan 13'ü Fas'ı geçiriyor.<br>Hollanda'ya inanan sadece 6 kişi.
+        </div>`
+    }
+  ];
+
+  // Build team slides
   const slideData = [];
 
   Object.entries(DRAMATIC_PHOTOS).forEach(([teamEn, photoUrl]) => {
-    const totalPickers = PARTICIPANTS.filter(name => {
-      const p = PREDICTIONS[name];
-      const teamsAt = [...p.final, p.champion];
-      return teamsAt.some(t => (TR_TO_EN[t] || t) === teamEn);
-    });
-
     const finalPickers = PARTICIPANTS.filter(name =>
       PREDICTIONS[name].final.some(t => (TR_TO_EN[t] || t) === teamEn)
     );
@@ -274,41 +294,52 @@ function renderHero() {
     const pct = Math.round((finalPickers.length / PARTICIPANTS.length) * 100);
     const champPct = Math.round((champPickers.length / PARTICIPANTS.length) * 100);
 
-    slideData.push({ teamEn, photoUrl, finalPickers, champPickers, pct, champPct });
+    slideData.push({ type: 'team', teamEn, photoUrl, finalPickers, champPickers, pct, champPct });
   });
 
-  // Sort by most picked champion
   slideData.sort((a,b) => b.champPct - a.champPct);
 
-  slideData.forEach((s, i) => {
+  const allSlides = [...editorialSlides, ...slideData];
+
+  allSlides.forEach((s, i) => {
     const slide = document.createElement('div');
     slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
 
-    const avatarsHtml = s.champPickers.slice(0,8).map(name =>
-      `<img class="hero-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" title="${name}" onerror="this.style.display='none'">`
-    ).join('');
+    if (s.type === 'editorial') {
+      slide.innerHTML = `
+        <div class="hero-slide-bg" style="background-image:url('${s.photoUrl}');background-position:${s.bgPos};"></div>
+        <div class="hero-content">${s.content}</div>
+        <div class="hero-wc-logo">
+          <img src="../docs_for_claude/asset_pictures/world_cup_icon.png" alt="FIFA World Cup 2026">
+        </div>`;
+    } else {
+      const avatarsHtml = s.champPickers.slice(0,8).map(name =>
+        `<img class="hero-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" title="${name}" onerror="this.style.display='none'">`
+      ).join('');
 
-    const teamTR = toTR(s.teamEn);
-    slide.innerHTML = `
-      <div class="hero-slide-bg" style="background-image:url('${s.photoUrl}');${s.teamEn === 'Argentina' ? 'background-position:center 42%;' : ''}"></div>
-      <div class="hero-content">
-        <div class="hero-label">FIFA Dünya Kupası 2026 · KupaTakip</div>
-        <div class="hero-stat">
-          Katılımcıların <span>%${s.champPct}${trNumSuffix(s.champPct)}</span><br>${trAccusative(teamTR)}<br>şampiyon seçti
+      const teamTR = toTR(s.teamEn);
+      slide.innerHTML = `
+        <div class="hero-slide-bg" style="background-image:url('${s.photoUrl}');${s.teamEn === 'Argentina' ? 'background-position:center 42%;' : ''}"></div>
+        <div class="hero-content">
+          <div class="hero-label">FIFA Dünya Kupası 2026 · #kupatakip</div>
+          <div class="hero-stat">
+            Katılımcıların <span>%${s.champPct}${trNumSuffix(s.champPct)}</span><br>${trAccusative(teamTR)}<br>şampiyon seçti
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;">
+            %${s.pct}${trNumSuffix(s.pct)} finale çıkardı
+          </div>
+          ${avatarsHtml ? `<div class="hero-avatars">${avatarsHtml}</div>` : ''}
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px;">
-          %${s.pct}${trNumSuffix(s.pct)} finale çıkardı
-        </div>
-        ${avatarsHtml ? `<div class="hero-avatars">${avatarsHtml}</div>` : ''}
-      </div>
-      <div class="hero-wc-logo">
-        <img src="../docs_for_claude/asset_pictures/world_cup_icon.png" alt="FIFA World Cup 2026">
-      </div>`;
+        <div class="hero-wc-logo">
+          <img src="../docs_for_claude/asset_pictures/world_cup_icon.png" alt="FIFA World Cup 2026">
+        </div>`;
+    }
+
     container.appendChild(slide);
 
     const dot = document.createElement('button');
     dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
-    dot.setAttribute('aria-label', s.teamEn);
+    dot.setAttribute('aria-label', s.teamEn || s.type || String(i));
     dot.addEventListener('click', () => goToSlide(i));
     dotsEl.appendChild(dot);
   });
@@ -326,7 +357,7 @@ function renderHero() {
   }
 
   // Auto-advance every 5 seconds
-  setInterval(() => goToSlide(current + 1), 5000);
+  setInterval(() => goToSlide(current + 1), 7500);
 }
 
 // ── LEADERBOARD ────────────────────────────────────────────
