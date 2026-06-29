@@ -44,16 +44,18 @@ async function init() {
   SCORES = computeScores(STATE);
 
   renderHero();
+  renderUpcomingMatches();
   renderLeaderboard();
   renderBracket();
-  renderPersonalBrackets();
   renderTimeline();
-  renderPossibility();
-  renderStats();
   setupNav();
   setupAccordion();
 
   document.getElementById('loading-screen').classList.add('hidden');
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeMatchModal();
+  });
 }
 
 // ── Turnuva Durumu Hesapla ─────────────────────────────────
@@ -344,9 +346,9 @@ function renderLeaderboard() {
       <div class="lb-rank">${rank}</div>
       <div class="lb-participant">
         <img class="lb-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">
-        <div>
+        <div style="min-width:0">
           <div class="lb-name">${name}</div>
-          <div style="margin-top:4px"><div class="lb-bar-wrap"><div class="lb-bar" style="width:${barWidth}%"></div></div></div>
+          <div><div class="lb-bar-wrap"><div class="lb-bar" style="width:${barWidth}%"></div></div></div>
         </div>
       </div>
       <div class="lb-champ">
@@ -358,23 +360,112 @@ function renderLeaderboard() {
         <div class="lbl">Puan</div>
       </div>
       <div class="lb-pts-col">
-        <div class="val" style="color:var(--text-muted);font-size:1rem">${s.breakdown.ro16}</div>
-        <div class="lbl">Son16</div>
-      </div>
-      <div class="lb-pts-col">
-        <div class="val" style="color:var(--text-muted);font-size:1rem">${s.breakdown.qf}</div>
-        <div class="lbl">ÇF</div>
-      </div>
-      <div class="lb-pts-col">
-        <div class="val" style="color:var(--text-muted);font-size:1rem">${s.breakdown.sf}</div>
-        <div class="lbl">YF</div>
-      </div>
-      <div class="lb-pts-col">
         <div class="max-val">Maks: ${s.maxPts}</div>
-        ${isOut ? '<div class="badge-out" style="margin-top:2px">dışarıda</div>' : ''}
+        ${isOut ? '<div class="badge-out" style="margin-top:3px">dışarıda</div>' : ''}
       </div>`;
     el.appendChild(row);
   });
+}
+
+// ── UPCOMING MATCHES ───────────────────────────────────────
+function renderUpcomingMatches() {
+  const el = document.getElementById('upcoming-strip');
+  if (!el) return;
+
+  const now   = Date.now();
+  const in24h = now + 24 * 60 * 60 * 1000;
+
+  const upcoming = Object.entries(BRACKET)
+    .filter(([id, m]) => {
+      if (m.round !== 'RO32') return false;
+      if (RESULTS[id] != null) return false;
+      if (!m.datetime) return false;
+      const t = new Date(m.datetime).getTime();
+      return t >= now && t <= in24h;
+    })
+    .sort(([, a], [, b]) => new Date(a.datetime) - new Date(b.datetime));
+
+  if (upcoming.length === 0) {
+    el.style.display = 'none';
+    return;
+  }
+
+  const cards = upcoming.map(([id, m]) => {
+    const homeFlag = flagUrl(m.home);
+    const awayFlag = flagUrl(m.away);
+    const homeTR   = toTR(m.home);
+    const awayTR   = toTR(m.away);
+    const timeStr  = new Date(m.datetime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+
+    return `
+      <button class="upcoming-card" onclick="openMatchModal('${id}')">
+        <div class="upcoming-time">${timeStr}</div>
+        <div class="upcoming-matchup">
+          <div class="upcoming-team">
+            ${homeFlag ? `<img class="upcoming-flag" src="${homeFlag}" alt="${homeTR}" onerror="this.style.display='none'">` : ''}
+            <span class="upcoming-name">${homeTR}</span>
+          </div>
+          <span class="upcoming-vs">VS</span>
+          <div class="upcoming-team">
+            ${awayFlag ? `<img class="upcoming-flag" src="${awayFlag}" alt="${awayTR}" onerror="this.style.display='none'">` : ''}
+            <span class="upcoming-name">${awayTR}</span>
+          </div>
+        </div>
+      </button>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="upcoming-label">Yaklaşan Maçlar · 24 Saat</div>
+    <div class="upcoming-scroll">${cards}</div>`;
+}
+
+function openMatchModal(matchId) {
+  const m = BRACKET[matchId];
+  if (!m) return;
+
+  const homeFlag = flagUrl(m.home);
+  const awayFlag = flagUrl(m.away);
+  const homeTR   = toTR(m.home);
+  const awayTR   = toTR(m.away);
+  const timeStr  = m.datetime
+    ? new Date(m.datetime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
+    : '';
+
+  const homePickers = PARTICIPANTS.filter(name =>
+    PREDICTIONS[name].ro16.some(t => (TR_TO_EN[t] || t) === m.home)
+  );
+  const awayPickers = PARTICIPANTS.filter(name =>
+    PREDICTIONS[name].ro16.some(t => (TR_TO_EN[t] || t) === m.away)
+  );
+
+  const avatarRow = pickers => pickers.map(n =>
+    `<img class="modal-picker-avatar" src="${PARTICIPANT_PICS[n]}" alt="${n}" title="${n}" onerror="this.style.display='none'">`
+  ).join('');
+
+  const teamCol = (flag, nameTR, pickers) => `
+    <div class="modal-team">
+      ${flag ? `<img class="modal-flag" src="${flag}" alt="${nameTR}" onerror="this.style.display='none'">` : ''}
+      <div class="modal-team-name">${nameTR}</div>
+      <div class="modal-pickers-label">Son 16'ya çıkardı</div>
+      <div class="modal-pickers">${avatarRow(pickers)}</div>
+      <div class="modal-picker-count">${pickers.length} kişi</div>
+    </div>`;
+
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-round-tag">Son 32 · ${m.date} · ${timeStr}</div>
+    <div class="modal-teams">
+      ${teamCol(homeFlag, homeTR, homePickers)}
+      <div class="modal-vs">VS</div>
+      ${teamCol(awayFlag, awayTR, awayPickers)}
+    </div>`;
+
+  document.getElementById('match-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMatchModal() {
+  document.getElementById('match-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // ── BRACKET ────────────────────────────────────────────────
@@ -765,20 +856,8 @@ function renderPbPanel(name) {
 
 // ── ACCORDION ─────────────────────────────────────────────
 function setupAccordion() {
-  const sections = document.querySelectorAll('section[id]');
+  const sections  = document.querySelectorAll('section[id]');
   const chevronSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-  function openSection(section) {
-    sections.forEach(s => {
-      s.querySelector('.section-body')?.classList.remove('open');
-      s.querySelector('.section-header')?.classList.remove('section-open');
-    });
-    section.querySelector('.section-body')?.classList.add('open');
-    section.querySelector('.section-header')?.classList.add('section-open');
-    if (section.id === 'timeline' && timelineChart) {
-      setTimeout(() => timelineChart.resize(), 420);
-    }
-  }
 
   sections.forEach(section => {
     const header = section.querySelector('.section-header');
@@ -791,29 +870,39 @@ function setupAccordion() {
     header.appendChild(chevron);
 
     header.addEventListener('click', () => {
-      const isOpen = body.classList.contains('open');
-      if (isOpen) {
-        body.classList.remove('open');
-        header.classList.remove('section-open');
-      } else {
-        openSection(section);
+      const opening = !body.classList.contains('open');
+      body.classList.toggle('open');
+      header.classList.toggle('section-open');
+      if (opening && section.id === 'timeline' && timelineChart) {
+        setTimeout(() => timelineChart.resize(), 420);
       }
     });
   });
 
-  // Nav links auto-open their target section
+  // Nav links open their target section without touching others
   document.querySelectorAll('.site-nav a[href^="#"]').forEach(link => {
     link.addEventListener('click', () => {
       const target = document.querySelector(link.getAttribute('href'));
-      if (target && !target.querySelector('.section-body')?.classList.contains('open')) {
-        openSection(target);
+      if (target) {
+        const body   = target.querySelector('.section-body');
+        const header = target.querySelector('.section-header');
+        if (body && !body.classList.contains('open')) {
+          body.classList.add('open');
+          header?.classList.add('section-open');
+          if (target.id === 'timeline' && timelineChart) {
+            setTimeout(() => timelineChart.resize(), 420);
+          }
+        }
       }
     });
   });
 
   // Open leaderboard by default
   const lb = document.getElementById('leaderboard');
-  if (lb) openSection(lb);
+  if (lb) {
+    lb.querySelector('.section-body')?.classList.add('open');
+    lb.querySelector('.section-header')?.classList.add('section-open');
+  }
 }
 
 // ── NAV ────────────────────────────────────────────────────

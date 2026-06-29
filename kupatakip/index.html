@@ -37,10 +37,7 @@
     <ul class="site-nav">
       <li><a href="#leaderboard">Sıralama</a></li>
       <li><a href="#bracket">Eleme</a></li>
-      <li><a href="#personal-brackets">Tahminler</a></li>
       <li><a href="#timeline">Grafik</a></li>
-      <li><a href="#possibility">İhtimaller</a></li>
-      <li><a href="#stats">İstatistikler</a></li>
     </ul>
   </nav>
 </header>
@@ -50,6 +47,9 @@
   <div id="hero-slides"></div>
   <div id="hero-dots" class="hero-dots"></div>
 </div>
+
+<!-- ── Upcoming Matches ── -->
+<div class="upcoming-strip" id="upcoming-strip"></div>
 
 <div class="section-divider"></div>
 
@@ -61,35 +61,15 @@
   </div>
   <div class="section-body">
     <div class="section-body-inner">
-      <p style="margin-bottom:20px;color:var(--text-muted);font-size:13px;line-height:1.7;max-width:700px">
-        Puanlama Fibonacci sayılarına dayanıyor. Son 32'yi geçmesini doğru tahmin ettiğin her takım için <strong style="color:var(--text)">+1</strong>,
-        Çeyrek Final için <strong style="color:var(--text)">+2</strong>,
-        Yarı Final için <strong style="color:var(--text)">+3</strong>,
-        Final için <strong style="color:var(--text)">+5</strong> ve
-        şampiyonu doğru bulanlar <strong style="color:var(--gold)">+8</strong> puan alıyor.
-      </p>
-
       <div class="lb-header">
         <div></div>
         <div class="lh-name">Katılımcı</div>
         <div>Şampiyon</div>
         <div>Puan</div>
-        <div>Son 16</div>
-        <div>ÇF</div>
-        <div>YF</div>
         <div>Maks</div>
       </div>
 
       <div class="leaderboard-grid" id="leaderboard-body"></div>
-
-      <div style="margin-top:16px;padding:14px 16px;background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);font-size:12px;color:var(--text-muted)">
-        <strong style="color:var(--gold)">Puanlama:</strong>
-        Son 32'den çıkmak <strong style="color:var(--text)">+1</strong> ·
-        Çeyrek Final <strong style="color:var(--text)">+2</strong> ·
-        Yarı Final <strong style="color:var(--text)">+3</strong> ·
-        Final <strong style="color:var(--text)">+5</strong> ·
-        Şampiyon <strong style="color:var(--gold)">+8</strong>
-      </div>
     </div>
   </div>
 </section>
@@ -116,27 +96,6 @@
 
 <div class="section-divider"></div>
 
-<!-- ── Personal Brackets ── -->
-<section id="personal-brackets">
-  <div class="section-header">
-    <h2 class="section-title">Kişisel Tahminler</h2>
-    <span class="section-subtitle">Katılımcı Bazlı Bracket</span>
-  </div>
-  <div class="section-body">
-    <div class="section-body-inner">
-      <div class="pb-tabs" id="pb-tabs"></div>
-      <div class="card pb-panel" id="pb-panel"></div>
-      <div class="pb-legend">
-        <div class="pb-legend-item"><div class="pb-legend-dot correct"></div> Doğru tahmin</div>
-        <div class="pb-legend-item"><div class="pb-legend-dot wrong"></div> Yanlış tahmin</div>
-        <div class="pb-legend-item"><div class="pb-legend-dot pending"></div> Sonuç bekleniyor</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
 <!-- ── Timeline ── -->
 <section id="timeline">
   <div class="section-header">
@@ -154,79 +113,19 @@
   </div>
 </section>
 
-<div class="section-divider"></div>
-
-<!-- ── Possibility Grid ── -->
-<section id="possibility">
-  <div class="section-header">
-    <h2 class="section-title">İhtimal Tablosu</h2>
-    <span class="section-subtitle">Kim Hâlâ Kazanabilir?</span>
-  </div>
-  <div class="section-body">
-    <div class="section-body-inner">
-      <div class="card possibility-grid">
-        <table class="poss-table">
-          <thead>
-            <tr>
-              <th>Katılımcı</th>
-              <th>Güncel Puan</th>
-              <th>Maks. Puan</th>
-              <th>Son 16 (adet)</th>
-              <th>ÇF (adet)</th>
-              <th>YF (adet)</th>
-              <th>Final (adet)</th>
-              <th>Şampiyon Tahmini</th>
-            </tr>
-          </thead>
-          <tbody id="possibility-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
-<!-- ── Stats ── -->
-<section id="stats">
-  <div class="section-header">
-    <h2 class="section-title">İstatistikler</h2>
-    <span class="section-subtitle">Sayılarla Tahminler</span>
-  </div>
-  <div class="section-body">
-    <div class="section-body-inner">
-      <div class="stats-grid">
-
-        <div class="card stat-card">
-          <div class="stat-card-title">En Çok Şampiyon Seçilen Takım</div>
-          <div id="stat-champion-picks"></div>
-        </div>
-
-        <div class="card stat-card">
-          <div class="stat-card-title">En Çok Finale Çıkarılan Takım</div>
-          <div id="stat-final-picks"></div>
-        </div>
-
-        <div class="card stat-card">
-          <div class="stat-card-title">Sürprizler — Az Tahmin Edilen İlerleyenler</div>
-          <div id="stat-upsets"></div>
-        </div>
-
-        <div class="card stat-card">
-          <div class="stat-card-title">Cesur Tahminler — Şampiyon Dark Horse'lar</div>
-          <div id="stat-dark-horses"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ── Footer ── -->
 <footer class="site-footer">
   <div>KupaTakip · FIFA Dünya Kupası 2026 · 19 Katılımcı</div>
   <div style="margin-top:4px">Sonuçlar güncellenince sayfa yenile.</div>
 </footer>
+
+<!-- ── Match Modal ── -->
+<div id="match-modal" class="match-modal-overlay" onclick="if(event.target===this)closeMatchModal()">
+  <div class="match-modal">
+    <button class="modal-close" onclick="closeMatchModal()">✕</button>
+    <div class="modal-content" id="modal-content"></div>
+  </div>
+</div>
 
 <!-- Tooltip -->
 <div class="tooltip" id="tooltip"></div>
