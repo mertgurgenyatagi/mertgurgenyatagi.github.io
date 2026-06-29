@@ -357,7 +357,7 @@ function renderHero() {
   }
 
   // Auto-advance every 5 seconds
-  setInterval(() => goToSlide(current + 1), 7500);
+  setInterval(() => goToSlide(current + 1), 12000);
 }
 
 // ── LEADERBOARD ────────────────────────────────────────────
