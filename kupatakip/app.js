@@ -254,19 +254,8 @@ function renderHero() {
   const dotsEl    = document.getElementById('hero-dots');
   if (!container) return;
 
-  // Editorial slides (prepended before team slides)
+  // Editorial slides — order: Paraguay, Yusuf, Morocco, Son 32, then team slides (Argentina, France)
   const editorialSlides = [
-    {
-      type: 'editorial',
-      photoUrl: '../docs_for_claude/asset_pictures/canada_goal_dramatic.jpg',
-      bgPos: 'center top',
-      content: `
-        <div class="hero-label">Son 32 · İlk 48 Saat</div>
-        <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          İlk iki maç da son dakika golleri ile belirlendi.<br>Martinelli'nin golü 8 katılımcıyı 2 puanla<br>listenin üst kısmında tuttu.
-        </div>`
-    },
     {
       type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/paraguay_dramatic.jpg',
@@ -298,6 +287,17 @@ function renderHero() {
         <div class="hero-stat">13'E 6:<br><span>FAS</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
           19 katılımcıdan 13'ü Fas'ı geçiriyor.<br>Hollanda'ya inanan sadece 6 kişi.
+        </div>`
+    },
+    {
+      type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/canada_goal_dramatic.jpg',
+      bgPos: 'center top',
+      content: `
+        <div class="hero-label">Son 32 · İlk 48 Saat</div>
+        <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          İlk iki maç da son dakika golleri ile belirlendi.<br>Martinelli'nin golü 8 katılımcıyı 2 puanla<br>listenin üst kısmında tuttu.
         </div>`
     }
   ];
