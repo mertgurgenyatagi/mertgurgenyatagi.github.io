@@ -69,7 +69,7 @@ const FLAG_FILES = {
   "Egypt":                    "Flag_of_Egypt_Flat_Round-128x128.png",
   "Australia":                "Flag_of_Australia_Flat_Round-128x128.png",
   "Algeria":                  "Flag_of_Algeria_Flat_Round-128x128.png",
-  "Ivory Coast":              "Flag_of_Côte_dIvoire_Flat_Round-128x128.png",
+  "Ivory Coast":              "Flag_of_Ivory_Coast_Flat_Round-128x128.png",
   "Cape Verde":               "Flag_of_Cape_Verde_Flat_Round-128x128.png",
   "Sweden":                   "Flag_of_Sweden_Flat_Round-128x128.png",
   "Paraguay":                 "Flag_of_Paraguay_Flat_Round-128x128.png",
@@ -176,7 +176,7 @@ const PREDICTIONS = {
     champion: "İspanya"
   },
   "Berk Uzun": {
-    ro16:     ["Almanya","Fransa","Kanada","Fas","Portekiz","İspanya","ABD","Belçika","Brezilya","Norveç","Meksika","İngiltere","Arjantin","Mısır","İsviçre","Kolombiya"],
+    ro16:     ["Almanya","Fransa","Kanada","Fas","Portekiz","İspanya","ABD","Belçika","Japonya","Norveç","Meksika","İngiltere","Arjantin","Mısır","İsviçre","Kolombiya"],
     qf:       ["Fransa","Fas","İspanya","ABD","Norveç","İngiltere","Arjantin","İsviçre"],
     sf:       ["Fransa","İspanya","Norveç","Arjantin"],
     final:    ["Fransa","Arjantin"],
@@ -233,10 +233,10 @@ const PREDICTIONS = {
   },
   "Batu Çataklı": {
     ro16:     ["Almanya","Fransa","Kanada","Fas","Portekiz","İspanya","ABD","Belçika","Brezilya","Norveç","Meksika","İngiltere","Arjantin","Mısır","Cezayir","Gana"],
-    qf:       ["Fransa","Fas","İspanya","ABD","Norveç","İngiltere","Arjantin","Cezayir"],
-    sf:       ["Fransa","İspanya","İngiltere","Arjantin"],
-    final:    ["Fransa","Arjantin"],
-    champion: "Fransa"
+    qf:       ["Almanya","Fas","İspanya","ABD","Norveç","İngiltere","Arjantin","Cezayir"],
+    sf:       ["Almanya","İspanya","İngiltere","Arjantin"],
+    final:    ["Almanya","Arjantin"],
+    champion: "Almanya"
   },
   "Demir Öztürk": {
     ro16:     ["Almanya","Fransa","Güney Afrika","Hollanda","Portekiz","İspanya","ABD","Belçika","Brezilya","Norveç","Meksika","İngiltere","Arjantin","Mısır","İsviçre","Kolombiya"],
