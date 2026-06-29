@@ -695,14 +695,14 @@ section {
   .hero { height: 360px; }
   .hero-content { max-width: 100%; }
   .hero-slide { padding: 1.5rem; }
-  /* 4 visible columns: rank | name | champion | score */
+  /* 3 visible columns: rank | name | score */
   .lb-row, .lb-header {
-    grid-template-columns: 28px 1fr 72px 50px;
+    grid-template-columns: 28px 1fr 50px;
     padding: 9px 12px;
     gap: 8px;
   }
-  .lb-row > *:nth-child(n+5),
-  .lb-header > *:nth-child(n+5) { display: none; }
+  .lb-row > *:nth-child(n+4),
+  .lb-header > *:nth-child(n+4) { display: none; }
   .lb-name { font-size: 12px; }
   .lb-pts-col .val { font-size: 1.1rem; }
 }
