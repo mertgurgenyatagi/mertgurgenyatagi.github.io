@@ -295,6 +295,9 @@ function renderHero() {
           %${s.pct}${trNumSuffix(s.pct)} finale çıkardı
         </div>
         ${avatarsHtml ? `<div class="hero-avatars">${avatarsHtml}</div>` : ''}
+      </div>
+      <div class="hero-wc-logo">
+        <img src="../docs_for_claude/asset_pictures/world_cup_icon.png" alt="FIFA World Cup 2026">
       </div>`;
     container.appendChild(slide);
 

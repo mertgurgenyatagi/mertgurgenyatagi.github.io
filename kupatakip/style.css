@@ -116,10 +116,29 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   inset: 0;
   display: flex;
   align-items: flex-end;
+  justify-content: space-between;
   padding: 3.5rem;
   opacity: 0;
   transition: opacity 0.8s ease;
   pointer-events: none;
+}
+
+.hero-wc-logo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding-bottom: 0.5rem;
+}
+
+.hero-wc-logo img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  opacity: 0.85;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.5));
 }
 
 .hero-slide.active {
@@ -1106,6 +1125,7 @@ section {
   .hero { height: 400px; }
   .hero-slide { padding: 2rem 1.25rem; }
   .hero-content { max-width: 100%; }
+  .hero-wc-logo { display: none; }
   .hero-stat { font-size: clamp(2.2rem, 9vw, 3.2rem); }
   /* 3 cols: rank | name | score — hide champ (3rd) and max (5th) */
   .lb-row, .lb-header {
