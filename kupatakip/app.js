@@ -259,7 +259,7 @@ function renderHero() {
     {
       type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/canada_goal_dramatic.jpg',
-      bgPos: 'center bottom',
+      bgPos: 'center top',
       content: `
         <div class="hero-label">Son 32 · İlk 48 Saat</div>
         <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
@@ -270,7 +270,7 @@ function renderHero() {
     {
       type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/netherlands_v_morocco_dramatic.jpg',
-      bgPos: 'center top',
+      bgPos: 'center center',
       content: `
         <div class="hero-label">Son 32 · 30 Haziran</div>
         <div class="hero-stat">13'E 6:<br><span>FAS</span></div>
@@ -357,7 +357,7 @@ function renderHero() {
   }
 
   // Auto-advance every 5 seconds
-  setInterval(() => goToSlide(current + 1), 12000);
+  setInterval(() => goToSlide(current + 1), 15000);
 }
 
 // ── LEADERBOARD ────────────────────────────────────────────
