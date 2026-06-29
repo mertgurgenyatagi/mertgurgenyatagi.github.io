@@ -302,7 +302,7 @@ const BRACKET = {
 
 // Bracket görselleştirmesi için gruplar
 const BRACKET_ROUNDS = [
-  { key: "RO32", label: "Son 32", matches: ["match_2","match_5","match_1","match_3","match_11","match_12","match_9","match_10","match_4","match_6","match_7","match_8","match_14","match_16","match_13","match_15"] },
+  { key: "RO32", label: "Son 32", matches: ["match_3","match_5","match_1","match_4","match_12","match_11","match_10","match_9","match_2","match_6","match_7","match_8","match_15","match_14","match_13","match_16"] },
   { key: "RO16", label: "Son 16", matches: ["match_17","match_18","match_21","match_22","match_19","match_20","match_23","match_24"] },
   { key: "QF",   label: "Çeyrek", matches: ["match_25","match_26","match_27","match_28"] },
   { key: "SF",   label: "Yarı",   matches: ["match_29","match_30"] },
