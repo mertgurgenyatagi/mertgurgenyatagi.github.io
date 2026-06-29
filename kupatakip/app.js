@@ -395,7 +395,7 @@ function renderUpcomingMatches() {
     const awayFlag = flagUrl(m.away);
     const homeTR   = toTR(m.home);
     const awayTR   = toTR(m.away);
-    const timeStr  = new Date(m.datetime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' });
+    const timeStr  = m.time || '';
 
     return `
       <button class="upcoming-card" onclick="openMatchModal('${id}')">
@@ -427,9 +427,7 @@ function openMatchModal(matchId) {
   const awayFlag = flagUrl(m.away);
   const homeTR   = toTR(m.home);
   const awayTR   = toTR(m.away);
-  const timeStr  = m.datetime
-    ? new Date(m.datetime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' })
-    : '';
+  const timeStr  = m.time || '';
 
   const homePickers = PARTICIPANTS.filter(name =>
     PREDICTIONS[name].ro16.some(t => (TR_TO_EN[t] || t) === m.home)
