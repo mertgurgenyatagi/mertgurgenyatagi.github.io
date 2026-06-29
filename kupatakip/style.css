@@ -1066,7 +1066,7 @@ section {
   /* 3 cols: rank | name | score — hide champ (3rd) and max (5th) */
   .lb-row, .lb-header {
     grid-template-columns: 38px 1fr 62px;
-    padding: 16px 4px;
+    padding: 16px 20px 16px 4px;
     gap: 10px;
   }
   .lb-row > *:nth-child(3),
