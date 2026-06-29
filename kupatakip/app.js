@@ -216,7 +216,12 @@ function computeTimelineData() {
 
   const labels = ['Başlangıç', ...playedMatches.map(id => matchLabels[id] || id)];
 
-  const datasets = PARTICIPANTS.map((name, i) => {
+  const top5 = [...PARTICIPANTS]
+    .sort((a, b) => SCORES[b].pts - SCORES[a].pts)
+    .slice(0, 5);
+
+  const datasets = top5.map(name => {
+    const i = PARTICIPANTS.indexOf(name);
     const data = [0];
     // Simulate state after each match
     for (let j = 0; j < playedMatches.length; j++) {
