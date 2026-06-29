@@ -261,9 +261,9 @@ const ROUND_POINTS = { ro16: 1, qf: 2, sf: 3, final: 5, champion: 8 };
 // home/away İngilizce takım adları
 const BRACKET = {
   match_1:  { home: "South Africa",          away: "Canada",                   round: "RO32", date: "28 Haz", datetime: "2026-06-28T20:00:00Z", time: "23:00" },
-  match_2:  { home: "Germany",               away: "Paraguay",                 round: "RO32", date: "29 Haz", datetime: "2026-06-29T17:00:00Z", time: "20:00" },
-  match_3:  { home: "Netherlands",           away: "Morocco",                  round: "RO32", date: "29 Haz", datetime: "2026-06-29T20:00:00Z", time: "23:00" },
-  match_4:  { home: "Brazil",                away: "Japan",                    round: "RO32", date: "29 Haz", datetime: "2026-06-29T23:00:00Z", time: "02:00" },
+  match_2:  { home: "Germany",               away: "Paraguay",                 round: "RO32", date: "29 Haz", datetime: "2026-06-29T20:30:00Z", time: "23:30" },
+  match_3:  { home: "Netherlands",           away: "Morocco",                  round: "RO32", date: "29 Haz", datetime: "2026-06-30T01:00:00Z", time: "04:00" },
+  match_4:  { home: "Brazil",                away: "Japan",                    round: "RO32", date: "29 Haz", datetime: "2026-06-29T17:00:00Z", time: "20:00" },
   match_5:  { home: "France",                away: "Sweden",                   round: "RO32", date: "30 Haz", datetime: "2026-06-30T17:00:00Z", time: "20:00" },
   match_6:  { home: "Ivory Coast",           away: "Norway",                   round: "RO32", date: "30 Haz", datetime: "2026-06-30T20:00:00Z", time: "23:00" },
   match_7:  { home: "Mexico",                away: "Ecuador",                  round: "RO32", date: "30 Haz", datetime: "2026-06-30T23:00:00Z", time: "02:00" },
