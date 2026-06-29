@@ -75,9 +75,11 @@ function didPredict(name, id) {
     : pred[key].includes(winnerTR);
 }
 
-// Last 5 completed matches (oldest → newest)
-const completed = MATCH_ORDER.filter(id => results[id] != null);
-const last5     = completed.slice(-5);
+// Last 5 completed matches sorted chronologically (oldest → newest)
+const completed = MATCH_ORDER
+  .filter(id => results[id] != null)
+  .sort((a, b) => new Date(BRACKET[a].datetime) - new Date(BRACKET[b].datetime));
+const last5 = completed.slice(-5);
 const offset    = 5 - last5.length; // empty circles go on the left
 
 // Build form data

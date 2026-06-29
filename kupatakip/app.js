@@ -211,8 +211,10 @@ function computeTimelineData() {
     match_31:'Final'
   };
 
-  // Only include matches that have been played
-  const playedMatches = matchOrder.filter(id => RESULTS[id] != null);
+  // Only include matches that have been played, sorted chronologically
+  const playedMatches = matchOrder
+    .filter(id => RESULTS[id] != null)
+    .sort((a, b) => new Date(BRACKET[a].datetime) - new Date(BRACKET[b].datetime));
 
   const labels = ['Başlangıç', ...playedMatches.map(id => matchLabels[id] || id)];
 
