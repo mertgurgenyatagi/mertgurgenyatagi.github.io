@@ -277,7 +277,7 @@ function renderHero() {
 
     const teamTR = toTR(s.teamEn);
     slide.innerHTML = `
-      <div class="hero-slide-bg" style="background-image:url('${s.photoUrl}');${s.teamEn === 'Argentina' ? 'background-position:center bottom;' : ''}"></div>
+      <div class="hero-slide-bg" style="background-image:url('${s.photoUrl}');${s.teamEn === 'Argentina' ? 'background-position:center 70%;' : ''}"></div>
       <div class="hero-content">
         <div class="hero-label">FIFA Dünya Kupası 2026 · KupaTakip</div>
         <div class="hero-stat">
