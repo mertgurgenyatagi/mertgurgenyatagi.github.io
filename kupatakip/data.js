@@ -98,7 +98,7 @@ const PARTICIPANT_PICS = {
   "Emin Balçın":       "../docs_for_claude/participant_pictures/emin.png",
   "Berk Uzun":         "../docs_for_claude/participant_pictures/berk_uzun.png",
   "Yiğit Yıldırım":   "../docs_for_claude/participant_pictures/yigit_yildirim.png",
-  "Enez Özşen":        "../docs_for_claude/participant_pictures/enez_ozsen.png",
+  "Enes Özşen":        "../docs_for_claude/participant_pictures/enez_ozsen.png",
   "Bahadır Seril":     "../docs_for_claude/participant_pictures/bahadir_seril.png",
   "Burak Onur Uysal":  "../docs_for_claude/participant_pictures/burak_onur_uysal.png",
   "Emir Çiftçi":       "../docs_for_claude/participant_pictures/emir_ciftci.png",
@@ -189,7 +189,7 @@ const PREDICTIONS = {
     final:    ["İspanya","Arjantin"],
     champion: "Arjantin"
   },
-  "Enez Özşen": {
+  "Enes Özşen": {
     ro16:     ["Almanya","Fransa","Kanada","Fas","Hırvatistan","İspanya","Bosna Hersek","Belçika","Japonya","Fildişi Sahilleri","Meksika","İngiltere","Arjantin","Avustralya","İsviçre","Kolombiya"],
     qf:       ["Fransa","Fas","İspanya","Bosna Hersek","Fildişi Sahilleri","İngiltere","Arjantin","Kolombiya"],
     sf:       ["Fransa","İspanya","Fildişi Sahilleri","Arjantin"],
