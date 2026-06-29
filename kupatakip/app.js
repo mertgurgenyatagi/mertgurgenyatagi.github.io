@@ -280,6 +280,17 @@ function renderHero() {
     },
     {
       type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/yusuf_dramatic.jpeg',
+      bgPos: 'center center',
+      content: `
+        <div class="hero-label">Son 32 · Yusuf Şahin</div>
+        <div class="hero-stat">TURNUVAYA<br><span>VEDA ETTİ</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          Almanya'yı şampiyon olarak seçen Yusuf hüznünü paylaştı.<br>"Ben ağır cenabetmişim" diyen Yusuf, "200 lira da bahis<br>atmıştım" diye ekleyerek yürekleri dağladı.
+        </div>`
+    },
+    {
+      type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/netherlands_v_morocco_dramatic.jpg',
       bgPos: 'center 35%',
       content: `
