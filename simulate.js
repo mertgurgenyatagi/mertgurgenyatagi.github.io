@@ -21,7 +21,7 @@ const MATCH_IDS = [
   'match_17','match_18','match_19','match_20','match_21','match_22','match_23','match_24',
   'match_25','match_26','match_27','match_28',
   'match_29','match_30',
-  'match_32'
+  'match_31'
 ];
 const M = MATCH_IDS.length; // 31
 

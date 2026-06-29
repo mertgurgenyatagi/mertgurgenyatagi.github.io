@@ -1,8 +1,8 @@
 {
   "_comment": "1 = birinci takim kazandi (sol/ust), 2 = ikinci takim kazandi (sag/alt), null = oynanmadi",
-  "match_1":  2,
+  "match_1":  null,
   "match_2":  null,
-  "match_3":  null,
+  "match_3":  2,
   "match_4":  null,
   "match_5":  null,
   "match_6":  null,
@@ -30,6 +30,5 @@
   "match_28": null,
   "match_29": null,
   "match_30": null,
-  "match_31": null,
-  "match_32": null
+  "match_31": null
 }

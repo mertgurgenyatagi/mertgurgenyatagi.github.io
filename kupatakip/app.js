@@ -124,7 +124,7 @@ function computeState(results) {
     .forEach(id => { if (winners[id]) teamsInFinal.add(winners[id]); });
 
   // Champion
-  if (winners['match_32']) champion = winners['match_32'];
+  if (winners['match_31']) champion = winners['match_31'];
 
   // Still-alive teams (reached highest stage and not eliminated yet)
   const eliminated = new Set(Object.values(losers).filter(Boolean));
@@ -194,21 +194,21 @@ function computeTimelineData() {
     'match_17','match_18','match_19','match_20','match_21','match_22','match_23','match_24',
     'match_25','match_26','match_27','match_28',
     'match_29','match_30',
-    'match_32'
+    'match_31'
   ];
 
   const matchLabels = {
-    match_1:'G.Afrika-Kanada', match_2:'Almanya-Paraguay', match_3:'Hollanda-Fas',
-    match_4:'Brezilya-Japonya', match_5:'Fransa-İsveç', match_6:'F.Sahilleri-Norveç',
-    match_7:'Meksika-Ekvador', match_8:'İngiltere-K.Kongo', match_9:'ABD-Bosna H.',
-    match_10:'Belçika-Senegal', match_11:'Portekiz-Hırvatistan', match_12:'İspanya-Avusturya',
-    match_13:'İsviçre-Cezayir', match_14:'Arjantin-Y.Burun A.', match_15:'Kolombiya-Gana',
-    match_16:'Avustralya-Mısır',
+    match_1:'Almanya-Paraguay', match_2:'Fransa-İsveç', match_3:'G.Afrika-Kanada',
+    match_4:'Hollanda-Fas', match_5:'Portekiz-Hırvatistan', match_6:'İspanya-Avusturya',
+    match_7:'ABD-Bosna H.', match_8:'Belçika-Senegal', match_9:'Brezilya-Japonya',
+    match_10:'F.Sahilleri-Norveç', match_11:'Meksika-Ekvador', match_12:'İngiltere-K.Kongo',
+    match_13:'Arjantin-Y.Burun A.', match_14:'Avustralya-Mısır', match_15:'İsviçre-Cezayir',
+    match_16:'Kolombiya-Gana',
     match_17:'Son16-1', match_18:'Son16-2', match_19:'Son16-3', match_20:'Son16-4',
     match_21:'Son16-5', match_22:'Son16-6', match_23:'Son16-7', match_24:'Son16-8',
     match_25:'ÇF-1', match_26:'ÇF-2', match_27:'ÇF-3', match_28:'ÇF-4',
     match_29:'YF-1', match_30:'YF-2',
-    match_32:'Final'
+    match_31:'Final'
   };
 
   // Only include matches that have been played

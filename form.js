@@ -15,14 +15,14 @@ const { TR_TO_EN, BRACKET, PREDICTIONS, PARTICIPANTS } = new Function(
 const results = JSON.parse(fs.readFileSync(path.join(dir, 'results.json'), 'utf8'));
 delete results._comment;
 
-// Match order — no 3rd place (match_31)
+// Match order — match_31 is the Final
 const MATCH_ORDER = [
   'match_1','match_2','match_3','match_4','match_5','match_6','match_7','match_8',
   'match_9','match_10','match_11','match_12','match_13','match_14','match_15','match_16',
   'match_17','match_18','match_19','match_20','match_21','match_22','match_23','match_24',
   'match_25','match_26','match_27','match_28',
   'match_29','match_30',
-  'match_32'
+  'match_31'
 ];
 
 // Resolve winners for all completed matches
