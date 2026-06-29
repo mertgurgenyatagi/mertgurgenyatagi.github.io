@@ -259,44 +259,45 @@ const ROUND_POINTS = { ro16: 1, qf: 2, sf: 3, final: 5, champion: 8 };
 
 // RO32 maç çizelgesi (match_1..match_16)
 // home/away İngilizce takım adları
+// datetime = UTC ISO (TRT = UTC+3), time = Türkiye saati
 const BRACKET = {
-  match_1:  { home: "South Africa",          away: "Canada",                   round: "RO32", date: "28 Haz", datetime: "2026-06-28T20:00:00Z", time: "23:00" },
-  match_2:  { home: "Germany",               away: "Paraguay",                 round: "RO32", date: "29 Haz", datetime: "2026-06-29T20:30:00Z", time: "23:30" },
-  match_3:  { home: "Netherlands",           away: "Morocco",                  round: "RO32", date: "29 Haz", datetime: "2026-06-30T01:00:00Z", time: "04:00" },
-  match_4:  { home: "Brazil",                away: "Japan",                    round: "RO32", date: "29 Haz", datetime: "2026-06-29T17:00:00Z", time: "20:00" },
-  match_5:  { home: "France",                away: "Sweden",                   round: "RO32", date: "30 Haz", datetime: "2026-06-30T21:00:00Z", time: "00:00" },
-  match_6:  { home: "Ivory Coast",           away: "Norway",                   round: "RO32", date: "30 Haz", datetime: "2026-06-30T17:00:00Z", time: "20:00" },
-  match_7:  { home: "Mexico",                away: "Ecuador",                  round: "RO32", date: "30 Haz", datetime: "2026-07-01T01:00:00Z", time: "04:00" },
-  match_8:  { home: "England",               away: "DR Congo",                 round: "RO32", date: "1 Tem",  datetime: "2026-07-01T16:00:00Z", time: "19:00" },
-  match_9:  { home: "United States",         away: "Bosnia and Herzegovina",   round: "RO32", date: "1 Tem",  datetime: "2026-07-02T00:00:00Z", time: "03:00" },
-  match_10: { home: "Belgium",               away: "Senegal",                  round: "RO32", date: "1 Tem",  datetime: "2026-07-01T20:00:00Z", time: "23:00" },
-  match_11: { home: "Portugal",              away: "Croatia",                  round: "RO32", date: "2 Tem",  datetime: "2026-07-02T23:00:00Z", time: "02:00" },
-  match_12: { home: "Spain",                 away: "Austria",                  round: "RO32", date: "2 Tem",  datetime: "2026-07-02T19:00:00Z", time: "22:00" },
-  match_13: { home: "Switzerland",           away: "Algeria",                  round: "RO32", date: "2 Tem",  datetime: "2026-07-03T03:00:00Z", time: "06:00" },
-  match_14: { home: "Argentina",             away: "Cape Verde",               round: "RO32", date: "3 Tem",  datetime: "2026-07-03T22:00:00Z", time: "01:00" },
-  match_15: { home: "Colombia",              away: "Ghana",                    round: "RO32", date: "3 Tem",  datetime: "2026-07-04T01:30:00Z", time: "04:30" },
-  match_16: { home: "Australia",             away: "Egypt",                    round: "RO32", date: "3 Tem",  datetime: "2026-07-03T18:00:00Z", time: "21:00" },
+  match_1:  { home: "South Africa",        away: "Canada",                 round: "RO32", date: "28 Haz", datetime: "2026-06-28T20:00:00Z", time: "23:00" },
+  match_2:  { home: "Brazil",              away: "Japan",                  round: "RO32", date: "29 Haz", datetime: "2026-06-29T17:00:00Z", time: "20:00" },
+  match_3:  { home: "Germany",             away: "Paraguay",               round: "RO32", date: "29 Haz", datetime: "2026-06-29T20:30:00Z", time: "23:30" },
+  match_4:  { home: "Netherlands",         away: "Morocco",                round: "RO32", date: "30 Haz", datetime: "2026-06-30T01:00:00Z", time: "04:00" },
+  match_5:  { home: "France",              away: "Sweden",                 round: "RO32", date: "30 Haz", datetime: "2026-06-30T17:00:00Z", time: "20:00" },
+  match_6:  { home: "Ivory Coast",         away: "Norway",                 round: "RO32", date: "1 Tem",  datetime: "2026-06-30T21:00:00Z", time: "00:00" },
+  match_7:  { home: "Mexico",              away: "Ecuador",                round: "RO32", date: "1 Tem",  datetime: "2026-07-01T01:00:00Z", time: "04:00" },
+  match_8:  { home: "England",             away: "DR Congo",               round: "RO32", date: "1 Tem",  datetime: "2026-07-01T16:00:00Z", time: "19:00" },
+  match_9:  { home: "Belgium",             away: "Senegal",                round: "RO32", date: "1 Tem",  datetime: "2026-07-01T20:00:00Z", time: "23:00" },
+  match_10: { home: "United States",       away: "Bosnia and Herzegovina", round: "RO32", date: "2 Tem",  datetime: "2026-07-02T00:00:00Z", time: "03:00" },
+  match_11: { home: "Spain",               away: "Austria",                round: "RO32", date: "2 Tem",  datetime: "2026-07-02T19:00:00Z", time: "22:00" },
+  match_12: { home: "Portugal",            away: "Croatia",                round: "RO32", date: "3 Tem",  datetime: "2026-07-02T23:00:00Z", time: "02:00" },
+  match_13: { home: "Switzerland",         away: "Algeria",                round: "RO32", date: "3 Tem",  datetime: "2026-07-03T03:00:00Z", time: "06:00" },
+  match_14: { home: "Australia",           away: "Egypt",                  round: "RO32", date: "3 Tem",  datetime: "2026-07-03T18:00:00Z", time: "21:00" },
+  match_15: { home: "Argentina",           away: "Cape Verde",             round: "RO32", date: "4 Tem",  datetime: "2026-07-03T22:00:00Z", time: "01:00" },
+  match_16: { home: "Colombia",            away: "Ghana",                  round: "RO32", date: "4 Tem",  datetime: "2026-07-04T01:30:00Z", time: "04:30" },
   // Son 16 - kazananlar buluşuyor
-  match_17: { home: null, away: null, round: "RO16", homeFrom: "match_2",  awayFrom: "match_5"  },
-  match_18: { home: null, away: null, round: "RO16", homeFrom: "match_1",  awayFrom: "match_3"  },
-  match_19: { home: null, away: null, round: "RO16", homeFrom: "match_4",  awayFrom: "match_6"  },
-  match_20: { home: null, away: null, round: "RO16", homeFrom: "match_7",  awayFrom: "match_8"  },
-  match_21: { home: null, away: null, round: "RO16", homeFrom: "match_11", awayFrom: "match_12" },
-  match_22: { home: null, away: null, round: "RO16", homeFrom: "match_9",  awayFrom: "match_10" },
-  match_23: { home: null, away: null, round: "RO16", homeFrom: "match_14", awayFrom: "match_16" },
-  match_24: { home: null, away: null, round: "RO16", homeFrom: "match_13", awayFrom: "match_15" },
+  match_17: { home: null, away: null, round: "RO16", date: "4 Tem",  datetime: "2026-07-04T17:00:00Z", time: "20:00", homeFrom: "match_2",  awayFrom: "match_5"  },
+  match_18: { home: null, away: null, round: "RO16", date: "5 Tem",  datetime: "2026-07-04T21:00:00Z", time: "00:00", homeFrom: "match_1",  awayFrom: "match_3"  },
+  match_19: { home: null, away: null, round: "RO16", date: "5 Tem",  datetime: "2026-07-05T20:00:00Z", time: "23:00", homeFrom: "match_4",  awayFrom: "match_6"  },
+  match_20: { home: null, away: null, round: "RO16", date: "6 Tem",  datetime: "2026-07-06T00:00:00Z", time: "03:00", homeFrom: "match_7",  awayFrom: "match_8"  },
+  match_21: { home: null, away: null, round: "RO16", date: "6 Tem",  datetime: "2026-07-06T19:00:00Z", time: "22:00", homeFrom: "match_11", awayFrom: "match_12" },
+  match_22: { home: null, away: null, round: "RO16", date: "7 Tem",  datetime: "2026-07-07T00:00:00Z", time: "03:00", homeFrom: "match_9",  awayFrom: "match_10" },
+  match_23: { home: null, away: null, round: "RO16", date: "7 Tem",  datetime: "2026-07-07T16:00:00Z", time: "19:00", homeFrom: "match_14", awayFrom: "match_16" },
+  match_24: { home: null, away: null, round: "RO16", date: "7 Tem",  datetime: "2026-07-07T20:00:00Z", time: "23:00", homeFrom: "match_13", awayFrom: "match_15" },
   // Çeyrek Final
-  match_25: { home: null, away: null, round: "QF", homeFrom: "match_17", awayFrom: "match_18" },
-  match_26: { home: null, away: null, round: "QF", homeFrom: "match_21", awayFrom: "match_22" },
-  match_27: { home: null, away: null, round: "QF", homeFrom: "match_19", awayFrom: "match_20" },
-  match_28: { home: null, away: null, round: "QF", homeFrom: "match_23", awayFrom: "match_24" },
+  match_25: { home: null, away: null, round: "QF", date: "9 Tem",  datetime: "2026-07-09T20:00:00Z", time: "23:00", homeFrom: "match_17", awayFrom: "match_18" },
+  match_26: { home: null, away: null, round: "QF", date: "10 Tem", datetime: "2026-07-10T19:00:00Z", time: "22:00", homeFrom: "match_21", awayFrom: "match_22" },
+  match_27: { home: null, away: null, round: "QF", date: "12 Tem", datetime: "2026-07-11T21:00:00Z", time: "00:00", homeFrom: "match_19", awayFrom: "match_20" },
+  match_28: { home: null, away: null, round: "QF", date: "12 Tem", datetime: "2026-07-12T01:00:00Z", time: "04:00", homeFrom: "match_23", awayFrom: "match_24" },
   // Yarı Final
-  match_29: { home: null, away: null, round: "SF", homeFrom: "match_25", awayFrom: "match_26" },
-  match_30: { home: null, away: null, round: "SF", homeFrom: "match_27", awayFrom: "match_28" },
+  match_29: { home: null, away: null, round: "SF", date: "14 Tem", datetime: "2026-07-14T19:00:00Z", time: "22:00", homeFrom: "match_25", awayFrom: "match_26" },
+  match_30: { home: null, away: null, round: "SF", date: "15 Tem", datetime: "2026-07-15T19:00:00Z", time: "22:00", homeFrom: "match_27", awayFrom: "match_28" },
   // 3. lük maçı (puanlamada kullanılmaz)
   match_31: { home: null, away: null, round: "3RD", loserFrom: ["match_29","match_30"] },
   // Final
-  match_32: { home: null, away: null, round: "Final", homeFrom: "match_29", awayFrom: "match_30" }
+  match_32: { home: null, away: null, round: "Final", date: "19 Tem", datetime: "2026-07-19T19:00:00Z", time: "22:00", homeFrom: "match_29", awayFrom: "match_30" }
 };
 
 // Bracket görselleştirmesi için gruplar
