@@ -674,20 +674,31 @@ section {
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  /* 5 visible columns: rank | name | champion | score | son16 */
   .lb-row, .lb-header {
-    grid-template-columns: 36px 1fr 60px 60px;
+    grid-template-columns: 36px 1fr 80px 65px 55px;
   }
-  .lb-pts-col:nth-child(n+6) { display: none; }
+  .lb-row > *:nth-child(n+6),
+  .lb-header > *:nth-child(n+6) { display: none; }
   .site-nav a { padding: 0 10px; font-size: 11px; }
 }
 
 @media (max-width: 600px) {
-  section { padding: 2.5rem 1rem; }
+  section { padding: 2rem 1rem; }
   .site-header { padding: 0 1rem; }
   .hero { height: 360px; }
   .hero-content { max-width: 100%; }
   .hero-slide { padding: 1.5rem; }
-  .lb-row, .lb-header { grid-template-columns: 36px 1fr 60px; }
+  /* 4 visible columns: rank | name | champion | score */
+  .lb-row, .lb-header {
+    grid-template-columns: 28px 1fr 72px 50px;
+    padding: 9px 12px;
+    gap: 8px;
+  }
+  .lb-row > *:nth-child(n+5),
+  .lb-header > *:nth-child(n+5) { display: none; }
+  .lb-name { font-size: 12px; }
+  .lb-pts-col .val { font-size: 1.1rem; }
 }
 
 /* ── Loading State ── */
