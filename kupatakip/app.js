@@ -270,7 +270,7 @@ function renderHero() {
     {
       type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/netherlands_v_morocco_dramatic.jpg',
-      bgPos: 'center center',
+      bgPos: 'center 35%',
       content: `
         <div class="hero-label">Son 32 · 30 Haziran</div>
         <div class="hero-stat">13'E 6:<br><span>FAS</span></div>
