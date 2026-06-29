@@ -1,145 +1,145 @@
 {
-  "_generated": "2026-06-29T18:47:23.416Z",
-  "_matchCount": 1,
+  "_generated": "2026-06-29T19:00:53.316Z",
+  "_matchCount": 2,
   "slotMatches": [
     null,
     null,
     null,
-    null,
-    "match_3"
+    "match_3",
+    "match_9"
   ],
   "participants": {
     "Yusuf Şahin": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Batu Balcı": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Emre Bulut": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Barış Başar": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Serhat Gürgenyatağı": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Burak Arslantürk": [
       null,
       null,
       null,
-      null,
-      true
+      true,
+      false
     ],
     "Kuzey Emre": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Emin Balçın": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Berk Uzun": [
       null,
       null,
       null,
-      null,
-      true
+      true,
+      false
     ],
     "Yiğit Yıldırım": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Enes Özşen": [
       null,
       null,
       null,
-      null,
-      true
+      true,
+      false
     ],
     "Bahadır Seril": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Burak Onur Uysal": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Emir Çiftçi": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Talha Kılıç": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Bedirhan Çakır": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Batu Çataklı": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ],
     "Demir Öztürk": [
       null,
       null,
       null,
-      null,
-      false
+      false,
+      true
     ],
     "Mert Gürgenyatağı": [
       null,
       null,
       null,
-      null,
+      true,
       true
     ]
   }
