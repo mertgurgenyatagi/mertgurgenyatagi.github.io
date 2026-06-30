@@ -238,10 +238,10 @@ function computeTimelineData() {
       fullLabel: name,
       data,
       borderColor: PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length],
-      backgroundColor: PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length] + '22',
-      borderWidth: 2,
-      pointRadius: 3,
-      pointHoverRadius: 6,
+      borderWidth: 2.5,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length],
       tension: 0.3,
       fill: false
     };
@@ -634,38 +634,69 @@ function renderTimeline() {
     return;
   }
 
+  // Draw first-name labels at the end of each line, handling overlaps
+  const endLabelPlugin = {
+    id: 'endLabels',
+    afterDraw(chart) {
+      const ctx = chart.ctx;
+      const MIN_GAP = 14;
+
+      const positions = chart.data.datasets.map((ds, i) => {
+        const meta = chart.getDatasetMeta(i);
+        if (!meta.data.length) return null;
+        const last = meta.data[meta.data.length - 1];
+        return { x: last.x, y: last.y, label: ds.label, color: ds.borderColor };
+      }).filter(Boolean).sort((a, b) => a.y - b.y);
+
+      // Push overlapping labels apart downward, then pull back up if they overflow
+      for (let i = 1; i < positions.length; i++) {
+        if (positions[i].y - positions[i - 1].y < MIN_GAP)
+          positions[i].y = positions[i - 1].y + MIN_GAP;
+      }
+      const chartBottom = chart.chartArea.bottom;
+      for (let i = positions.length - 1; i >= 0; i--) {
+        if (positions[i].y > chartBottom) positions[i].y = chartBottom;
+        if (i < positions.length - 1 && positions[i].y > positions[i + 1].y - MIN_GAP)
+          positions[i].y = positions[i + 1].y - MIN_GAP;
+      }
+
+      ctx.save();
+      ctx.font = 'bold 11px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      positions.forEach(p => {
+        // subtle halo so text is readable over lines
+        ctx.strokeStyle = 'rgba(8,12,20,0.7)';
+        ctx.lineWidth = 3;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(p.label, p.x + 10, p.y + 4);
+        ctx.fillStyle = p.color;
+        ctx.fillText(p.label, p.x + 10, p.y + 4);
+      });
+      ctx.restore();
+    }
+  };
+
   timelineChart = new Chart(canvas, {
     type: 'line',
+    plugins: [endLabelPlugin],
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
+      interaction: { mode: 'nearest', intersect: false },
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: '#9ca3af', font: { size: 11 }, boxWidth: 12, padding: 12 }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(7,9,15,0.95)',
-          borderColor: 'rgba(212,175,55,0.3)',
-          borderWidth: 1,
-          titleColor: '#D4AF37',
-          bodyColor: '#e8eaf0',
-          callbacks: {
-            title: items => items[0].label,
-            label: item => ` ${item.dataset.fullLabel}: ${item.raw} puan`
-          }
-        }
+        legend: { display: false },
+        tooltip: { enabled: false }
       },
+      layout: { padding: { right: 80 } },
       scales: {
         x: {
-          ticks: { color: '#6b7280', font: { size: 10 }, maxRotation: 45 },
-          grid: { color: 'rgba(255,255,255,0.04)' }
+          ticks: { color: '#6b7280', font: { size: 10 }, maxRotation: 40 },
+          grid: { color: 'rgba(255,255,255,0.03)' }
         },
         y: {
-          ticks: { color: '#6b7280', font: { size: 11 } },
-          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { color: '#6b7280', font: { size: 11 }, stepSize: 1 },
+          grid: { color: 'rgba(255,255,255,0.05)' },
           beginAtZero: true
         }
       }
