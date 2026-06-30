@@ -1,7 +1,7 @@
 {
   "_comment": "1 = birinci takim kazandi (sol/ust), 2 = ikinci takim kazandi (sag/alt), null = oynanmadi",
   "match_1":  2,
-  "match_2":  null,
+  "match_2":  1,
   "match_3":  2,
   "match_4":  2,
   "match_5":  null,
