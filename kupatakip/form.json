@@ -1,8 +1,8 @@
 {
-  "_generated": "2026-06-30T22:10:10.133Z",
+  "_generated": "2026-06-30T23:00:05.793Z",
   "_matchCount": 6,
   "slotMatches": [
-    "match_3",
+    "match_9",
     "match_1",
     "match_4",
     "match_10",
@@ -17,35 +17,35 @@
       true
     ],
     "Batu Balcı": [
-      false,
+      true,
       false,
       false,
       true,
       true
     ],
     "Emre Bulut": [
-      false,
+      true,
       true,
       true,
       false,
       false
     ],
     "Barış Başar": [
-      false,
+      true,
       false,
       true,
       true,
       true
     ],
     "Serhat Gürgenyatağı": [
-      false,
+      true,
       false,
       true,
       true,
       true
     ],
     "Burak Arslantürk": [
-      true,
+      false,
       false,
       true,
       true,
@@ -59,14 +59,14 @@
       true
     ],
     "Emin Balçın": [
-      false,
+      true,
       true,
       true,
       false,
       true
     ],
     "Berk Uzun": [
-      true,
+      false,
       false,
       true,
       true,
@@ -80,14 +80,14 @@
       true
     ],
     "Enes Özşen": [
-      true,
+      false,
       false,
       true,
       false,
       true
     ],
     "Bahadır Seril": [
-      false,
+      true,
       false,
       true,
       false,
@@ -108,7 +108,7 @@
       true
     ],
     "Talha Kılıç": [
-      false,
+      true,
       false,
       false,
       true,
@@ -129,7 +129,7 @@
       true
     ],
     "Demir Öztürk": [
-      false,
+      true,
       false,
       false,
       true,
