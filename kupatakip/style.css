@@ -549,7 +549,7 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
 /* ── Bracket inside participant modal ── */
 .bkt-wrap {
   display: flex;
-  height: 260px;
+  height: 300px;
   width: 100%;
   user-select: none;
   overflow: hidden;
@@ -571,11 +571,9 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
   position: relative;
 }
-.bkt-slot.correct { background: rgba(74,222,128,0.08); border-radius: 2px; }
-.bkt-slot.wrong   { background: rgba(248,113,113,0.08); border-radius: 2px; }
 
 /* LEFT half — connectors on right edge, entries on left */
 .bkt-L .bkt-col:not(:last-child) .bkt-slot.pt::after {
@@ -615,8 +613,32 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
 
 /* Flags */
 .bkt-f { width: 14px; height: 14px; border-radius: 50%; object-fit: cover; display: block; flex-shrink: 0; }
-.bkt-win { box-shadow: 0 0 0 1.5px var(--gold); }
-.bkt-los { opacity: 0.18; }
+
+/* Loser (not predicted to advance): grayscale + barely visible */
+.bkt-los { filter: grayscale(100%); opacity: 0.1; }
+
+/* Winner wrapper (holds flag + optional +N label) */
+.bkt-ww { position: relative; display: flex; align-items: center; justify-content: center; }
+
+/* Predicted winner, pending or wrong: 30% sat + gray ring */
+.bkt-win { filter: saturate(30%); box-shadow: 0 0 0 1.5px #6b7280; }
+
+/* Predicted winner, correct: full sat + green ring */
+.bkt-ww.ok .bkt-win { filter: none; box-shadow: 0 0 0 1.5px #4ade80; }
+
+/* +N points label */
+.bkt-pts {
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  font-size: 7px;
+  font-style: italic;
+  font-weight: 700;
+  color: #4ade80;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 /* Center — champion + finalists */
 .bkt-center {
@@ -635,14 +657,23 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   background: rgba(255,255,255,0.15);
   transform: translateY(-50%);
 }
-.bkt-fin { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; opacity: 0.6; display: block; position: relative; }
+.bkt-fin { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; opacity: 0.5; display: block; position: relative; filter: saturate(30%); }
 .bkt-champ { display: flex; align-items: center; justify-content: center; position: relative; }
 .bkt-champ img {
   width: 22px; height: 22px; border-radius: 50%; object-fit: cover; display: block;
-  box-shadow: 0 0 0 2px var(--gold), 0 0 8px rgba(212,175,55,0.45);
+  filter: saturate(30%);
+  box-shadow: 0 0 0 2px #6b7280;
 }
-.bkt-champ.correct img { box-shadow: 0 0 0 2px #4ade80, 0 0 8px rgba(74,222,128,0.4); }
-.bkt-champ.wrong   img { box-shadow: 0 0 0 2px #f87171, 0 0 6px rgba(248,113,113,0.3); }
+.bkt-champ.ok img {
+  filter: none;
+  box-shadow: 0 0 0 2px #4ade80, 0 0 8px rgba(74,222,128,0.4);
+}
+.bkt-cpts {
+  position: absolute;
+  top: -5px; right: -8px;
+  font-size: 8px; font-style: italic; font-weight: 700;
+  color: #4ade80; line-height: 1; white-space: nowrap;
+}
 
 /* ── Sections ── */
 section {

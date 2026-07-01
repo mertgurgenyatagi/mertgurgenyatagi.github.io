@@ -590,17 +590,23 @@ function openParticipantModal(name) {
   const champEn = toEn(pred.champion);
   pw['match_31'] = champEn;
 
+  const ROUND_PTS = { RO32: 1, RO16: 2, QF: 3, SF: 5, Final: 8 };
+
   const mkSlot = (id, cls) => {
-    const m    = BRACKET[id];
-    const home = m.round === 'RO32' ? m.home : (pw[m.homeFrom] || '?');
-    const away = m.round === 'RO32' ? m.away : (pw[m.awayFrom] || '?');
+    const m      = BRACKET[id];
+    const home   = m.round === 'RO32' ? m.home : (pw[m.homeFrom] || '?');
+    const away   = m.round === 'RO32' ? m.away : (pw[m.awayFrom] || '?');
     const winner = pw[id];
     const loser  = winner === home ? away : home;
     const actual = STATE.winners[id];
-    const status = actual != null ? (actual === winner ? 'correct' : 'wrong') : 'pending';
+    const ok     = actual != null && actual === winner;
+    const pts    = ROUND_PTS[m.round] || 0;
     const wf = flagUrl(winner), lf = flagUrl(loser);
-    return `<div class="bkt-slot ${cls} ${status}">
-      ${wf ? `<img class="bkt-f bkt-win" src="${wf}" alt="">` : '<span class="bkt-f bkt-win"></span>'}
+    return `<div class="bkt-slot ${cls}">
+      <div class="bkt-ww${ok ? ' ok' : ''}">
+        ${wf ? `<img class="bkt-f bkt-win" src="${wf}" alt="">` : '<span class="bkt-f bkt-win"></span>'}
+        ${ok ? `<span class="bkt-pts">+${pts}</span>` : ''}
+      </div>
       ${lf ? `<img class="bkt-f bkt-los" src="${lf}" alt="">` : '<span class="bkt-f bkt-los"></span>'}
     </div>`;
   };
@@ -609,8 +615,7 @@ function openParticipantModal(name) {
 
   const champFlag = flagUrl(champEn);
   const champTR   = toTR(champEn);
-  const finState  = STATE.winners['match_31'] != null
-    ? (STATE.winners['match_31'] === champEn ? 'correct' : 'wrong') : 'pending';
+  const champOk   = STATE.winners['match_31'] != null && STATE.winners['match_31'] === champEn;
   const lfSrc = flagUrl(pw['match_29']);
   const rfSrc = flagUrl(pw['match_30']);
 
@@ -637,7 +642,7 @@ function openParticipantModal(name) {
       </div>
       <div class="bkt-center">
         ${lfSrc ? `<img class="bkt-fin" src="${lfSrc}" alt="">` : ''}
-        <div class="bkt-champ ${finState}">${champFlag ? `<img src="${champFlag}" alt="${champTR}">` : ''}</div>
+        <div class="bkt-champ${champOk ? ' ok' : ''}">${champFlag ? `<img src="${champFlag}" alt="${champTR}">` : ''}${champOk ? '<span class="bkt-cpts">+8</span>' : ''}</div>
         ${rfSrc ? `<img class="bkt-fin" src="${rfSrc}" alt="">` : ''}
       </div>
       <div class="bkt-half bkt-R">
