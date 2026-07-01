@@ -552,11 +552,10 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   height: 260px;
   width: 100%;
   user-select: none;
+  overflow: hidden;
 }
 
-.bkt-half { display: flex; flex: 1; min-width: 0; }
-.bkt-L { flex-direction: row; }
-.bkt-R { flex-direction: row-reverse; }
+.bkt-half { display: flex; flex-direction: row; flex: 1; min-width: 0; overflow: hidden; }
 
 .bkt-col {
   display: flex;
@@ -578,25 +577,38 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
 .bkt-slot.correct { background: rgba(74,222,128,0.08); border-radius: 2px; }
 .bkt-slot.wrong   { background: rgba(248,113,113,0.08); border-radius: 2px; }
 
-/* Vertical connector bars (right edge of each col except the innermost) */
-.bkt-L .bkt-col:not(:last-child) .bkt-slot.pt::after,
-.bkt-R .bkt-col:not(:first-child) .bkt-slot.pt::after {
+/* LEFT half — connectors on right edge, entries on left */
+.bkt-L .bkt-col:not(:last-child) .bkt-slot.pt::after {
   content: ''; position: absolute;
   right: 0; top: 50%; bottom: -0.5px; width: 1px;
   background: rgba(255,255,255,0.15);
 }
-.bkt-L .bkt-col:not(:last-child) .bkt-slot.pb::after,
-.bkt-R .bkt-col:not(:first-child) .bkt-slot.pb::after {
+.bkt-L .bkt-col:not(:last-child) .bkt-slot.pb::after {
   content: ''; position: absolute;
   right: 0; top: -0.5px; bottom: 50%; width: 1px;
   background: rgba(255,255,255,0.15);
 }
-
-/* Horizontal entry ticks on inner columns */
-.bkt-L .bkt-col:not(:first-child) .bkt-slot::before,
-.bkt-R .bkt-col:not(:last-child) .bkt-slot::before {
+.bkt-L .bkt-col:not(:first-child) .bkt-slot::before {
   content: ''; position: absolute;
   left: 0; top: 50%; height: 1px; width: 40%;
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-50%);
+}
+
+/* RIGHT half (DOM order: SF QF RO16 RO32) — connectors on left edge, entries on right */
+.bkt-R .bkt-col:not(:first-child) .bkt-slot.pt::after {
+  content: ''; position: absolute;
+  left: 0; top: 50%; bottom: -0.5px; width: 1px;
+  background: rgba(255,255,255,0.15);
+}
+.bkt-R .bkt-col:not(:first-child) .bkt-slot.pb::after {
+  content: ''; position: absolute;
+  left: 0; top: -0.5px; bottom: 50%; width: 1px;
+  background: rgba(255,255,255,0.15);
+}
+.bkt-R .bkt-col:not(:last-child) .bkt-slot::before {
+  content: ''; position: absolute;
+  right: 0; top: 50%; height: 1px; width: 40%;
   background: rgba(255,255,255,0.15);
   transform: translateY(-50%);
 }
@@ -615,9 +627,16 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   gap: 5px;
   width: 42px;
   flex-shrink: 0;
+  position: relative;
 }
-.bkt-fin { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; opacity: 0.6; display: block; }
-.bkt-champ { display: flex; align-items: center; justify-content: center; }
+.bkt-center::before {
+  content: ''; position: absolute;
+  left: 0; right: 0; top: 50%; height: 1px;
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-50%);
+}
+.bkt-fin { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; opacity: 0.6; display: block; position: relative; }
+.bkt-champ { display: flex; align-items: center; justify-content: center; position: relative; }
 .bkt-champ img {
   width: 22px; height: 22px; border-radius: 50%; object-fit: cover; display: block;
   box-shadow: 0 0 0 2px var(--gold), 0 0 8px rgba(212,175,55,0.45);
