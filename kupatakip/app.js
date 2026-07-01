@@ -562,40 +562,57 @@ function closeMatchModal() {
 function openParticipantModal(name) {
   const pred = PREDICTIONS[name];
   const s    = SCORES[name];
-  const ro16Set = new Set(pred.ro16);
+  const toEn = t => TR_TO_EN[t] || t;
 
-  const RO32 = [
-    'match_1','match_2','match_3','match_4','match_5','match_6','match_7','match_8',
-    'match_9','match_10','match_11','match_12','match_13','match_14','match_15','match_16'
-  ];
+  // Resolve each match's predicted winner (EN) through the bracket tree
+  const pw = {};
 
-  const pickCard = id => {
-    const m       = BRACKET[id];
-    const homeTR  = EN_TO_TR[m.home] || m.home;
-    const awayTR  = EN_TO_TR[m.away] || m.away;
-    const pickedTR    = ro16Set.has(homeTR) ? homeTR : ro16Set.has(awayTR) ? awayTR : null;
-    const opponentTR  = pickedTR === homeTR ? awayTR : homeTR;
-    const result  = RESULTS[id];
-    let status = '';
-    if (result != null && pickedTR) {
-      const winnerTR = result === 1 ? homeTR : awayTR;
-      status = pickedTR === winnerTR ? 'correct' : 'wrong';
-    }
-    const flag = pickedTR ? flagUrl(TR_TO_EN[pickedTR] || pickedTR) : null;
-    return `
-      <div class="pm-pick ${status}">
-        <div class="pm-pick-date">${m.date}</div>
-        <div class="pm-pick-team">
-          ${flag ? `<img class="pm-pick-flag" src="${flag}" alt="" onerror="this.style.display='none'">` : ''}
-          <span class="pm-pick-name">${pickedTR || '—'}</span>
-        </div>
-        <div class="pm-pick-vs">vs ${opponentTR}</div>
-      </div>`;
+  const ro16En = new Set(pred.ro16.map(toEn));
+  for (let i = 1; i <= 16; i++) {
+    const id = 'match_' + i, m = BRACKET[id];
+    pw[id] = ro16En.has(m.home) ? m.home : m.away;
+  }
+  const qfEn = new Set(pred.qf.map(toEn));
+  for (let i = 17; i <= 24; i++) {
+    const id = 'match_' + i, m = BRACKET[id];
+    pw[id] = qfEn.has(pw[m.homeFrom]) ? pw[m.homeFrom] : pw[m.awayFrom];
+  }
+  const sfEn = new Set(pred.sf.map(toEn));
+  for (let i = 25; i <= 28; i++) {
+    const id = 'match_' + i, m = BRACKET[id];
+    pw[id] = sfEn.has(pw[m.homeFrom]) ? pw[m.homeFrom] : pw[m.awayFrom];
+  }
+  const finEn = new Set(pred.final.map(toEn));
+  for (const id of ['match_29','match_30']) {
+    const m = BRACKET[id];
+    pw[id] = finEn.has(pw[m.homeFrom]) ? pw[m.homeFrom] : pw[m.awayFrom];
+  }
+  const champEn = toEn(pred.champion);
+  pw['match_31'] = champEn;
+
+  const mkSlot = (id, cls) => {
+    const m    = BRACKET[id];
+    const home = m.round === 'RO32' ? m.home : (pw[m.homeFrom] || '?');
+    const away = m.round === 'RO32' ? m.away : (pw[m.awayFrom] || '?');
+    const winner = pw[id];
+    const loser  = winner === home ? away : home;
+    const actual = STATE.winners[id];
+    const status = actual != null ? (actual === winner ? 'correct' : 'wrong') : 'pending';
+    const wf = flagUrl(winner), lf = flagUrl(loser);
+    return `<div class="bkt-slot ${cls} ${status}">
+      ${wf ? `<img class="bkt-f bkt-win" src="${wf}" alt="">` : '<span class="bkt-f bkt-win"></span>'}
+      ${lf ? `<img class="bkt-f bkt-los" src="${lf}" alt="">` : '<span class="bkt-f bkt-los"></span>'}
+    </div>`;
   };
 
-  const champEN   = TR_TO_EN[pred.champion] || pred.champion;
-  const champFlag = flagUrl(champEN);
-  const champTR   = toTR(champEN);
+  const mkCol = ids => ids.map((id, i) => mkSlot(id, i % 2 === 0 ? 'pt' : 'pb')).join('');
+
+  const champFlag = flagUrl(champEn);
+  const champTR   = toTR(champEn);
+  const finState  = STATE.winners['match_31'] != null
+    ? (STATE.winners['match_31'] === champEn ? 'correct' : 'wrong') : 'pending';
+  const lfSrc = flagUrl(pw['match_29']);
+  const rfSrc = flagUrl(pw['match_30']);
 
   document.getElementById('pm-content').innerHTML = `
     <div class="pm-header">
@@ -611,10 +628,24 @@ function openParticipantModal(name) {
         </div>
       </div>
     </div>
-    <div class="pm-section-label">Son 32 Tahminleri</div>
-    <div class="pm-picks">
-      <div class="pm-col">${RO32.slice(0, 8).map(pickCard).join('')}</div>
-      <div class="pm-col">${RO32.slice(8).map(pickCard).join('')}</div>
+    <div class="bkt-wrap">
+      <div class="bkt-half bkt-L">
+        <div class="bkt-col">${mkCol(['match_1','match_2','match_3','match_4','match_5','match_6','match_7','match_8'])}</div>
+        <div class="bkt-col">${mkCol(['match_17','match_18','match_19','match_20'])}</div>
+        <div class="bkt-col">${mkCol(['match_25','match_26'])}</div>
+        <div class="bkt-col">${mkCol(['match_29'])}</div>
+      </div>
+      <div class="bkt-center">
+        ${lfSrc ? `<img class="bkt-fin" src="${lfSrc}" alt="">` : ''}
+        <div class="bkt-champ ${finState}">${champFlag ? `<img src="${champFlag}" alt="${champTR}">` : ''}</div>
+        ${rfSrc ? `<img class="bkt-fin" src="${rfSrc}" alt="">` : ''}
+      </div>
+      <div class="bkt-half bkt-R">
+        <div class="bkt-col">${mkCol(['match_30'])}</div>
+        <div class="bkt-col">${mkCol(['match_27','match_28'])}</div>
+        <div class="bkt-col">${mkCol(['match_21','match_22','match_23','match_24'])}</div>
+        <div class="bkt-col">${mkCol(['match_9','match_10','match_11','match_12','match_13','match_14','match_15','match_16'])}</div>
+      </div>
     </div>`;
 
   document.getElementById('participant-modal').classList.add('open');
