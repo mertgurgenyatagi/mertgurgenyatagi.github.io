@@ -256,8 +256,19 @@ function renderHero() {
   const dotsEl    = document.getElementById('hero-dots');
   if (!container) return;
 
-  // Editorial slides — order: Paraguay, Yusuf, Morocco, Son 32, Belgium, then team slides (Argentina, France)
+  // Editorial slides — order: Belgium, Paraguay, Yusuf, Morocco, Son 32, then team slides (Argentina, France)
   const editorialSlides = [
+    {
+      type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/belgium-senegal-dramatic.jpg',
+      bgPos: 'center top',
+      content: `
+        <div class="hero-label">Son 32 · 1 Temmuz</div>
+        <div class="hero-stat">ÇOĞUNLUK<br><span>BELÇİKA DİYOR</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          19 katılımcıdan 12'si Belçika'yı geçiriyor.<br>Senegal'e güvenen 7 kişi ise sürprizi bekliyor.
+        </div>`
+    },
     {
       type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/paraguay_dramatic.jpg',
@@ -300,17 +311,6 @@ function renderHero() {
         <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
           İlk iki maç da son dakika golleri ile belirlendi.<br>Martinelli'nin golü 8 katılımcıyı 2 puanla<br>listenin üst kısmında tuttu.
-        </div>`
-    }
-    {
-      type: 'editorial',
-      photoUrl: '../docs_for_claude/asset_pictures/belgium-senegal-dramatic.jpg',
-      bgPos: 'center top',
-      content: `
-        <div class="hero-label">Son 32 · 1 Temmuz</div>
-        <div class="hero-stat">ÇOĞUNLUK<br><span>BELÇİKA DİYOR</span></div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          19 katılımcıdan 12'si Belçika'yı geçiriyor.<br>Senegal'e güvenen 7 kişi ise sürprizi bekliyor.
         </div>`
     }
   ];
