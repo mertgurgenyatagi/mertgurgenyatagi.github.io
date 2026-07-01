@@ -491,6 +491,126 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
   margin-top: 4px;
 }
 
+/* ── Participant Modal ── */
+.pm-modal { max-width: 580px; }
+
+.pm-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.pm-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--gold);
+  flex-shrink: 0;
+}
+
+.pm-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.pm-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.pm-pts {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.pm-champ-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.pm-champ-flag {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.pm-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.pm-picks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pm-col { display: flex; flex-direction: column; gap: 5px; }
+
+.pm-pick {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 8px 10px;
+  border-left: 3px solid rgba(255,255,255,0.08);
+}
+
+.pm-pick.correct { border-left-color: #4ade80; background: rgba(74,222,128,0.07); }
+.pm-pick.wrong   { border-left-color: #f87171; background: rgba(248,113,113,0.07); }
+
+.pm-pick-date {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.pm-pick-team {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pm-pick-flag {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.pm-pick-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pm-pick-vs {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
 /* ── Sections ── */
 section {
   padding: 3.5rem 2.5rem;

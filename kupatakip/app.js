@@ -62,7 +62,7 @@ async function init() {
   document.getElementById('loading-screen').classList.add('hidden');
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeMatchModal();
+    if (e.key === 'Escape') { closeMatchModal(); closeParticipantModal(); }
   });
 }
 
@@ -430,6 +430,8 @@ function renderLeaderboard() {
 
     const row = document.createElement('div');
     row.className = `lb-row ${rowClass}`;
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', () => openParticipantModal(name));
     row.innerHTML = `
       <div class="lb-rank">${rank}</div>
       <div class="lb-participant">
@@ -554,6 +556,73 @@ function openMatchModal(matchId) {
 
 function closeMatchModal() {
   document.getElementById('match-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function openParticipantModal(name) {
+  const pred = PREDICTIONS[name];
+  const s    = SCORES[name];
+  const ro16Set = new Set(pred.ro16);
+
+  const RO32 = [
+    'match_1','match_2','match_3','match_4','match_5','match_6','match_7','match_8',
+    'match_9','match_10','match_11','match_12','match_13','match_14','match_15','match_16'
+  ];
+
+  const pickCard = id => {
+    const m       = BRACKET[id];
+    const homeTR  = EN_TO_TR[m.home] || m.home;
+    const awayTR  = EN_TO_TR[m.away] || m.away;
+    const pickedTR    = ro16Set.has(homeTR) ? homeTR : ro16Set.has(awayTR) ? awayTR : null;
+    const opponentTR  = pickedTR === homeTR ? awayTR : homeTR;
+    const result  = RESULTS[id];
+    let status = '';
+    if (result != null && pickedTR) {
+      const winnerTR = result === 1 ? homeTR : awayTR;
+      status = pickedTR === winnerTR ? 'correct' : 'wrong';
+    }
+    const flag = pickedTR ? flagUrl(TR_TO_EN[pickedTR] || pickedTR) : null;
+    return `
+      <div class="pm-pick ${status}">
+        <div class="pm-pick-date">${m.date}</div>
+        <div class="pm-pick-team">
+          ${flag ? `<img class="pm-pick-flag" src="${flag}" alt="" onerror="this.style.display='none'">` : ''}
+          <span class="pm-pick-name">${pickedTR || '—'}</span>
+        </div>
+        <div class="pm-pick-vs">vs ${opponentTR}</div>
+      </div>`;
+  };
+
+  const champEN   = TR_TO_EN[pred.champion] || pred.champion;
+  const champFlag = flagUrl(champEN);
+  const champTR   = toTR(champEN);
+
+  document.getElementById('pm-content').innerHTML = `
+    <div class="pm-header">
+      <img class="pm-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">
+      <div>
+        <div class="pm-name">${name}</div>
+        <div class="pm-meta">
+          <span class="pm-pts">${s.pts} puan</span>
+          <span class="pm-champ-label">
+            ${champFlag ? `<img class="pm-champ-flag" src="${champFlag}" alt="">` : ''}
+            ${champTR} şampiyonluğu için
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="pm-section-label">Son 32 Tahminleri</div>
+    <div class="pm-picks">
+      <div class="pm-col">${RO32.slice(0, 8).map(pickCard).join('')}</div>
+      <div class="pm-col">${RO32.slice(8).map(pickCard).join('')}</div>
+    </div>`;
+
+  document.getElementById('participant-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeParticipantModal() {
+  document.getElementById('participant-modal').classList.remove('open');
   document.body.style.overflow = '';
 }
 
