@@ -626,11 +626,11 @@ h1, h2, h3, h4 { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; 
 /* Predicted winner, correct: full sat + green ring */
 .bkt-ww.ok .bkt-win { filter: none; box-shadow: 0 0 0 1.5px #4ade80; }
 
-/* +N points label */
+/* +N points label — anchored to slot (position:relative), stays within bounds */
 .bkt-pts {
   position: absolute;
-  top: -5px;
-  right: -6px;
+  top: 1px;
+  right: 2px;
   font-size: 7px;
   font-style: italic;
   font-weight: 700;

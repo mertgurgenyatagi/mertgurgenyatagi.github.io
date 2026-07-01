@@ -605,9 +605,9 @@ function openParticipantModal(name) {
     return `<div class="bkt-slot ${cls}">
       <div class="bkt-ww${ok ? ' ok' : ''}">
         ${wf ? `<img class="bkt-f bkt-win" src="${wf}" alt="">` : '<span class="bkt-f bkt-win"></span>'}
-        ${ok ? `<span class="bkt-pts">+${pts}</span>` : ''}
       </div>
       ${lf ? `<img class="bkt-f bkt-los" src="${lf}" alt="">` : '<span class="bkt-f bkt-los"></span>'}
+      ${ok ? `<span class="bkt-pts">+${pts}</span>` : ''}
     </div>`;
   };
 
