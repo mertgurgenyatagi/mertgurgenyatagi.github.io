@@ -1,12 +1,12 @@
 {
-  "_generated": "2026-07-01T23:02:57.017Z",
-  "_matchCount": 9,
+  "_generated": "2026-07-02T05:50:42.742Z",
+  "_matchCount": 10,
   "slotMatches": [
-    "match_10",
     "match_2",
     "match_11",
     "match_12",
-    "match_8"
+    "match_8",
+    "match_7"
   ],
   "participants": {
     "Yusuf Şahin": [
@@ -14,7 +14,7 @@
       true,
       true,
       true,
-      true
+      false
     ],
     "Batu Balcı": [
       true,
@@ -26,30 +26,30 @@
     "Emre Bulut": [
       false,
       false,
-      false,
       true,
+      false,
       false
     ],
     "Barış Başar": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Serhat Gürgenyatağı": [
       true,
-      true,
       false,
       true,
-      true
+      true,
+      false
     ],
     "Burak Arslantürk": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Kuzey Emre": [
       true,
@@ -59,11 +59,11 @@
       true
     ],
     "Emin Balçın": [
+      true,
+      true,
+      true,
       false,
-      true,
-      true,
-      true,
-      false
+      true
     ],
     "Berk Uzun": [
       true,
@@ -73,52 +73,52 @@
       true
     ],
     "Yiğit Yıldırım": [
-      false,
       true,
       false,
       true,
-      false
-    ],
-    "Enes Özşen": [
       false,
-      true,
-      true,
-      true,
       true
     ],
-    "Bahadır Seril": [
-      false,
+    "Enes Özşen": [
+      true,
       true,
       true,
       true,
       false
+    ],
+    "Bahadır Seril": [
+      true,
+      true,
+      true,
+      false,
+      true
     ],
     "Burak Onur Uysal": [
       true,
       true,
       true,
       true,
-      true
+      false
     ],
     "Emir Çiftçi": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
     "Talha Kılıç": [
       true,
-      true,
       false,
       true,
-      false
+      false,
+      true
     ],
     "Bedirhan Çakır": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Batu Çataklı": [
