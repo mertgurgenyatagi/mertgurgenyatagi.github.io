@@ -1,20 +1,20 @@
 {
-  "_generated": "2026-07-02T05:50:42.742Z",
-  "_matchCount": 10,
+  "_generated": "2026-07-02T21:19:02.614Z",
+  "_matchCount": 11,
   "slotMatches": [
-    "match_2",
     "match_11",
     "match_12",
     "match_8",
-    "match_7"
+    "match_7",
+    "match_6"
   ],
   "participants": {
     "Yusuf Şahin": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Batu Balcı": [
       true,
@@ -25,30 +25,30 @@
     ],
     "Emre Bulut": [
       false,
-      false,
       true,
+      false,
       false,
       false
     ],
     "Barış Başar": [
       true,
       true,
+      false,
+      true,
+      true
+    ],
+    "Serhat Gürgenyatağı": [
+      false,
+      true,
       true,
       false,
       true
     ],
-    "Serhat Gürgenyatağı": [
-      true,
-      false,
-      true,
-      true,
-      false
-    ],
     "Burak Arslantürk": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Kuzey Emre": [
@@ -61,8 +61,8 @@
     "Emin Balçın": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Berk Uzun": [
@@ -73,51 +73,51 @@
       true
     ],
     "Yiğit Yıldırım": [
-      true,
       false,
       true,
       false,
+      true,
       true
     ],
     "Enes Özşen": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Bahadır Seril": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Burak Onur Uysal": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Emir Çiftçi": [
-      true,
       false,
+      true,
       true,
       true,
       true
     ],
     "Talha Kılıç": [
-      true,
       false,
       true,
       false,
+      true,
       true
     ],
     "Bedirhan Çakır": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
