@@ -29,6 +29,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add kupatakip/results.json kupatakip/form.json
           if ! git diff --staged --quiet; then
-            git commit -m "Auto-update scores [skip ci]"
+            git commit -m "Auto-update scores"
             git push
           fi
