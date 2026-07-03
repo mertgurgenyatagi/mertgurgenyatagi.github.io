@@ -1,18 +1,18 @@
 {
-  "_generated": "2026-07-03T04:23:21.694Z",
-  "_matchCount": 12,
+  "_generated": "2026-07-03T07:44:38.983Z",
+  "_matchCount": 13,
   "slotMatches": [
-    "match_12",
     "match_8",
     "match_7",
     "match_6",
-    "match_5"
+    "match_5",
+    "match_15"
   ],
   "participants": {
     "Yusuf Şahin": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
@@ -21,32 +21,32 @@
       true,
       true,
       true,
-      true
-    ],
-    "Emre Bulut": [
-      true,
-      false,
-      false,
-      false,
       false
     ],
+    "Emre Bulut": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ],
     "Barış Başar": [
-      true,
       false,
       true,
       true,
+      false,
       false
     ],
     "Serhat Gürgenyatağı": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
     "Burak Arslantürk": [
-      true,
       false,
+      true,
       true,
       true,
       true
@@ -59,8 +59,8 @@
       true
     ],
     "Emin Balçın": [
-      true,
       false,
+      true,
       true,
       true,
       true
@@ -73,30 +73,30 @@
       true
     ],
     "Yiğit Yıldırım": [
-      true,
       false,
+      true,
       true,
       true,
       true
     ],
     "Enes Özşen": [
       true,
-      true,
       false,
       true,
-      false
+      false,
+      true
     ],
     "Bahadır Seril": [
-      true,
       false,
+      true,
       true,
       true,
       true
     ],
     "Burak Onur Uysal": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
@@ -108,14 +108,14 @@
       true
     ],
     "Talha Kılıç": [
-      true,
       false,
+      true,
       true,
       true,
       true
     ],
     "Bedirhan Çakır": [
-      false,
+      true,
       true,
       true,
       true,
@@ -126,7 +126,7 @@
       true,
       true,
       true,
-      true
+      false
     ],
     "Demir Öztürk": [
       true,
@@ -139,8 +139,8 @@
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ]
   }
 }
