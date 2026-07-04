@@ -55,7 +55,7 @@ MATCH_ORDER.forEach(resolveActual);
 const now = Date.now();
 const pending = MATCH_ORDER.filter(id => {
   if (results[id] != null) return false;
-  return now > new Date(BRACKET[id].datetime).getTime() + 2 * 3600 * 1000;
+  return now > new Date(BRACKET[id].datetime).getTime() + (3 * 60 + 10) * 60 * 1000;
 });
 
 if (pending.length === 0) {
