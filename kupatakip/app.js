@@ -462,17 +462,23 @@ function renderUpcomingMatches() {
   const el = document.getElementById('upcoming-strip');
   if (!el) return;
 
-  const now        = Date.now();
-  const in24h      = now + 24 * 60 * 60 * 1000;
-  const twoHoursMs = 2 * 60 * 60 * 1000;
+  const now          = Date.now();
+  const in24h        = now + 24 * 60 * 60 * 1000;
+  const fetchWindowMs = (3 * 60 + 10) * 60 * 1000;
 
   const upcoming = Object.entries(BRACKET)
     .filter(([id, m]) => {
-      if (m.round !== 'RO32') return false;
       if (RESULTS[id] != null) return false;
       if (!m.datetime) return false;
       const t = new Date(m.datetime).getTime();
-      return t >= now - twoHoursMs && t <= in24h;
+      if (t < now - fetchWindowMs || t > in24h) return false;
+      // For non-RO32 matches, only show if both teams are known
+      if (m.round !== 'RO32') {
+        const home = resolveMatchTeam(id, 'home');
+        const away = resolveMatchTeam(id, 'away');
+        if (!home || !away) return false;
+      }
+      return true;
     })
     .sort(([, a], [, b]) => new Date(a.datetime) - new Date(b.datetime));
 
@@ -482,10 +488,12 @@ function renderUpcomingMatches() {
   }
 
   const cards = upcoming.map(([id, m]) => {
-    const homeFlag = flagUrl(m.home);
-    const awayFlag = flagUrl(m.away);
-    const homeTR   = toTR(m.home);
-    const awayTR   = toTR(m.away);
+    const home     = m.round === 'RO32' ? m.home : resolveMatchTeam(id, 'home');
+    const away     = m.round === 'RO32' ? m.away : resolveMatchTeam(id, 'away');
+    const homeFlag = flagUrl(home);
+    const awayFlag = flagUrl(away);
+    const homeTR   = toTR(home);
+    const awayTR   = toTR(away);
     const kickoff  = new Date(m.datetime).getTime();
     const isLive   = kickoff <= now;
     const timeStr  = isLive ? 'CANLI' : (m.time || '');
@@ -516,18 +524,30 @@ function openMatchModal(matchId) {
   const m = BRACKET[matchId];
   if (!m) return;
 
-  const homeFlag = flagUrl(m.home);
-  const awayFlag = flagUrl(m.away);
-  const homeTR   = toTR(m.home);
-  const awayTR   = toTR(m.away);
+  const home = m.round === 'RO32' ? m.home : resolveMatchTeam(matchId, 'home');
+  const away = m.round === 'RO32' ? m.away : resolveMatchTeam(matchId, 'away');
+
+  const homeFlag = flagUrl(home);
+  const awayFlag = flagUrl(away);
+  const homeTR   = home ? toTR(home) : '?';
+  const awayTR   = away ? toTR(away) : '?';
   const timeStr  = m.time || '';
 
-  const homePickers = PARTICIPANTS.filter(name =>
-    PREDICTIONS[name].ro16.some(t => (TR_TO_EN[t] || t) === m.home)
-  );
-  const awayPickers = PARTICIPANTS.filter(name =>
-    PREDICTIONS[name].ro16.some(t => (TR_TO_EN[t] || t) === m.away)
-  );
+  const NEXT_KEY   = { RO32: 'ro16', RO16: 'qf', QF: 'sf', SF: 'final', Final: 'champion' };
+  const PICK_LABEL = { RO32: "Son 16'ya çıkardı", RO16: "Çeyrek'e çıkardı", QF: "Yarı'ya çıkardı", SF: "Finale çıkardı", Final: 'Şampiyon seçti' };
+  const ROUND_TR   = { RO32: 'Son 32', RO16: 'Son 16', QF: 'Çeyrek Final', SF: 'Yarı Final', Final: 'Final' };
+
+  const nextKey    = NEXT_KEY[m.round]   || 'ro16';
+  const pickLabel  = PICK_LABEL[m.round] || "Son 16'ya çıkardı";
+  const roundLabel = ROUND_TR[m.round]   || m.round;
+
+  const pickersFor = team => !team ? [] : PARTICIPANTS.filter(name => {
+    if (nextKey === 'champion') return (TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion) === team;
+    return (PREDICTIONS[name][nextKey] || []).some(t => (TR_TO_EN[t] || t) === team);
+  });
+
+  const homePickers = pickersFor(home);
+  const awayPickers = pickersFor(away);
 
   const avatarRow = pickers => pickers.map(n =>
     `<img class="modal-picker-avatar" src="${PARTICIPANT_PICS[n]}" alt="${n}" title="${n}" onerror="this.style.display='none'">`
@@ -537,13 +557,13 @@ function openMatchModal(matchId) {
     <div class="modal-team">
       ${flag ? `<img class="modal-flag" src="${flag}" alt="${nameTR}" onerror="this.style.display='none'">` : ''}
       <div class="modal-team-name">${nameTR}</div>
-      <div class="modal-pickers-label">Son 16'ya çıkardı</div>
+      <div class="modal-pickers-label">${pickLabel}</div>
       <div class="modal-pickers">${avatarRow(pickers)}</div>
       <div class="modal-picker-count">${pickers.length} kişi</div>
     </div>`;
 
   document.getElementById('modal-content').innerHTML = `
-    <div class="modal-round-tag">Son 32 · ${m.date} · ${timeStr}</div>
+    <div class="modal-round-tag">${roundLabel} · ${m.date} · ${timeStr}</div>
     <div class="modal-teams">
       ${teamCol(homeFlag, homeTR, homePickers)}
       <div class="modal-vs">VS</div>
