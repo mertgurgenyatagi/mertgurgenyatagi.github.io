@@ -1,12 +1,12 @@
 {
-  "_generated": "2026-07-04T02:10:39.535Z",
-  "_matchCount": 15,
+  "_generated": "2026-07-04T07:20:41.098Z",
+  "_matchCount": 16,
   "slotMatches": [
-    "match_6",
     "match_5",
     "match_15",
     "match_14",
-    "match_13"
+    "match_13",
+    "match_16"
   ],
   "participants": {
     "Yusuf Şahin": [
@@ -18,22 +18,22 @@
     ],
     "Batu Balcı": [
       true,
+      false,
+      false,
       true,
-      false,
-      false,
       true
     ],
     "Emre Bulut": [
       false,
+      true,
+      true,
       false,
-      true,
-      true,
-      false
+      true
     ],
     "Barış Başar": [
+      false,
+      false,
       true,
-      false,
-      false,
       true,
       true
     ],
@@ -61,8 +61,8 @@
     "Emin Balçın": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Berk Uzun": [
@@ -75,22 +75,22 @@
     "Yiğit Yıldırım": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Enes Özşen": [
-      true,
       false,
       true,
       false,
+      true,
       true
     ],
     "Bahadır Seril": [
       true,
       true,
-      true,
       false,
+      true,
       true
     ],
     "Burak Onur Uysal": [
@@ -112,7 +112,7 @@
       true,
       true,
       true,
-      true
+      false
     ],
     "Bedirhan Çakır": [
       true,
@@ -123,10 +123,10 @@
     ],
     "Batu Çataklı": [
       true,
-      true,
       false,
       true,
-      true
+      true,
+      false
     ],
     "Demir Öztürk": [
       true,
@@ -136,11 +136,11 @@
       true
     ],
     "Mert Gürgenyatağı": [
-      true,
       false,
       true,
       false,
-      true
+      true,
+      false
     ]
   }
 }
