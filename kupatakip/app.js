@@ -266,9 +266,7 @@ function renderHero() {
         <div class="hero-label">Son 32 Bitti · Son 16 Başlıyor</div>
         <div class="hero-stat">16 KALDI.<br><span>ARTIK HER ŞEY 2 PUAN.</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          15 puanla Kuzey lider, peşinde ise Yusuf, Berk ve Bedirhan var.<br>
-          Mal Emre sonuncu, Almanya'yı seçenler ise umutsuz.<br>
-          Hiçbir şey bitmiş değil. Emre dışında.
+          15 puanla Kuzey lider, peşinde ise Yusuf, Berk ve Bedirhan var. Mal Emre sonuncu, Almanya'yı seçenler ise umutsuz. Hiçbir şey bitmiş değil. Emre dışında.
         </div>`
     },
     {
