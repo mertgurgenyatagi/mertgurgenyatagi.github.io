@@ -263,13 +263,12 @@ function renderHero() {
       photoUrl: '../docs_for_claude/asset_pictures/ro32_over.jpg',
       bgPos: 'center top',
       content: `
-        <div class="hero-label">Son 32 Bitti · 16 Maç · 3 Sürpriz</div>
-        <div class="hero-stat">15 PUANLA<br><span>KUZEY TEK BAŞINA</span></div>
+        <div class="hero-label">Son 32 Bitti · Son 16 Başlıyor</div>
+        <div class="hero-stat">16 KALDI.<br><span>ARTIK HER ŞEY 2 PUAN.</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          Paraguay ve Mısır favori devleri yıktı. Kuzey Emre<br>
-          tek hatayla sırayı tek başına tutarken Yusuf, Berk<br>
-          ve Bedirhan 14'er puanla peşinde. Almanya'ya her<br>
-          şeyini koyan Yusuf'un kupaya umudu artık yok.
+          15 puanla Kuzey lider, peşinde ise Yusuf, Berk ve Bedirhan var.<br>
+          Mal Emre sonuncu, Almanya'yı seçenler ise umutsuz.<br>
+          Hiçbir şey bitmiş değil. Emre dışında.
         </div>`
     },
     {
