@@ -277,7 +277,7 @@ function renderHero() {
         <div class="hero-label">Son 32 · 1 Temmuz</div>
         <div class="hero-stat">ÇOĞUNLUK<br><span>BELÇİKA DİYOR</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          19 katılımcıdan 12'si Belçika'yı geçiriyor.<br>Senegal'e güvenen 7 kişi ise sürprizi bekliyor.
+          19 katılımcıdan 12'si Belçika'yı geçiriyor. Senegal'e güvenen 7 kişi ise sürprizi bekliyor.
         </div>`
     },
     {
@@ -288,7 +288,7 @@ function renderHero() {
         <div class="hero-label">Son 32 · 29 Haziran</div>
         <div class="hero-stat">PARAGUAY<br><span>İMKANSIZI BAŞARDI</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          Penaltılarla Almanya'yı eleyen Paraguay 17 üye için<br>puan kaybına sebep olurken Emin ve Emre'yi üste taşıdı.
+          Penaltılarla Almanya'yı eleyen Paraguay 17 üye için puan kaybına sebep olurken Emin ve Emre'yi üste taşıdı.
         </div>`
     },
     {
@@ -299,7 +299,7 @@ function renderHero() {
         <div class="hero-label">Son 32 · Yusuf Şahin</div>
         <div class="hero-stat">TURNUVAYA<br><span>VEDA ETTİ</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          Almanya'yı şampiyon olarak seçen Yusuf hüznünü paylaştı.<br>"Ben ağır cenabetmişim" diyen Yusuf, "200 lira da bahis<br>atmıştım" diye ekleyerek yürekleri dağladı.
+          Almanya'yı şampiyon olarak seçen Yusuf hüznünü paylaştı. "Ben ağır cenabetmişim" diyen Yusuf, "200 lira da bahis atmıştım" diye ekleyerek yürekleri dağladı.
         </div>`
     },
     {
@@ -310,7 +310,7 @@ function renderHero() {
         <div class="hero-label">Son 32 · 30 Haziran</div>
         <div class="hero-stat">13'E 6:<br><span>FAS</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          19 katılımcıdan 13'ü Fas'ı geçiriyor.<br>Hollanda'ya inanan sadece 6 kişi.
+          19 katılımcıdan 13'ü Fas'ı geçiriyor. Hollanda'ya inanan sadece 6 kişi.
         </div>`
     },
     {
@@ -321,7 +321,7 @@ function renderHero() {
         <div class="hero-label">Son 32 · İlk 48 Saat</div>
         <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
         <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
-          İlk iki maç da son dakika golleri ile belirlendi.<br>Martinelli'nin golü 8 katılımcıyı 2 puanla<br>listenin üst kısmında tuttu.
+          İlk iki maç da son dakika golleri ile belirlendi. Martinelli'nin golü 8 katılımcıyı 2 puanla listenin üst kısmında tuttu.
         </div>`
     }
   ];
