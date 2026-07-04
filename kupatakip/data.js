@@ -78,10 +78,7 @@ const FLAG_FILES = {
 };
 
 // Dramatik fotoğraflar
-const DRAMATIC_PHOTOS = {
-  "Argentina": "../docs_for_claude/asset_pictures/argentina_dramatic.jpg",
-  "France":    "../docs_for_claude/asset_pictures/france_dramatic.jpg"
-};
+const DRAMATIC_PHOTOS = {};
 
 // Katılımcı profil resimleri
 const PARTICIPANT_PICS = {

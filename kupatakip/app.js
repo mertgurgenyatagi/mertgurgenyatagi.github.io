@@ -260,6 +260,20 @@ function renderHero() {
   const editorialSlides = [
     {
       type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/ro32_over.jpg',
+      bgPos: 'center top',
+      content: `
+        <div class="hero-label">Son 32 Bitti · 16 Maç · 3 Sürpriz</div>
+        <div class="hero-stat">15 PUANLA<br><span>KUZEY TEK BAŞINA</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;">
+          Paraguay ve Mısır favori devleri yıktı. Kuzey Emre<br>
+          tek hatayla sırayı tek başına tutarken Yusuf, Berk<br>
+          ve Bedirhan 14'er puanla peşinde. Almanya'ya her<br>
+          şeyini koyan Yusuf'un kupaya umudu artık yok.
+        </div>`
+    },
+    {
+      type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/belgium-senegal-dramatic.jpg',
       bgPos: 'center top',
       content: `
