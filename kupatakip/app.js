@@ -484,7 +484,9 @@ function renderScenarioToggles() {
   bar.id = 'lb-scenario-bar';
   bar.className = 'lb-scenario-bar';
 
-  Object.entries(UPCOMING_FAVORITES).forEach(([matchId, fav]) => {
+  Object.entries(UPCOMING_FAVORITES)
+    .sort(([idA], [idB]) => new Date(BRACKET[idA].datetime) - new Date(BRACKET[idB].datetime))
+    .forEach(([matchId, fav]) => {
     const btn = document.createElement('button');
     btn.className = 'lb-scenario-toggle';
     btn.setAttribute('data-match', matchId);
@@ -513,23 +515,28 @@ function renderLeaderboard() {
   const el = document.getElementById('leaderboard-body');
   if (!el) return;
 
-  const sorted = [...PARTICIPANTS].sort((a,b) => {
-    const diff = SCORES[b].pts - SCORES[a].pts;
+  const anyActive = Object.values(SCENARIO_TOGGLES).some(Boolean);
+  const gains = {};
+  PARTICIPANTS.forEach(n => { gains[n] = anyActive ? computeScenarioGain(n) : 0; });
+
+  const sorted = [...PARTICIPANTS].sort((a, b) => {
+    const projA = SCORES[a].pts + gains[a];
+    const projB = SCORES[b].pts + gains[b];
+    const diff  = projB - projA;
     return diff !== 0 ? diff : SCORES[b].maxPts - SCORES[a].maxPts;
   });
 
-  const maxScore      = Math.max(...sorted.map(n => SCORES[n].pts), 1);
-  const currentTopPts = maxScore; // highest actual score right now
-  const anyActive     = Object.values(SCENARIO_TOGGLES).some(Boolean);
+  const maxScore      = Math.max(...PARTICIPANTS.map(n => SCORES[n].pts), 1);
+  const currentTopPts = maxScore;
 
   el.innerHTML = '';
 
   sorted.forEach((name, i) => {
     const s = SCORES[name];
     const rank = i + 1;
-    const isOut = s.maxPts < currentTopPts; // can't reach the current leader's score
+    const isOut = s.maxPts < currentTopPts;
     const rowClass = rank === 1 ? 'lb-gold' : rank === 2 ? 'lb-silver' : rank === 3 ? 'lb-bronze' : isOut ? 'lb-out' : '';
-    const gain      = anyActive ? computeScenarioGain(name) : 0;
+    const gain = gains[name];
 
     const champEn  = TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion;
     const champFlag= flagUrl(champEn);
@@ -561,8 +568,7 @@ function renderLeaderboard() {
         <span>${champTR}</span>
       </div>
       <div class="lb-pts-col">
-        <div class="val">${s.pts}</div>
-        ${(anyActive && gain > 0) ? `<div class="lb-proj">→ ${s.pts + gain}</div>` : ''}
+        ${(anyActive && gain > 0) ? `<div class="val val-has-proj"><span class="val-num">${s.pts}</span><span class="lb-proj-desk"> → ${s.pts + gain}</span><span class="lb-proj-mob">${s.pts + gain}</span></div>` : `<div class="val">${s.pts}</div>`}
         <div class="lbl">Puan</div>
       </div>
       <div class="lb-pts-col">
