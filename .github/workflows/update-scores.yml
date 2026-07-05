@@ -32,6 +32,7 @@ jobs:
           git add kupatakip/results.json kupatakip/form.json
           if ! git diff --staged --quiet; then
             git commit -m "Auto-update scores"
+            git pull --rebase
             git push
             echo "pushed=true" >> $GITHUB_OUTPUT
           fi
