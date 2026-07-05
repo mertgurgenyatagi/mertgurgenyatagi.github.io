@@ -8,6 +8,8 @@ let SIM_DATA  = null;    // sim_results.json'dan yüklenir (simulate.js çalış
 let STATE    = {};      // türetilmiş turnuva durumu
 let SCORES   = {};      // katılımcı → puan bilgisi
 let timelineChart = null;
+let UPCOMING_FAVORITES = {};  // matchId → { team, teamTR, roundKey, roundPts }
+let SCENARIO_TOGGLES   = {};  // matchId → boolean
 
 // ── Türkçe yardımcılar ────────────────────────────────────
 // Apostroftan sonra gelen ek (sayının okunuşundaki son sese göre)
@@ -51,9 +53,13 @@ async function init() {
   STATE  = computeState(RESULTS);
   SCORES = computeScores(STATE);
 
+  UPCOMING_FAVORITES = computeUpcomingFavorites();
+  Object.keys(UPCOMING_FAVORITES).forEach(id => { SCENARIO_TOGGLES[id] = false; });
+
   renderHero();
   renderUpcomingMatches();
   renderLeaderboard();
+  renderScenarioToggles();
   renderBracket();
   renderTimeline();
   setupNav();
@@ -406,6 +412,102 @@ function renderHero() {
   setInterval(() => goToSlide(current + 1), 15000);
 }
 
+// ── SCENARIO TOGGLES ───────────────────────────────────────
+function computeUpcomingFavorites() {
+  const favorites     = {};
+  const now           = Date.now();
+  const in24h         = now + 24 * 60 * 60 * 1000;
+  const fetchWindowMs = (3 * 60 + 10) * 60 * 1000;
+
+  const NEXT_KEY = { RO32: 'ro16', RO16: 'qf', QF: 'sf', SF: 'final', Final: 'champion' };
+  const NEXT_PTS = { ro16: 1, qf: 2, sf: 3, final: 5, champion: 8 };
+
+  Object.entries(BRACKET).forEach(([id, m]) => {
+    if (RESULTS[id] != null) return;
+    if (!m.datetime) return;
+    const kickoff = new Date(m.datetime).getTime();
+    if (kickoff < now - fetchWindowMs || kickoff > in24h) return;
+
+    const home = m.round === 'RO32' ? m.home : resolveMatchTeam(id, 'home');
+    const away = m.round === 'RO32' ? m.away : resolveMatchTeam(id, 'away');
+    if (!home || !away) return;
+
+    const roundKey = NEXT_KEY[m.round];
+    if (!roundKey) return;
+    const roundPts = NEXT_PTS[roundKey];
+
+    const countFor = teamEn => PARTICIPANTS.filter(name => {
+      const p = PREDICTIONS[name];
+      if (roundKey === 'champion') return (TR_TO_EN[p.champion] || p.champion) === teamEn;
+      return (p[roundKey] || []).some(t => (TR_TO_EN[t] || t) === teamEn);
+    }).length;
+
+    const homeCount = countFor(home);
+    const awayCount = countFor(away);
+    if (homeCount === awayCount) return;
+
+    const favTeam = homeCount > awayCount ? home : away;
+    favorites[id] = { team: favTeam, teamTR: toTR(favTeam), roundKey, roundPts };
+  });
+
+  return favorites;
+}
+
+function computeScenarioGain(name) {
+  const p    = PREDICTIONS[name];
+  const toEn = t => TR_TO_EN[t] || t;
+  let gain = 0;
+  Object.entries(SCENARIO_TOGGLES).forEach(([matchId, active]) => {
+    if (!active) return;
+    const fav = UPCOMING_FAVORITES[matchId];
+    if (!fav) return;
+    const { team, roundKey, roundPts } = fav;
+    if (roundKey === 'champion') {
+      if (toEn(p.champion) === team) gain += roundPts;
+    } else {
+      if ((p[roundKey] || []).some(t => toEn(t) === team)) gain += roundPts;
+    }
+  });
+  return gain;
+}
+
+function renderScenarioToggles() {
+  const section = document.getElementById('leaderboard');
+  if (!section) return;
+
+  const existing = document.getElementById('lb-scenario-bar');
+  if (existing) existing.remove();
+
+  if (Object.keys(UPCOMING_FAVORITES).length === 0) return;
+
+  const bar = document.createElement('div');
+  bar.id = 'lb-scenario-bar';
+  bar.className = 'lb-scenario-bar';
+
+  Object.entries(UPCOMING_FAVORITES).forEach(([matchId, fav]) => {
+    const btn = document.createElement('button');
+    btn.className = 'lb-scenario-toggle';
+    btn.setAttribute('data-match', matchId);
+    const flagSrc = flagUrl(fav.team);
+    btn.innerHTML =
+      (flagSrc ? `<img class="lb-toggle-flag" src="${flagSrc}" alt="${fav.teamTR}">` : '') +
+      `<span>Eğer favori <b>${fav.teamTR}</b> kazanırsa</span>`;
+    btn.addEventListener('click', () => toggleScenario(matchId));
+    bar.appendChild(btn);
+  });
+
+  const header = section.querySelector('.section-header');
+  if (header) header.insertAdjacentElement('afterend', bar);
+  else section.prepend(bar);
+}
+
+function toggleScenario(matchId) {
+  SCENARIO_TOGGLES[matchId] = !SCENARIO_TOGGLES[matchId];
+  const btn = document.querySelector(`#lb-scenario-bar [data-match="${matchId}"]`);
+  if (btn) btn.classList.toggle('active', SCENARIO_TOGGLES[matchId]);
+  renderLeaderboard();
+}
+
 // ── LEADERBOARD ────────────────────────────────────────────
 function renderLeaderboard() {
   const el = document.getElementById('leaderboard-body');
@@ -418,6 +520,7 @@ function renderLeaderboard() {
 
   const maxScore      = Math.max(...sorted.map(n => SCORES[n].pts), 1);
   const currentTopPts = maxScore; // highest actual score right now
+  const anyActive     = Object.values(SCENARIO_TOGGLES).some(Boolean);
 
   el.innerHTML = '';
 
@@ -426,6 +529,7 @@ function renderLeaderboard() {
     const rank = i + 1;
     const isOut = s.maxPts < currentTopPts; // can't reach the current leader's score
     const rowClass = rank === 1 ? 'lb-gold' : rank === 2 ? 'lb-silver' : rank === 3 ? 'lb-bronze' : isOut ? 'lb-out' : '';
+    const gain      = anyActive ? computeScenarioGain(name) : 0;
 
     const champEn  = TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion;
     const champFlag= flagUrl(champEn);
@@ -458,6 +562,7 @@ function renderLeaderboard() {
       </div>
       <div class="lb-pts-col">
         <div class="val">${s.pts}</div>
+        ${(anyActive && gain > 0) ? `<div class="lb-proj">→ ${s.pts + gain}</div>` : ''}
         <div class="lbl">Puan</div>
       </div>
       <div class="lb-pts-col">
