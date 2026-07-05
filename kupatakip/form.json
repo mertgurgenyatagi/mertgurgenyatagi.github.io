@@ -1,12 +1,12 @@
 {
-  "_generated": "2026-07-04T20:27:15.652Z",
-  "_matchCount": 17,
+  "_generated": "2026-07-05T00:18:53.807Z",
+  "_matchCount": 18,
   "slotMatches": [
-    "match_15",
     "match_14",
     "match_13",
     "match_16",
-    "match_18"
+    "match_18",
+    "match_17"
   ],
   "participants": {
     "Yusuf Şahin": [
@@ -14,28 +14,28 @@
       true,
       true,
       true,
-      true
+      false
     ],
     "Batu Balcı": [
       false,
+      true,
+      true,
+      false,
+      true
+    ],
+    "Emre Bulut": [
+      true,
       false,
       true,
       true,
       false
     ],
-    "Emre Bulut": [
-      true,
-      true,
-      false,
-      true,
-      true
-    ],
     "Barış Başar": [
-      false,
       true,
       true,
       true,
-      true
+      true,
+      false
     ],
     "Serhat Gürgenyatağı": [
       true,
@@ -59,8 +59,8 @@
       true
     ],
     "Emin Balçın": [
-      true,
       false,
+      true,
       true,
       true,
       true
@@ -73,22 +73,22 @@
       true
     ],
     "Yiğit Yıldırım": [
-      true,
       false,
       true,
       true,
-      true
+      true,
+      false
     ],
     "Enes Özşen": [
-      true,
       false,
+      true,
       true,
       true,
       true
     ],
     "Bahadır Seril": [
-      true,
       false,
+      true,
       true,
       true,
       true
@@ -97,22 +97,22 @@
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Emir Çiftçi": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Talha Kılıç": [
       true,
       true,
-      true,
       false,
-      false
+      false,
+      true
     ],
     "Bedirhan Çakır": [
       true,
@@ -122,25 +122,25 @@
       true
     ],
     "Batu Çataklı": [
-      false,
       true,
       true,
       false,
-      true
+      true,
+      false
     ],
     "Demir Öztürk": [
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Mert Gürgenyatağı": [
-      true,
       false,
       true,
       false,
-      false
+      false,
+      true
     ]
   }
 }
