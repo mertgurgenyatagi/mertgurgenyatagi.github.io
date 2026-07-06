@@ -222,7 +222,7 @@ function computeTimelineData() {
     .filter(id => RESULTS[id] != null)
     .sort((a, b) => new Date(BRACKET[a].datetime) - new Date(BRACKET[b].datetime));
 
-  const labels = ['Başlangıç', ...playedMatches.map(id => matchLabels[id] || id)];
+  const labels = playedMatches.map(id => matchLabels[id] || id);
 
   const top5 = [...PARTICIPANTS]
     .sort((a, b) => SCORES[b].pts - SCORES[a].pts)
@@ -230,14 +230,16 @@ function computeTimelineData() {
 
   const datasets = top5.map(name => {
     const i = PARTICIPANTS.indexOf(name);
-    const data = [0];
-    // Simulate state after each match
+    const data = [];
     for (let j = 0; j < playedMatches.length; j++) {
       const partialResults = {};
       playedMatches.slice(0, j + 1).forEach(id => { partialResults[id] = RESULTS[id]; });
       const partialState = computeState(partialResults);
       const partialScores = computeScores(partialState);
-      data.push(partialScores[name].pts);
+      const sortedAll = [...PARTICIPANTS].sort((a, b) =>
+        partialScores[b].pts - partialScores[a].pts || partialScores[b].maxPts - partialScores[a].maxPts
+      );
+      data.push(sortedAll.indexOf(name) + 1);
     }
     return {
       label: name.split(' ')[0],
@@ -887,7 +889,7 @@ function renderTimeline() {
 
   if (timelineChart) timelineChart.destroy();
 
-  if (labels.length <= 1) {
+  if (labels.length === 0) {
     canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:var(--text-muted);font-size:13px;">İlk maç sonucu girilince grafik burada belirecek.</div>';
     return;
   }
@@ -953,9 +955,16 @@ function renderTimeline() {
           grid: { color: 'rgba(255,255,255,0.03)' }
         },
         y: {
-          ticks: { color: '#6b7280', font: { size: 11 }, stepSize: 1 },
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          beginAtZero: true
+          reverse: true,
+          min: 1,
+          max: PARTICIPANTS.length,
+          ticks: {
+            color: '#6b7280',
+            font: { size: 11 },
+            stepSize: 1,
+            callback: v => Number.isInteger(v) ? v + '.' : ''
+          },
+          grid: { color: 'rgba(255,255,255,0.05)' }
         }
       }
     }
