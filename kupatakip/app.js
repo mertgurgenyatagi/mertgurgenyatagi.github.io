@@ -266,6 +266,17 @@ function renderHero() {
   const editorialSlides = [
     {
       type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/norway_beats_brazil.jpg',
+      bgPos: 'center center',
+      content: `
+        <div class="hero-label">Son 16 · 5 Temmuz</div>
+        <div class="hero-stat">HAALAND DÜZENİ BOZDU</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;max-width:460px;">
+          Turnuvada ikinci kez favori olmayan takım kazandı. Günlerdir liderliği elinde tutan Kuzey, koltuğu Berk'e bıraktı. "Arjantin elenesiye kadar buradayız arkadaşlar" diyen Berk, "tadını çıkaralım." diye ekledi.
+        </div>`
+    },
+    {
+      type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/ro32_over.jpg',
       bgPos: 'center top',
       content: `
@@ -319,17 +330,6 @@ function renderHero() {
           19 katılımcıdan 13'ü Fas'ı geçiriyor. Hollanda'ya inanan sadece 6 kişi.
         </div>`
     },
-    {
-      type: 'editorial',
-      photoUrl: '../docs_for_claude/asset_pictures/canada_goal_dramatic.jpg',
-      bgPos: 'center top',
-      content: `
-        <div class="hero-label">Son 32 · İlk 48 Saat</div>
-        <div class="hero-stat">SON 32,<br><span>SON DAKİKADA</span></div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;max-width:460px;">
-          İlk iki maç da son dakika golleri ile belirlendi. Martinelli'nin golü 8 katılımcıyı 2 puanla listenin üst kısmında tuttu.
-        </div>`
-    }
   ];
 
   // Build team slides
