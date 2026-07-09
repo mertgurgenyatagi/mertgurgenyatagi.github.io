@@ -268,6 +268,17 @@ function renderHero() {
   const editorialSlides = [
     {
       type: 'editorial',
+      photoUrl: '../docs_for_claude/asset_pictures/qf.jpg',
+      bgPos: 'center 25%',
+      content: `
+        <div class="hero-label">Çeyrek Final · 9 Temmuz</div>
+        <div class="hero-stat">ÇEYREK FİNALLER BAŞLIYOR.<br><span>ARTIK HER ŞEY 3 PUAN.</span></div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:10px;max-width:460px;">
+          28 puanla Berk önde; Burak Arslantürk, Kuzey ve Demir ise 27 ile peşinde. Maçlarda sürpriz beklenmiyor, fakat Norveç ve İngiltere'yi çeyrek finallere çıkarmayanların gözleri yaşlı.
+        </div>`
+    },
+    {
+      type: 'editorial',
       photoUrl: '../docs_for_claude/asset_pictures/norway_beats_brazil.jpg',
       bgPos: 'center center',
       content: `
