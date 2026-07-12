@@ -1,45 +1,45 @@
 {
-  "_generated": "2026-07-12T01:50:11.637Z",
-  "_matchCount": 27,
+  "_generated": "2026-07-12T05:18:43.099Z",
+  "_matchCount": 28,
   "slotMatches": [
-    "match_23",
     "match_24",
     "match_25",
     "match_26",
-    "match_27"
+    "match_27",
+    "match_28"
   ],
   "participants": {
     "Yusuf Şahin": [
       true,
+      false,
+      false,
       true,
-      false,
-      false,
       true
     ],
     "Batu Balcı": [
-      true,
       false,
       true,
       true,
-      false
+      false,
+      true
     ],
     "Emre Bulut": [
       false,
       false,
       false,
-      false,
-      true
-    ],
-    "Barış Başar": [
-      true,
-      false,
-      false,
       true,
       false
     ],
-    "Serhat Gürgenyatağı": [
+    "Barış Başar": [
+      false,
+      false,
       true,
       false,
+      true
+    ],
+    "Serhat Gürgenyatağı": [
+      false,
+      true,
       true,
       true,
       true
@@ -55,13 +55,13 @@
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Emin Balçın": [
       true,
-      true,
       false,
+      true,
       true,
       true
     ],
@@ -69,28 +69,28 @@
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Yiğit Yıldırım": [
-      true,
       false,
       false,
       true,
-      false
+      false,
+      true
     ],
     "Enes Özşen": [
-      true,
       false,
       true,
       true,
-      false
+      false,
+      true
     ],
     "Bahadır Seril": [
-      true,
       false,
       true,
       true,
+      false,
       false
     ],
     "Burak Onur Uysal": [
@@ -101,11 +101,11 @@
       true
     ],
     "Emir Çiftçi": [
-      true,
       false,
       true,
       true,
-      false
+      false,
+      true
     ],
     "Talha Kılıç": [
       true,
@@ -118,13 +118,13 @@
       true,
       true,
       true,
-      true,
-      false
+      false,
+      true
     ],
     "Batu Çataklı": [
+      false,
+      false,
       true,
-      false,
-      false,
       true,
       true
     ],
