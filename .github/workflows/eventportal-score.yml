@@ -46,6 +46,14 @@ jobs:
       - name: Trigger Pages deploy
         if: steps.git-push.outputs.pushed == 'true'
         run: |
+          PUSHED_SHA=$(git rev-parse HEAD)
+          for i in $(seq 1 10); do
+            REMOTE_SHA=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/commits/main" | jq -r .sha)
+            [ "$REMOTE_SHA" = "$PUSHED_SHA" ] && break
+            sleep 2
+          done
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github+json" \
