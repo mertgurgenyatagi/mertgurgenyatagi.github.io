@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EventPortal — Değerlendirme</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="rate.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<div class="rate-shell">
+  <header class="rate-header">
+    <h1 class="app-title">Etkinlik Değerlendirme</h1>
+    <div class="rate-progress" id="rateProgress">Yükleniyor...</div>
+  </header>
+
+  <main id="rateMain">
+    <div class="rate-body" id="rateBody" hidden>
+      <section class="rate-event" id="rateEvent"></section>
+
+      <section class="rate-panel">
+        <h2 class="rate-question">Bu etkinliğe gitme olasılığın nedir?</h2>
+        <div class="score-row" id="scoreRow">
+          <!-- 1..5 options injected here -->
+        </div>
+        <textarea id="noteInput" class="rate-note" placeholder="Notların (opsiyonel) — neden bu skoru verdin?" rows="6"></textarea>
+        <button type="button" class="btn btn-primary btn-block" id="submitBtn" disabled>Gönder ve Sonraki</button>
+        <p class="rate-hint">Kısayol: 1-5 puan seçer, Ctrl/Cmd+Enter gönderir.</p>
+      </section>
+    </div>
+
+    <div class="rate-done" id="rateDone" hidden>
+      <span class="icon icon-lock rate-done-icon"></span>
+      <p>Değerlendirilecek başka etkinlik kalmadı.</p>
+      <p class="rate-done-sub" id="rateDoneCount"></p>
+    </div>
+  </main>
+
+  <footer class="rate-footer">
+    <button type="button" class="btn btn-ghost" id="importBtn">İçe Aktar (CSV)</button>
+    <input type="file" id="importFile" accept=".csv,text/csv" hidden>
+    <button type="button" class="btn btn-ghost" id="exportBtn">Dışa Aktar (CSV)</button>
+  </footer>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+</div>
+
+<script src="rate.js"></script>
+</body>
+</html>

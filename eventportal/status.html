@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EventPortal — Durum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+<meta name="robots" content="noindex, nofollow">
+</head>
+<body>
+<div class="page" style="max-width: 640px;">
+
+  <div id="gate" style="padding-top: 18vh; text-align:center;">
+    <span class="icon icon-lock" style="width:22px; height:22px; color:var(--color-muted); margin-bottom: var(--space-sm); display:inline-block;"></span>
+    <p style="color: var(--color-muted); margin: 0 0 var(--space-sm); font-size: 14px;">Bu sayfa gizlidir.</p>
+    <input type="password" id="passInput" style="max-width:200px; margin: 0 auto var(--space-sm); display:block; height:36px; padding:0 var(--space-sm); background:var(--color-canvas-soft); border:1px solid var(--color-hairline); border-radius:var(--radius-md); color:var(--color-ink); font-size:14px; text-align:center;" placeholder="Parola" autocomplete="off">
+    <button class="btn btn-primary" id="unlockBtn" type="button">Görüntüle</button>
+    <p id="gateError" style="color: var(--color-error); font-size:13px; margin-top:var(--space-sm); display:none;">Yanlış parola.</p>
+  </div>
+
+  <div id="statusContent" style="display:none; padding-top: var(--space-xl);">
+    <h1 style="font-size:20px; font-weight:400; letter-spacing:-0.3px;">Tarama Durumu</h1>
+    <p style="color:var(--color-muted); font-size:13px; line-height:1.6;">
+      Bu sayfa gerçek erişim kontrolü sunmaz (statik bir site, sunucu yok) — sadece rastgele bir ziyaretçiyi caydırır.
+      Sayfa kaynağını görüntüleyen biri parolayı kolayca bulabilir. İçerik zaten hassas değil, sadece tarama teşhis kayıtları.
+    </p>
+    <div id="summary" style="margin: var(--space-lg) 0; padding: var(--space-base); background: var(--color-canvas-soft); border:1px solid var(--color-hairline); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 13px; line-height: 1.9;"></div>
+    <div id="poolStats" style="margin: var(--space-base) 0; padding: var(--space-base); background: var(--color-canvas-soft); border:1px solid var(--color-hairline); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 13px; line-height: 1.9;"></div>
+    <div id="sourceTable"></div>
+
+    <h2 style="font-size:16px; font-weight:400; margin-top:var(--space-xl);">Bana Göre — Puanlama İlerlemesi</h2>
+    <div id="tasteProgress" style="margin: var(--space-base) 0; padding: var(--space-base); background: var(--color-canvas-soft); border:1px solid var(--color-hairline); border-radius: var(--radius-md); font-family: var(--font-mono); font-size: 13px; line-height: 1.9;"></div>
+    <p style="margin-top:var(--space-xl); font-size:13px;"><a href="index.html" style="color:var(--color-muted);">← Etkinliklere dön</a></p>
+  </div>
+
+</div>
+
+<script>
+// Client-side obscurity only — not real access control, see the note in the
+// page itself. Change this to whatever you like.
+const STATUS_PASSPHRASE = 'istanbul7gun';
+
+function unlock() {
+  const val = document.getElementById('passInput').value;
+  if (val !== STATUS_PASSPHRASE) {
+    document.getElementById('gateError').style.display = 'block';
+    return;
+  }
+  sessionStorage.setItem('eventportal:statusUnlocked', '1');
+  showContent();
+}
+
+async function showContent() {
+  document.getElementById('gate').style.display = 'none';
+  const content = document.getElementById('statusContent');
+  content.style.display = 'block';
+
+  try {
+    const res = await fetch(`data/status.json?t=${Date.now()}`);
+    const status = await res.json();
+    renderStatus(status);
+  } catch (e) {
+    document.getElementById('summary').textContent = 'status.json okunamadı.';
+  }
+
+  pollTasteProgress();
+}
+
+let tastePollTimer = null;
+async function pollTasteProgress() {
+  clearTimeout(tastePollTimer);
+  try {
+    const res = await fetch(`data/taste-progress.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error('yok');
+    const progress = await res.json();
+    renderTasteProgress(progress);
+    if (!progress.done) tastePollTimer = setTimeout(pollTasteProgress, 5000);
+  } catch (e) {
+    document.getElementById('tasteProgress').textContent = 'Henüz puanlama başlatılmamış.';
+  }
+}
+
+function renderTasteProgress(p) {
+  const pct = Math.max(0, Math.min(100, p.percentDone));
+  const barColor = p.done ? 'var(--color-success)' : 'var(--color-primary)';
+  const etaText = p.done
+    ? 'tamamlandı'
+    : (p.etaMinutes != null ? `~${p.etaMinutes} dk kaldı` : 'hesaplanıyor...');
+  document.getElementById('tasteProgress').innerHTML = `
+    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+      <span>${p.scored} / ${p.toScoreTotal} puanlandı (%${pct})</span>
+      <span style="color:var(--color-muted);">${etaText}</span>
+    </div>
+    <div style="width:100%; height:8px; background:var(--color-canvas); border:1px solid var(--color-hairline); border-radius:999px; overflow:hidden;">
+      <div style="width:${pct}%; height:100%; background:${barColor}; transition:width 0.4s ease;"></div>
+    </div>
+    <div style="margin-top:8px; color:var(--color-muted); font-size:12px;">
+      zemin gerçeği (kendi oyların): ${p.rated} · sabit dışlanan (stand-up/sanatçı): ${p.excluded} · toplam etkinlik: ${p.total}${p.ratePerMin ? ` · hız: ${p.ratePerMin}/dk` : ''}
+    </div>`;
+}
+
+function renderStatus(status) {
+  const generated = new Date(status.generatedAt).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'medium' });
+  const windowLabel = status.window.start === status.window.end
+    ? `hedef gün: ${status.window.start}`
+    : `pencere: ${status.window.start} → ${status.window.end}`;
+  document.getElementById('summary').innerHTML = `
+    <div>son tarama: ${generated}</div>
+    <div>${windowLabel}</div>
+    <div>toplam etkinlik (havuz): ${status.totalEvents}</div>
+    <div>durum: ${status.anyFailed ? '<span style="color:var(--color-error)">bazı kaynaklar başarısız oldu</span>' : '<span style="color:var(--color-success)">tüm kaynaklar başarılı</span>'}</div>
+  `;
+
+  if (status.poolSizeBefore != null) {
+    document.getElementById('poolStats').innerHTML = `
+      <div>havuz: ${status.poolSizeBefore} → ${status.poolSizeAfter}</div>
+      <div>bu çalışmada eklenen yeni etkinlik: ${status.canonicalEventsCreatedThisRun}</div>
+      <div>bu çalışmada eklenen seans: ${status.sessionsAddedThisRun}</div>
+      <div>bu çalışmada silinen (geçmiş) seans: ${status.sessionsPrunedThisRun}</div>
+    `;
+  }
+
+  const rows = Object.entries(status.sources).map(([name, s]) => `
+    <tr style="border-bottom:1px solid var(--color-hairline);">
+      <td style="padding:8px 10px;">${s.ok ? '✓' : '✗'} ${name}</td>
+      <td style="padding:8px 10px; text-align:right;">${s.count}</td>
+      <td style="padding:8px 10px; text-align:right; color:var(--color-muted);">${(s.durationMs/1000).toFixed(1)}s</td>
+      <td style="padding:8px 10px; color:var(--color-error); font-size:12px;">${s.error ? s.error : ''}</td>
+    </tr>`).join('');
+
+  document.getElementById('sourceTable').innerHTML = `
+    <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:13px; font-family: var(--font-mono);">
+      <thead><tr style="text-align:left; color:var(--color-muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">
+        <th style="padding:8px 10px;">kaynak</th><th style="padding:8px 10px; text-align:right;">etkinlik</th><th style="padding:8px 10px; text-align:right;">süre</th><th style="padding:8px 10px;">hata</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    </div>`;
+}
+
+document.getElementById('unlockBtn').addEventListener('click', unlock);
+document.getElementById('passInput').addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+if (sessionStorage.getItem('eventportal:statusUnlocked') === '1') showContent();
+</script>
+</body>
+</html>

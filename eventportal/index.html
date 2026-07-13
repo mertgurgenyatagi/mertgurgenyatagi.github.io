@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EventPortal — İstanbul'daki Etkinlikler</title>
+<meta name="description" content="İstanbul'da gerçekleşecek etkinlikler, tek yerde.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 class="app-title">EventPortal</h1>
+  <nav><a href="status.html">durum</a></nav>
+</header>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <div class="toolbar-row">
+      <div class="search-field">
+        <span class="icon icon-search"></span>
+        <input type="text" id="searchInput" placeholder="Etkinlik, mekan ara..." autocomplete="off">
+      </div>
+      <div class="date-field">
+        <input type="date" id="dateFrom" aria-label="Başlangıç tarihi">
+        <span>–</span>
+        <input type="date" id="dateTo" aria-label="Bitiş tarihi">
+      </div>
+    </div>
+
+    <div class="toolbar-row">
+      <span class="select-wrap">
+        <select class="tb-select" id="categorySelect" aria-label="Kategori"></select>
+        <span class="icon icon-chevron-down"></span>
+      </span>
+      <span class="select-wrap">
+        <select class="tb-select" id="venueSelect" aria-label="Mekan"></select>
+        <span class="icon icon-chevron-down"></span>
+      </span>
+      <span class="select-wrap">
+        <select class="tb-select" id="sortSelect" aria-label="Sırala">
+          <option value="date-asc">Tarihe göre</option>
+          <option value="score-desc">Puana göre (yüksekten düşüğe)</option>
+        </select>
+        <span class="icon icon-chevron-down"></span>
+      </span>
+      <span class="select-wrap" id="listSelectWrap" hidden>
+        <select class="tb-select" id="listSelect" aria-label="Liste"></select>
+        <span class="icon icon-chevron-down"></span>
+      </span>
+      <button type="button" class="toggle-chip" id="tasteOnlyChip">
+        <span class="icon icon-sparkles"></span>Bana Göre
+      </button>
+      <button type="button" class="toggle-chip" id="favOnlyChip">
+        <span class="icon icon-heart"></span>Favoriler
+      </button>
+      <button type="button" class="toggle-chip" id="showDismissedChip">
+        <span class="icon icon-undo"></span>Gizlenenler
+      </button>
+    </div>
+
+    <div class="toolbar-row">
+      <div class="source-strip" id="sourceStrip"></div>
+    </div>
+
+    <div class="result-line">
+      <span id="resultCount">Yükleniyor...</span>
+      <button type="button" id="clearFiltersBtn">Filtreleri temizle</button>
+    </div>
+  </div>
+</div>
+
+<main class="page">
+  <div class="event-list" id="eventList"></div>
+  <div class="pagination" id="pagination" hidden></div>
+</main>
+
+<footer class="app-footer">
+  <span id="lastUpdated"></span>
+  <button class="footer-refresh" id="refreshBtn" type="button">
+    <span class="icon icon-refresh"></span>yenile
+  </button>
+</footer>
+
+<!-- Event detail modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastAction" hidden></button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

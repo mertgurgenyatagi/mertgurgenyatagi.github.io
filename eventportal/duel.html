@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EventPortal — Karşılaştırma</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="duel.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<div class="duel-shell">
+  <header class="duel-header">
+    <h1 class="app-title">Hangisi Daha İyi?</h1>
+    <div class="duel-progress" id="duelProgress">Yükleniyor...</div>
+  </header>
+
+  <main id="duelMain">
+    <div class="duel-pair" id="duelPair" hidden>
+      <section class="duel-card" data-side="a" id="cardA"></section>
+      <div class="duel-vs">VS</div>
+      <section class="duel-card" data-side="b" id="cardB"></section>
+    </div>
+
+    <div class="duel-done" id="duelDone" hidden>
+      <span class="icon icon-lock duel-done-icon"></span>
+      <p>Yapılabilecek yeni bir karşılaştırma kalmadı.</p>
+      <p class="duel-done-sub" id="duelDoneCount"></p>
+    </div>
+  </main>
+
+  <footer class="duel-footer">
+    <button type="button" class="btn btn-ghost" id="importBtn">İçe Aktar (CSV)</button>
+    <input type="file" id="importFile" accept=".csv,text/csv" hidden>
+    <button type="button" class="btn btn-ghost" id="exportBtn">Dışa Aktar (CSV)</button>
+  </footer>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+</div>
+
+<script src="duel.js"></script>
+</body>
+</html>
