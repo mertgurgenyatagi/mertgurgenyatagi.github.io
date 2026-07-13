@@ -627,7 +627,7 @@ function computePossibilities() {
         const top3 = [...PARTICIPANTS].sort((a, b) => {
           const diff = hypScores[b].pts - hypScores[a].pts;
           return diff !== 0 ? diff : hypScores[b].maxPts - hypScores[a].maxPts;
-        }).slice(0, 3);
+        }).slice(0, 3).map(name => ({ name, pts: hypScores[name].pts }));
 
         possibilities.push({ sf1Winner, sf2Winner, champion, ruledOut, top3 });
       });
@@ -645,9 +645,12 @@ function renderPossibilities() {
     ? `<img class="${cls}" src="${flagUrl(team)}" alt="${toTR(team)}" onerror="this.style.display='none'">`
     : `<div class="${cls} poss-flag-empty"></div>`;
 
-  const avatarImg = name => name
-    ? `<img class="poss-top3-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">`
-    : '';
+  const top3Slot = (entry, rankClass) => entry
+    ? `<div class="poss-top3-slot ${rankClass}" title="${entry.name}">
+         <img class="poss-top3-avatar" src="${PARTICIPANT_PICS[entry.name]}" alt="${entry.name}" onerror="this.style.background='#333'">
+         <span class="poss-top3-pts">${entry.pts}</span>
+       </div>`
+    : `<div class="poss-top3-slot ${rankClass}"></div>`;
 
   el.innerHTML = '';
 
@@ -666,9 +669,9 @@ function renderPossibilities() {
         </div>
       </div>
       <div class="poss-top3">
-        <div class="poss-top3-slot poss-gold" title="${p.top3[0] || ''}">${avatarImg(p.top3[0])}</div>
-        <div class="poss-top3-slot poss-silver" title="${p.top3[1] || ''}">${avatarImg(p.top3[1])}</div>
-        <div class="poss-top3-slot poss-bronze" title="${p.top3[2] || ''}">${avatarImg(p.top3[2])}</div>
+        ${top3Slot(p.top3[0], 'poss-gold')}
+        ${top3Slot(p.top3[1], 'poss-silver')}
+        ${top3Slot(p.top3[2], 'poss-bronze')}
       </div>`;
     el.appendChild(cell);
   });
