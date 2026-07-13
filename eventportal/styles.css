@@ -358,14 +358,22 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   width: 44px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
+  justify-content: center;
   padding-top: 2px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--color-primary);
 }
-.event-score .icon { width: 13px; height: 13px; color: var(--color-primary); }
+
+.score-pill {
+  display: inline-block;
+  min-width: 30px;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  color: #ffffff;
+}
 
 .event-actions {
   display: flex;

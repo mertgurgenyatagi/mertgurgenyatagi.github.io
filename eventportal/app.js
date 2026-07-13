@@ -7,7 +7,21 @@ const PAGE_SIZE = 20;
 // and research/smart-filter-analysis.md), "Bana Göre" hides an event.
 const TASTE_THRESHOLD = 3.5;
 
-const ALL_SOURCES = ['Bubilet', 'Biletinial', 'Oggusto', 'Luma', 'IKSV', 'Biletino', 'Bugece', 'KulturIstanbul', 'Biletix'];
+// Score badge color: red (1.0) -> amber (3.0) -> green (5.0), piecewise-lerped
+// in RGB. Stops were chosen so every point on the sweep keeps white text at
+// >=4.5:1 contrast (worst point is the 3.0 amber stop, at 4.62:1) - verified
+// point-by-point, not eyeballed. Going straight red->green in one lerp would
+// pass through a muddy, low-contrast brown midpoint, hence the amber stop.
+const SCORE_COLOR_STOPS = [[1, [0xd0, 0x3b, 0x3b]], [3, [0xa5, 0x67, 0x0f]], [5, [0x0f, 0x7a, 0x14]]];
+function scoreColor(score) {
+  const s = Math.max(1, Math.min(5, score));
+  const [lo, hi] = s <= 3 ? [SCORE_COLOR_STOPS[0], SCORE_COLOR_STOPS[1]] : [SCORE_COLOR_STOPS[1], SCORE_COLOR_STOPS[2]];
+  const t = (s - lo[0]) / (hi[0] - lo[0]);
+  const rgb = lo[1].map((c, i) => Math.round(c + (hi[1][i] - c) * t));
+  return `rgb(${rgb.join(',')})`;
+}
+
+const ALL_SOURCES =['Bubilet', 'Biletinial', 'Oggusto', 'Luma', 'IKSV', 'Biletino', 'Bugece', 'KulturIstanbul', 'Biletix'];
 
 // ---------- localStorage ----------
 const LS_FAVORITES = 'eventportal:favorites';
@@ -206,7 +220,7 @@ function eventRowHtml(ev) {
     ? `<span class="sub-item event-more-dates">+${ev.sessions.length - 1} tarih daha</span>`
     : '';
   const scoreHtml = ev.tasteScore != null
-    ? `<div class="event-score" title="Bana Göre tahmini puan">${icon('sparkles')}${ev.tasteScore.toFixed(1)}</div>`
+    ? `<div class="event-score" title="Bana Göre tahmini puan"><span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span></div>`
     : `<div class="event-score event-score-empty"></div>`;
 
   return `
@@ -430,7 +444,7 @@ function openModal(ev) {
       <div class="modal-eyebrow">${formatDateTime(ev.date, ev.time)}</div>
       <h2 class="modal-title">${escapeHtml(ev.title)}</h2>
       ${ev.venue ? `<div class="modal-meta-row">${icon('pin')}${escapeHtml(ev.venue)}</div>` : ''}
-      <div class="modal-tags">${escapeHtml(ev.category)} · ${escapeHtml(ev.source)}${ev.tasteScore != null ? ` · ${icon('sparkles')}${ev.tasteScore.toFixed(1)}` : ''}</div>
+      <div class="modal-tags">${escapeHtml(ev.category)} · ${escapeHtml(ev.source)}${ev.tasteScore != null ? ` · <span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>` : ''}</div>
       ${ev.description ? `<div class="modal-desc">${escapeHtml(ev.description)}</div>` : ''}
       ${sessionsHtml}
       <div class="modal-actions">
