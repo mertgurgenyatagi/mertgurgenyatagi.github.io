@@ -771,6 +771,85 @@ section {
 
 .lb-proj-mob { display: none; }
 
+/* ── Olasılıklar (Possibility Scenarios) ── */
+.poss-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px 18px;
+}
+
+.poss-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: opacity var(--transition);
+}
+
+.poss-cell.ruled-out { opacity: 0.25; }
+
+.poss-bracket {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+}
+
+.poss-slot { position: relative; display: flex; }
+
+.poss-champion { margin-bottom: 2px; }
+
+.poss-crown {
+  position: absolute;
+  top: -11px;
+  left: -7px;
+  font-size: 13px;
+  transform: rotate(-18deg);
+}
+
+.poss-finalists { display: flex; gap: 12px; }
+
+.poss-flag-lg, .poss-flag-sm, .poss-flag-empty {
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255,255,255,0.05);
+}
+
+.poss-flag-lg { width: 30px; height: 30px; }
+.poss-flag-sm { width: 24px; height: 24px; }
+
+.poss-top3 {
+  flex-shrink: 0;
+  width: 34px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.poss-top3-slot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 0;
+}
+
+.poss-top3-slot.poss-gold   { background: rgba(212,175,55,0.18); }
+.poss-top3-slot.poss-silver { background: rgba(192,192,192,0.14); }
+.poss-top3-slot.poss-bronze { background: rgba(205,127,50,0.14); }
+
+.poss-top3-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 /* ── Leaderboard ── */
 .leaderboard-grid {
   display: flex;
@@ -1356,6 +1435,7 @@ section {
   .lb-row > *:nth-child(3),
   .lb-header > *:nth-child(3) { display: none; }
   .site-nav a { padding: 0 10px; font-size: 11px; }
+  .poss-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 600px) {
@@ -1402,4 +1482,6 @@ section {
   .upcoming-flag { width: 30px; height: 30px; }
   .match-modal { padding: 28px 20px; border-radius: 16px; }
   .modal-flag { width: 44px; height: 44px; }
+  .poss-grid { grid-template-columns: 1fr; gap: 16px; }
+  .poss-cell { justify-content: center; }
 }

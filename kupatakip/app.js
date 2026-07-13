@@ -58,6 +58,7 @@ async function init() {
 
   renderHero();
   renderUpcomingMatches();
+  renderPossibilities();
   renderLeaderboard();
   renderScenarioToggles();
   renderBracket();
@@ -589,6 +590,87 @@ function renderLeaderboard() {
         ${isOut ? '<div class="badge-out" style="margin-top:3px">dışarıda</div>' : ''}
       </div>`;
     el.appendChild(row);
+  });
+}
+
+// ── OLASILIKLAR (Yarı Final + Final senaryoları) ───────────
+// Yarı finaller oynanmadığı için 8 olası sonuç var: 2 (YF-1 galibi)
+// x 2 (YF-2 galibi) x 2 (final galibi). Her senaryo için, o sonuç
+// gerçekleşseydi sıralamanın ilk 3'ünün kim olacağını hesaplıyoruz.
+function computePossibilities() {
+  const sf1Home = resolveMatchTeam('match_29', 'home');
+  const sf1Away = resolveMatchTeam('match_29', 'away');
+  const sf2Home = resolveMatchTeam('match_30', 'home');
+  const sf2Away = resolveMatchTeam('match_30', 'away');
+
+  const actual29 = RESULTS['match_29'];
+  const actual30 = RESULTS['match_30'];
+  const actual31 = RESULTS['match_31'];
+
+  const possibilities = [];
+
+  [1, 2].forEach(r29 => {
+    [1, 2].forEach(r30 => {
+      [1, 2].forEach(r31 => {
+        const sf1Winner = r29 === 1 ? sf1Home : sf1Away;
+        const sf2Winner = r30 === 1 ? sf2Home : sf2Away;
+        const champion  = r31 === 1 ? sf1Winner : sf2Winner;
+
+        const ruledOut =
+          (actual29 != null && actual29 !== r29) ||
+          (actual30 != null && actual30 !== r30) ||
+          (actual31 != null && actual31 !== r31);
+
+        const hypResults = { ...RESULTS, match_29: r29, match_30: r30, match_31: r31 };
+        const hypState  = computeState(hypResults);
+        const hypScores = computeScores(hypState);
+        const top3 = [...PARTICIPANTS].sort((a, b) => {
+          const diff = hypScores[b].pts - hypScores[a].pts;
+          return diff !== 0 ? diff : hypScores[b].maxPts - hypScores[a].maxPts;
+        }).slice(0, 3);
+
+        possibilities.push({ sf1Winner, sf2Winner, champion, ruledOut, top3 });
+      });
+    });
+  });
+
+  return possibilities;
+}
+
+function renderPossibilities() {
+  const el = document.getElementById('possibilities-body');
+  if (!el) return;
+
+  const flagImg = (team, cls) => team
+    ? `<img class="${cls}" src="${flagUrl(team)}" alt="${toTR(team)}" onerror="this.style.display='none'">`
+    : `<div class="${cls} poss-flag-empty"></div>`;
+
+  const avatarImg = name => name
+    ? `<img class="poss-top3-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">`
+    : '';
+
+  el.innerHTML = '';
+
+  computePossibilities().forEach(p => {
+    const cell = document.createElement('div');
+    cell.className = `poss-cell${p.ruledOut ? ' ruled-out' : ''}`;
+    cell.innerHTML = `
+      <div class="poss-bracket">
+        <div class="poss-slot poss-champion">
+          <span class="poss-crown">👑</span>
+          ${flagImg(p.champion, 'poss-flag poss-flag-lg')}
+        </div>
+        <div class="poss-finalists">
+          <div class="poss-slot">${flagImg(p.sf1Winner, 'poss-flag poss-flag-sm')}</div>
+          <div class="poss-slot">${flagImg(p.sf2Winner, 'poss-flag poss-flag-sm')}</div>
+        </div>
+      </div>
+      <div class="poss-top3">
+        <div class="poss-top3-slot poss-gold" title="${p.top3[0] || ''}">${avatarImg(p.top3[0])}</div>
+        <div class="poss-top3-slot poss-silver" title="${p.top3[1] || ''}">${avatarImg(p.top3[1])}</div>
+        <div class="poss-top3-slot poss-bronze" title="${p.top3[2] || ''}">${avatarImg(p.top3[2])}</div>
+      </div>`;
+    el.appendChild(cell);
   });
 }
 
@@ -1284,12 +1366,14 @@ function setupAccordion() {
     });
   });
 
-  // Open leaderboard by default
-  const lb = document.getElementById('leaderboard');
-  if (lb) {
-    lb.querySelector('.section-body')?.classList.add('open');
-    lb.querySelector('.section-header')?.classList.add('section-open');
-  }
+  // Open leaderboard and possibilities by default
+  ['leaderboard', 'possibilities'].forEach(id => {
+    const s = document.getElementById(id);
+    if (s) {
+      s.querySelector('.section-body')?.classList.add('open');
+      s.querySelector('.section-header')?.classList.add('section-open');
+    }
+  });
 }
 
 // ── NAV ────────────────────────────────────────────────────
