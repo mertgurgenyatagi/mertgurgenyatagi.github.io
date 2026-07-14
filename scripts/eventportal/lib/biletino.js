@@ -65,7 +65,12 @@ async function curlFetch(url, attempts = 3) {
     try {
       const { body, status } = await curlGetOnce(url);
       if (status >= 200 && status < 300) return body;
-      lastErr = new Error(`curl HTTP ${status} for ${url}`);
+      // Capture a snippet of the response body on failure -- a bare status
+      // code doesn't distinguish a Cloudflare challenge page from some other
+      // block, and that distinction is the difference between "IP reputation
+      // problem, needs a different network" and "something else entirely".
+      const snippet = stripHtml(body).slice(0, 200);
+      lastErr = new Error(`curl HTTP ${status} for ${url}${snippet ? ` -- ${snippet}` : ''}`);
     } catch (e) {
       lastErr = e;
     }

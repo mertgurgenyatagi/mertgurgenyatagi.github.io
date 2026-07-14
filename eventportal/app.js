@@ -163,7 +163,17 @@ async function loadEvents(bustCache) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   state.events = json.events || [];
-  windowBounds = { start: json.window.start, end: json.window.end };
+  // windowBounds drives the default date filter and the date-input min/max,
+  // so it must span the whole accumulated pool -- json.window is only the
+  // single day that day's fetch run targeted (see fetch-daily.js), and using
+  // it directly here made every earlier accumulated day invisible by default
+  // as soon as a newer day was merged in.
+  if (state.events.length) {
+    const dates = state.events.map(ev => ev.date).sort();
+    windowBounds = { start: dates[0], end: dates[dates.length - 1] };
+  } else {
+    windowBounds = { start: json.window.start, end: json.window.end };
+  }
   document.getElementById('lastUpdated').textContent = json.generatedAt
     ? `son güncelleme: ${new Date(json.generatedAt).toLocaleString('tr-TR', { dateStyle: 'medium', timeStyle: 'short' })}`
     : '';
