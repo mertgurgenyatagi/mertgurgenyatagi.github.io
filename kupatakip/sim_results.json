@@ -1,122 +1,122 @@
 {
-  "_generated": "2026-06-28T21:23:08.891Z",
+  "_generated": "2026-07-14T21:51:12.213Z",
   "_numSims": 1000000,
-  "_matchesPlayed": 1,
-  "currentTopScore": 1,
+  "_matchesPlayed": 29,
+  "currentTopScore": 44,
   "participants": {
     "Yusuf Şahin": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 30,
+      "peakPoss": 35,
+      "avgPts": 32.5,
+      "eliminated": true
     },
     "Batu Balcı": {
-      "currentScore": 0,
-      "peakPoss": 55,
-      "avgPts": 13.9,
-      "eliminated": false
+      "currentScore": 30,
+      "peakPoss": 43,
+      "avgPts": 34.5,
+      "eliminated": true
     },
     "Emre Bulut": {
-      "currentScore": 0,
-      "peakPoss": 57,
-      "avgPts": 13.9,
-      "eliminated": false
+      "currentScore": 14,
+      "peakPoss": 14,
+      "avgPts": 14,
+      "eliminated": true
     },
     "Barış Başar": {
-      "currentScore": 0,
-      "peakPoss": 58,
-      "avgPts": 13.9,
-      "eliminated": false
+      "currentScore": 30,
+      "peakPoss": 43,
+      "avgPts": 34.5,
+      "eliminated": true
     },
     "Serhat Gürgenyatağı": {
-      "currentScore": 0,
-      "peakPoss": 57,
-      "avgPts": 13.9,
+      "currentScore": 43,
+      "peakPoss": 56,
+      "avgPts": 49.5,
       "eliminated": false
     },
     "Burak Arslantürk": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
+      "currentScore": 39,
+      "peakPoss": 44,
+      "avgPts": 41.5,
       "eliminated": false
     },
     "Kuzey Emre": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
+      "currentScore": 36,
+      "peakPoss": 49,
+      "avgPts": 40.5,
       "eliminated": false
     },
     "Emin Balçın": {
-      "currentScore": 0,
-      "peakPoss": 57,
-      "avgPts": 13.9,
+      "currentScore": 38,
+      "peakPoss": 51,
+      "avgPts": 44.5,
       "eliminated": false
     },
     "Berk Uzun": {
-      "currentScore": 1,
-      "peakPoss": 58,
-      "avgPts": 14.9,
+      "currentScore": 37,
+      "peakPoss": 50,
+      "avgPts": 41.5,
       "eliminated": false
     },
     "Yiğit Yıldırım": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 30,
+      "peakPoss": 43,
+      "avgPts": 34.5,
+      "eliminated": true
     },
-    "Enez Özşen": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
-      "eliminated": false
+    "Enes Özşen": {
+      "currentScore": 29,
+      "peakPoss": 42,
+      "avgPts": 33.5,
+      "eliminated": true
     },
     "Bahadır Seril": {
-      "currentScore": 0,
-      "peakPoss": 55,
-      "avgPts": 13.9,
-      "eliminated": false
+      "currentScore": 25,
+      "peakPoss": 25,
+      "avgPts": 25,
+      "eliminated": true
     },
     "Burak Onur Uysal": {
-      "currentScore": 1,
-      "peakPoss": 58,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 37,
+      "peakPoss": 42,
+      "avgPts": 39.5,
+      "eliminated": true
     },
     "Emir Çiftçi": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 30,
+      "peakPoss": 30,
+      "avgPts": 30,
+      "eliminated": true
     },
     "Talha Kılıç": {
-      "currentScore": 0,
-      "peakPoss": 57,
-      "avgPts": 13.9,
-      "eliminated": false
+      "currentScore": 34,
+      "peakPoss": 39,
+      "avgPts": 36.5,
+      "eliminated": true
     },
     "Bedirhan Çakır": {
-      "currentScore": 1,
-      "peakPoss": 58,
-      "avgPts": 14.9,
+      "currentScore": 38,
+      "peakPoss": 51,
+      "avgPts": 42.5,
       "eliminated": false
     },
     "Batu Çataklı": {
-      "currentScore": 1,
-      "peakPoss": 56,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 32,
+      "peakPoss": 37,
+      "avgPts": 34.5,
+      "eliminated": true
     },
     "Demir Öztürk": {
-      "currentScore": 0,
-      "peakPoss": 53,
-      "avgPts": 13.9,
+      "currentScore": 44,
+      "peakPoss": 57,
+      "avgPts": 50.5,
       "eliminated": false
     },
     "Mert Gürgenyatağı": {
-      "currentScore": 1,
-      "peakPoss": 57,
-      "avgPts": 14.9,
-      "eliminated": false
+      "currentScore": 35,
+      "peakPoss": 40,
+      "avgPts": 37.5,
+      "eliminated": true
     }
   }
 }
