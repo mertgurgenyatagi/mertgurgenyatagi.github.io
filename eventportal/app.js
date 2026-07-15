@@ -270,17 +270,21 @@ function eventRowHtml(ev) {
   const dismissBtn = isDismissed
     ? `<button class="action-btn active" data-action="undismiss" title="Geri yükle">${icon('undo')}</button>`
     : `<button class="action-btn" data-action="dismiss" title="Gizle">${icon('x')}</button>`;
-  const scorePill = ev.tasteScore != null
-    ? `<span class="score-pill" title="Bana Göre tahmini puan" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>`
-    : '';
+  // Columns are fixed-width, so a missing price/rating still renders its
+  // cell (as a muted placeholder) rather than being omitted -- otherwise
+  // whatever follows it would shift left and break the column alignment
+  // between rows.
+  const ratingCell = ev.tasteScore != null
+    ? `<div class="cell cell-rating"><span class="score-pill" title="Bana Göre tahmini puan" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span></div>`
+    : `<div class="cell cell-rating"><span class="cell-placeholder">—</span></div>`;
   const priceLabel = formatPrice(ev.price);
   const priceCell = priceLabel
     ? `<div class="cell cell-price${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</div>`
-    : '';
+    : `<div class="cell cell-price"><span class="cell-placeholder">—</span></div>`;
 
   // Only photo/title (1) and date&time/price/rating (2, each its own
-  // designated cell) remain -- venue/category/source/extra-dates/
-  // description are all intentionally gone from the card.
+  // fixed-width designated cell) remain -- venue/category/source/extra-
+  // dates/description are all intentionally gone from the card.
   return `
     <article class="event-row${isDismissed ? ' dismissed' : ''}" data-id="${ev.id}">
       <div class="event-thumb">${ev.image ? `<img src="${escapeHtml(ev.image)}" alt="" loading="lazy">` : icon('image')}</div>
@@ -289,7 +293,7 @@ function eventRowHtml(ev) {
         <div class="event-cells">
           <div class="cell cell-datetime"><span class="cell-date">${dateLabel(ev.date)}</span><span class="cell-time">${ev.time || '--:--'}</span></div>
           ${priceCell}
-          ${scorePill}
+          ${ratingCell}
         </div>
       </div>
       <div class="event-actions">

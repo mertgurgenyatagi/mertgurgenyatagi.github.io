@@ -322,15 +322,15 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   padding-top: 1px;
 }
 
-/* Title: the only other tier-1 element besides the photo, so it gets the
-   full weight of the row -- but its line length is capped so it doesn't
-   sprawl edge to edge on wide viewports. */
+/* Title: the only other tier-1 element besides the photo. Deliberately
+   constrained -- the cells beside/below it are the wide, fixed elements
+   now, so title wraps to its second line rather than squeezing them. */
 .event-title {
   font-size: 15px;
   font-weight: 500;
   line-height: 1.35;
   margin: 0;
-  max-width: 34ch;
+  max-width: 24ch;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -338,36 +338,49 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   -webkit-box-orient: vertical;
 }
 
-/* Tier 2: date&time, price and rating, each its own designated cell.
-   Date&time and price are plain rectangular cells (deliberately not
-   pill-shaped, unlike rating) with bright white text for legibility;
-   rating keeps its existing colored pill untouched. */
+/* Tier 2: date&time, price and rating -- a uniform little table of
+   fixed-width columns divided by thin lines, not a row of separate
+   badges. Only rating keeps a pill; date&time/price are plain (bigger,
+   bright white) text with no box of their own. */
 .event-cells {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  align-items: stretch;
 }
 
 .cell {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 5px;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  background: var(--color-canvas-soft);
-  border: 1px solid var(--color-hairline-strong);
+  flex-shrink: 0;
+  width: 108px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 12px;
+  border-left: 1px solid var(--color-hairline-strong);
+  text-align: center;
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 600;
+}
+
+.cell-date {
+  font-size: 16px;
+  font-weight: 700;
   color: var(--color-ink);
   white-space: nowrap;
 }
-.cell-time { font-weight: 400; opacity: 0.8; }
-.cell-price.is-free {
-  background: rgba(62, 207, 150, 0.12);
-  border-color: rgba(62, 207, 150, 0.45);
+.cell-time {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink);
+  opacity: 0.75;
 }
+.cell-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-ink);
+  white-space: nowrap;
+}
+.cell-price.is-free { color: var(--color-success); }
+.cell-placeholder { font-size: 16px; font-weight: 700; color: var(--color-muted-soft); }
 
 /* Desktop: title and cells sit side by side in one row instead of
    stacking -- title keeps its 2-line clamp so it wraps instead of pushing
@@ -377,11 +390,11 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   .event-row { align-items: center; }
   .event-main {
     flex-direction: row;
-    align-items: center;
+    align-items: stretch;
     gap: var(--space-base);
   }
-  .event-title { flex: 1; max-width: none; }
-  .event-cells { flex-shrink: 0; flex-wrap: nowrap; }
+  .event-title { flex: 1; align-self: center; }
+  .event-cells { flex-shrink: 0; }
 }
 
 .score-pill {
@@ -629,5 +642,7 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
 .footer-refresh .icon { width: 11px; height: 11px; }
 
 @media (max-width: 480px) {
-  .cell { font-size: 11.5px; padding: 3px 7px; }
+  .cell { width: 84px; padding: 2px 6px; }
+  .cell-date, .cell-price { font-size: 14px; }
+  .cell-time { font-size: 12px; }
 }
