@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-15T14:46:27.176Z",
-  "startedAt": "2026-07-15T14:45:42.513Z",
+  "generatedAt": "2026-07-15T15:27:36.011Z",
+  "startedAt": "2026-07-15T15:26:20.225Z",
   "window": {
     "start": "2026-07-23",
     "end": "2026-07-23"
@@ -10,62 +10,62 @@
   "sources": {
     "Bubilet": {
       "ok": true,
-      "count": 25,
-      "durationMs": 6860,
+      "count": 24,
+      "durationMs": 7242,
       "error": null
     },
     "Biletinial": {
       "ok": true,
       "count": 87,
-      "durationMs": 16310,
+      "durationMs": 12890,
       "error": null
     },
     "Oggusto": {
       "ok": true,
       "count": 1,
-      "durationMs": 6712,
+      "durationMs": 7166,
       "error": null
     },
     "Luma": {
       "ok": true,
       "count": 0,
-      "durationMs": 340,
+      "durationMs": 233,
       "error": null
     },
     "IKSV": {
       "ok": true,
       "count": 0,
-      "durationMs": 2712,
+      "durationMs": 2349,
       "error": null
     },
     "Biletino": {
       "ok": false,
       "count": 0,
-      "durationMs": 1158,
+      "durationMs": 1122,
       "error": "curl HTTP 403 for https://biletino.com/sitemap.xml -- Attention Required! | Cloudflare body{margin:0;padding:0} if (!navigator.cookieEnabled) { window.addEventListener('DOMContentLoaded', function () { var cookieEl = document.getElementById('cookie-alert"
     },
     "Bugece": {
       "ok": true,
       "count": 1,
-      "durationMs": 1105,
+      "durationMs": 794,
       "error": null
     },
     "KulturIstanbul": {
       "ok": true,
       "count": 4,
-      "durationMs": 2831,
+      "durationMs": 2080,
       "error": null
     },
     "Biletix": {
       "ok": true,
       "count": 15,
-      "durationMs": 44565,
+      "durationMs": 41887,
       "error": null
     }
   },
-  "poolSizeBefore": 181,
+  "poolSizeBefore": 183,
   "poolSizeAfter": 183,
-  "canonicalEventsCreatedThisRun": 2,
-  "sessionsAddedThisRun": 4,
+  "canonicalEventsCreatedThisRun": 0,
+  "sessionsAddedThisRun": 1,
   "sessionsPrunedThisRun": 0
 }
