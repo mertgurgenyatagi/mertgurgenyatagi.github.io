@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-15T15:27:36.011Z",
-  "startedAt": "2026-07-15T15:26:20.225Z",
+  "generatedAt": "2026-07-15T16:00:29.962Z",
+  "startedAt": "2026-07-15T15:59:45.842Z",
   "window": {
     "start": "2026-07-23",
     "end": "2026-07-23"
@@ -11,61 +11,61 @@
     "Bubilet": {
       "ok": true,
       "count": 24,
-      "durationMs": 7242,
+      "durationMs": 7725,
       "error": null
     },
     "Biletinial": {
       "ok": true,
       "count": 87,
-      "durationMs": 12890,
+      "durationMs": 9611,
       "error": null
     },
     "Oggusto": {
       "ok": true,
       "count": 1,
-      "durationMs": 7166,
+      "durationMs": 3949,
       "error": null
     },
     "Luma": {
       "ok": true,
       "count": 0,
-      "durationMs": 233,
+      "durationMs": 440,
       "error": null
     },
     "IKSV": {
       "ok": true,
       "count": 0,
-      "durationMs": 2349,
+      "durationMs": 2655,
       "error": null
     },
     "Biletino": {
       "ok": false,
       "count": 0,
-      "durationMs": 1122,
+      "durationMs": 1085,
       "error": "curl HTTP 403 for https://biletino.com/sitemap.xml -- Attention Required! | Cloudflare body{margin:0;padding:0} if (!navigator.cookieEnabled) { window.addEventListener('DOMContentLoaded', function () { var cookieEl = document.getElementById('cookie-alert"
     },
     "Bugece": {
       "ok": true,
       "count": 1,
-      "durationMs": 794,
+      "durationMs": 692,
       "error": null
     },
     "KulturIstanbul": {
       "ok": true,
       "count": 4,
-      "durationMs": 2080,
+      "durationMs": 2380,
       "error": null
     },
     "Biletix": {
       "ok": true,
       "count": 15,
-      "durationMs": 41887,
+      "durationMs": 44022,
       "error": null
     }
   },
   "poolSizeBefore": 183,
   "poolSizeAfter": 183,
   "canonicalEventsCreatedThisRun": 0,
-  "sessionsAddedThisRun": 1,
+  "sessionsAddedThisRun": 0,
   "sessionsPrunedThisRun": 0
 }
