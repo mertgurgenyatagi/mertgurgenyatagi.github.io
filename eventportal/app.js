@@ -187,26 +187,41 @@ function matchesSearch(ev, q) {
   return hay.includes(q);
 }
 
+// skipCategory lets category-chip counts be computed against every other
+// active filter (dates, taste, favorites, dismissed, list, search) without
+// a chip's own category filtering itself out of its count.
+function eventMatchesFilters(ev, f, q, { skipCategory = false } = {}) {
+  if (!f.showDismissed && dismissed.has(ev.id)) return false;
+  if (f.favOnly && !favorites.has(ev.id)) return false;
+  if (f.tasteOnly && (ev.tasteScore == null || ev.tasteScore < TASTE_THRESHOLD)) return false;
+  if (f.dateFrom && ev.date < f.dateFrom) return false;
+  if (f.dateTo && ev.date > f.dateTo) return false;
+  if (!skipCategory && f.categories.size && !f.categories.has(ev.category)) return false;
+  if (f.list && !listsForEvent(ev.id).includes(f.list)) return false;
+  if (!matchesSearch(ev, q)) return false;
+  return true;
+}
+
 function applyFilters() {
   const f = state.filters;
   const q = state.search.trim().toLocaleLowerCase('tr');
 
-  state.filtered = state.events.filter(ev => {
-    if (!f.showDismissed && dismissed.has(ev.id)) return false;
-    if (f.favOnly && !favorites.has(ev.id)) return false;
-    if (f.tasteOnly && (ev.tasteScore == null || ev.tasteScore < TASTE_THRESHOLD)) return false;
-    if (f.dateFrom && ev.date < f.dateFrom) return false;
-    if (f.dateTo && ev.date > f.dateTo) return false;
-    if (f.categories.size && !f.categories.has(ev.category)) return false;
-    if (f.list && !listsForEvent(ev.id).includes(f.list)) return false;
-    if (!matchesSearch(ev, q)) return false;
-    return true;
-  });
-
+  state.filtered = state.events.filter(ev => eventMatchesFilters(ev, f, q));
   state.filtered.sort(SORT_COMPARATORS[state.sort] || SORT_COMPARATORS[DEFAULT_SORT]);
 
   state.page = Math.min(state.page, Math.max(1, Math.ceil(state.filtered.length / PAGE_SIZE)));
   render();
+}
+
+function categoryCounts() {
+  const f = state.filters;
+  const q = state.search.trim().toLocaleLowerCase('tr');
+  const counts = new Map();
+  for (const ev of state.events) {
+    if (!eventMatchesFilters(ev, f, q, { skipCategory: true })) continue;
+    counts.set(ev.category, (counts.get(ev.category) || 0) + 1);
+  }
+  return counts;
 }
 
 // ---------- Rendering ----------
@@ -215,6 +230,7 @@ function render() {
   document.getElementById('resultCount').textContent = `${state.filtered.length} etkinlik`;
   renderRows();
   renderPagination();
+  renderCategoryChips();
   syncToolbarControls();
 }
 
@@ -291,23 +307,17 @@ function renderPagination() {
 }
 
 // ---------- Toolbar ----------
-function distinctValues(key) {
-  const counts = new Map();
-  for (const ev of state.events) {
-    const v = ev[key];
-    if (!v) continue;
-    counts.set(v, (counts.get(v) || 0) + 1);
-  }
-  return counts;
+function renderCategoryChips() {
+  const counts = categoryCounts();
+  const active = state.filters.categories;
+  document.getElementById('categoryStrip').innerHTML = ALL_CATEGORIES.map(c => {
+    const n = counts.get(c) || 0;
+    const classes = ['category-chip', n === 0 ? 'zero' : '', active.has(c) ? 'active' : ''].filter(Boolean).join(' ');
+    return `<button type="button" class="${classes}" data-category="${escapeHtml(c)}">${escapeHtml(c)}<span class="count">${n}</span></button>`;
+  }).join('');
 }
 
 function renderToolbarOptions() {
-  const catCounts = distinctValues('category');
-  document.getElementById('categoryStrip').innerHTML = ALL_CATEGORIES.map(c => {
-    const n = catCounts.get(c) || 0;
-    return `<button type="button" class="category-chip${n === 0 ? ' zero' : ''}" data-category="${escapeHtml(c)}">${escapeHtml(c)}<span class="count">${n}</span></button>`;
-  }).join('');
-
   renderListOptions();
 }
 
@@ -328,9 +338,6 @@ function syncToolbarControls() {
   document.getElementById('favOnlyChip').classList.toggle('active', f.favOnly);
   document.getElementById('showDismissedChip').classList.toggle('active', f.showDismissed);
   document.getElementById('tasteOnlyChip').classList.toggle('active', f.tasteOnly);
-  document.querySelectorAll('.category-chip').forEach(chip => {
-    chip.classList.toggle('active', f.categories.has(chip.dataset.category));
-  });
 }
 
 // ---------- List popover ----------
