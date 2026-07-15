@@ -383,21 +383,22 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
 .cell-placeholder { font-size: 16px; font-weight: 400; color: var(--color-muted-soft); }
 
 /* Desktop: a strict 6-column grid --
-   thumb/title/datetime/price/rating/actions = 10/30/15/15/15/15. `fr`
-   units, not raw `%` -- percentages are computed against the full
-   container width and ignore `gap`, so 6 columns of 10/30/15/15/15/15%
-   plus 5 gaps overflows the row and pushes the last column (dismiss
-   button) off-screen; `fr` correctly reserves gap space first, then
-   splits what's left in the same ratio. .event-main and .event-cells are
-   just nesting wrappers in the markup; `display: contents` flattens them
-   so title and the 3 cells become direct grid items alongside
-   thumb/actions, in the same order they already appear in the DOM.
-   Thumbnail keeps its own fixed size (per earlier instruction) and simply
-   sits at the start of its column. */
+   thumb/title/datetime/price/rating/actions = 10/30/20/12.5/12.5/15.
+   Datetime got cramped at an equal 15 alongside price/rating, so it
+   takes the extra room from those two rather than actions. `fr` units,
+   not raw `%` -- percentages are computed against the full container
+   width and ignore `gap`, so 6 columns worth of % plus 5 gaps overflows
+   the row and pushes the last column (dismiss button) off-screen; `fr`
+   correctly reserves gap space first, then splits what's left in the
+   same ratio. .event-main and .event-cells are just nesting wrappers in
+   the markup; `display: contents` flattens them so title and the 3 cells
+   become direct grid items alongside thumb/actions, in the same order
+   they already appear in the DOM. Thumbnail keeps its own fixed size
+   (per earlier instruction) and simply sits at the start of its column. */
 @media (min-width: 640px) {
   .event-row {
     display: grid;
-    grid-template-columns: 10fr 30fr 15fr 15fr 15fr 15fr;
+    grid-template-columns: 10fr 30fr 20fr 12.5fr 12.5fr 15fr;
     align-items: center;
   }
   .event-main, .event-cells { display: contents; }
