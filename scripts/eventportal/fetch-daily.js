@@ -64,7 +64,21 @@ async function main() {
   const startedAt = new Date().toISOString();
   console.log(`[fetch-daily] target day ${targetDay}`);
 
-  const results = await Promise.all(SOURCES.map(src => runSource(src, window)));
+  // Sources used to run fully concurrently via Promise.all. Confirmed live
+  // that this was silently degrading price-resolution sub-requests on some
+  // sources: Biletinial and Biletix's own price calls succeeded 100% of the
+  // time when run individually (even from this same CI environment), but
+  // got 0% when all 9 sources -- including Biletino, which spawns up to 30
+  // concurrent `curl` child processes for its own crawl -- hit the runner's
+  // shared, limited CPU/network resources at the same instant. Running
+  // sources one at a time removes that contention entirely. Total
+  // wall-clock time goes up, but per-run duration is dominated by
+  // Biletino's own tens-of-minutes crawl regardless, and was explicitly
+  // called out as not a constraint.
+  const results = [];
+  for (const src of SOURCES) {
+    results.push(await runSource(src, window));
+  }
 
   const rawEvents = [];
   const sourcesStatus = {};
