@@ -369,6 +369,21 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   border-color: rgba(62, 207, 150, 0.45);
 }
 
+/* Desktop: title and cells sit side by side in one row instead of
+   stacking -- title keeps its 2-line clamp so it wraps instead of pushing
+   the cells out when space is tight. Thumbnail is untouched at every
+   width. */
+@media (min-width: 640px) {
+  .event-row { align-items: center; }
+  .event-main {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-base);
+  }
+  .event-title { flex: 1; max-width: none; }
+  .event-cells { flex-shrink: 0; flex-wrap: nowrap; }
+}
+
 .score-pill {
   display: inline-block;
   min-width: 30px;
