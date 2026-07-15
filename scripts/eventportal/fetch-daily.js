@@ -64,21 +64,15 @@ async function main() {
   const startedAt = new Date().toISOString();
   console.log(`[fetch-daily] target day ${targetDay}`);
 
-  // Sources used to run fully concurrently via Promise.all. Confirmed live
-  // that this was silently degrading price-resolution sub-requests on some
-  // sources: Biletinial and Biletix's own price calls succeeded 100% of the
-  // time when run individually (even from this same CI environment), but
-  // got 0% when all 9 sources -- including Biletino, which spawns up to 30
-  // concurrent `curl` child processes for its own crawl -- hit the runner's
-  // shared, limited CPU/network resources at the same instant. Running
-  // sources one at a time removes that contention entirely. Total
-  // wall-clock time goes up, but per-run duration is dominated by
-  // Biletino's own tens-of-minutes crawl regardless, and was explicitly
-  // called out as not a constraint.
-  const results = [];
-  for (const src of SOURCES) {
-    results.push(await runSource(src, window));
-  }
+  // Briefly changed this to run sources one at a time, suspecting cross-
+  // source resource contention was degrading price-resolution sub-requests
+  // -- live diagnostics disproved that (Biletinial/Biletix both resolved
+  // price reliably from this same CI environment at full internal
+  // concurrency, run in isolation and in bursts). The real bug was in
+  // mergeDay() silently no-op'ing already-seen sessions instead of
+  // backfilling a newly-resolved price (see lib/canonical.js) -- reverted
+  // back to the original concurrent design now that that's fixed.
+  const results = await Promise.all(SOURCES.map(src => runSource(src, window)));
 
   const rawEvents = [];
   const sourcesStatus = {};
