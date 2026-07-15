@@ -95,6 +95,7 @@ a { color: inherit; }
 .icon-image { -webkit-mask-image: url('assets/icons/image-placeholder.svg'); mask-image: url('assets/icons/image-placeholder.svg'); }
 .icon-sparkles { -webkit-mask-image: url('assets/icons/sparkles.svg'); mask-image: url('assets/icons/sparkles.svg'); }
 .icon-calendar { -webkit-mask-image: url('assets/icons/calendar.svg'); mask-image: url('assets/icons/calendar.svg'); }
+.icon-tag { -webkit-mask-image: url('assets/icons/tag.svg'); mask-image: url('assets/icons/tag.svg'); }
 
 /* ---------- Header ---------- */
 .app-header {

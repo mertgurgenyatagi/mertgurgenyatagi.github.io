@@ -156,6 +156,7 @@ const state = {
     showDismissed: false,
     tasteOnly: false,
     weekendOnly: false,
+    freeOnly: false,
   },
 };
 let windowBounds = { start: null, end: null };
@@ -164,7 +165,7 @@ function defaultFilters() {
   return {
     dateFrom: windowBounds.start, dateTo: windowBounds.end,
     categories: new Set(), list: '',
-    favOnly: false, showDismissed: false, tasteOnly: true, weekendOnly: false,
+    favOnly: false, showDismissed: false, tasteOnly: true, weekendOnly: false, freeOnly: false,
   };
 }
 
@@ -219,6 +220,10 @@ function eventMatchesFilters(ev, f, q, { skipCategory = false } = {}) {
   if (f.dateFrom && ev.date < f.dateFrom) return false;
   if (f.dateTo && ev.date > f.dateTo) return false;
   if (f.weekendOnly && !isWeekendSession(ev.date, ev.time)) return false;
+  // "Ücretsiz" means "not a known paid event" -- genuinely free (price 0)
+  // and price-undetermined (null, e.g. a source this app can't resolve
+  // price for) both pass, since neither is confirmed to cost money.
+  if (f.freeOnly && !(ev.price === 0 || ev.price == null)) return false;
   if (!skipCategory && f.categories.size && !f.categories.has(ev.category)) return false;
   if (f.list && !listsForEvent(ev.id).includes(f.list)) return false;
   if (!matchesSearch(ev, q)) return false;
@@ -367,6 +372,7 @@ function syncToolbarControls() {
   document.getElementById('showDismissedChip').classList.toggle('active', f.showDismissed);
   document.getElementById('tasteOnlyChip').classList.toggle('active', f.tasteOnly);
   document.getElementById('weekendOnlyChip').classList.toggle('active', f.weekendOnly);
+  document.getElementById('freeOnlyChip').classList.toggle('active', f.freeOnly);
 }
 
 // ---------- List popover ----------
@@ -558,6 +564,9 @@ function wireEvents() {
   });
   document.getElementById('weekendOnlyChip').addEventListener('click', () => {
     state.filters.weekendOnly = !state.filters.weekendOnly; state.page = 1; applyFilters();
+  });
+  document.getElementById('freeOnlyChip').addEventListener('click', () => {
+    state.filters.freeOnly = !state.filters.freeOnly; state.page = 1; applyFilters();
   });
   document.getElementById('categoryStrip').addEventListener('click', e => {
     const chip = e.target.closest('.category-chip');
