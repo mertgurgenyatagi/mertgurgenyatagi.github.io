@@ -4,6 +4,12 @@
 // parameters below (program IDs, zone_id) were reverse-engineered from the
 // site's own inline controller script and confirmed working directly.
 const { withinWindow, stripHtml, fetchWithRetry, mapLimit, makeId } = require('./util');
+const passo = require('./passo');
+
+// Price resolution is one extra request per event, but only against
+// ticketing.passo.com.tr, which is stateless and fast (see lib/passo.js) —
+// same modest concurrency as description resolution is plenty.
+const PRICE_CONCURRENCY = 10;
 
 // Resolving descriptions requires a second fetch per event (see
 // fetchDescription below) — this used to be lazy/on-demand only, but a
@@ -37,6 +43,17 @@ function pickImage(files, articleId) {
   return `https://www.iksv.org/i/content/${thumb.articleid || articleId}_${thumb.file1}`;
 }
 
+// IKSV's own API carries no price anywhere — every event, with no
+// exceptions in the current catalog, routes ticket sales to Passo via this
+// field (confirmed live). Solving this source's price meant reverse-
+// engineering Passo instead; see lib/passo.js.
+function pickTicketUrl(ev) {
+  for (const p of ev.programs || []) {
+    if (p && p.ticketUrl) return p.ticketUrl;
+  }
+  return null;
+}
+
 async function fetchEvents({ start, end }) {
   const res = await fetchWithRetry(ENDPOINT, {
     method: 'POST',
@@ -63,11 +80,19 @@ async function fetchEvents({ start, end }) {
       image: pickImage(ev.files, ev.articleId),
       description: null,
       link,
+      price: null,
+      _ticketUrl: pickTicketUrl(ev),
     });
   }
 
   await mapLimit(out, DESCRIPTION_CONCURRENCY, async ev => {
     ev.description = await fetchDescription(ev.link).catch(() => null);
+  });
+
+  await mapLimit(out, PRICE_CONCURRENCY, async ev => {
+    const parsed = ev._ticketUrl && passo.parseEventUrl(ev._ticketUrl);
+    ev.price = parsed ? await passo.priceForEvent(parsed.seoUrl, parsed.id).catch(() => null) : null;
+    delete ev._ticketUrl;
   });
 
   return out;

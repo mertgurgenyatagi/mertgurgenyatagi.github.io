@@ -6,7 +6,7 @@
 // one unauthenticated call (confirmed live: 25 events via the API vs. 6 in
 // the JSON-LD snapshot, `has_more: false` so no cursor pagination is even
 // needed today). That API is used here instead of scraping the SSR HTML.
-const { withinWindow, splitUtcToIstanbul, fetchWithRetry, mapLimit, makeId } = require('./util');
+const { withinWindow, splitUtcToIstanbul, fetchWithRetry, mapLimit, makeId, lowestOfferPrice } = require('./util');
 
 // Istanbul's place id on Luma — read off luma.com/istanbul's own
 // __NEXT_DATA__, not guessed.
@@ -29,11 +29,28 @@ function extractJsonLdEvent(html) {
   return null;
 }
 
-async function fetchDescription(link) {
+// The detail page's JSON-LD carries a complete `offers` array right next to
+// `description` this module already reads (confirmed live) — the discover
+// API's own `ticket_info.is_free` flag is unreliable (mislabels some real
+// ₺0 events as non-free, confirmed live on 3 samples), so the detail page's
+// offers is the one authoritative source, not a fallback.
+async function fetchDetail(link) {
   const res = await fetchWithRetry(link);
   const html = await res.text();
   const event = extractJsonLdEvent(html);
-  return (event && event.description) || null;
+  return {
+    description: (event && event.description) || null,
+    price: event ? lowestOfferPrice(event.offers) : null,
+  };
+}
+
+async function fetchDescription(link) {
+  return (await fetchDetail(link)).description;
+}
+
+// Used by oggusto.js when it only has a bare Luma event link.
+async function priceForLink(link) {
+  return (await fetchDetail(link)).price;
 }
 
 async function fetchEvents({ start, end }) {
@@ -66,15 +83,18 @@ async function fetchEvents({ start, end }) {
       image: ev.cover_url || null,
       description: null,
       link,
+      price: null,
     });
   }
 
   await mapLimit(out, DETAIL_CONCURRENCY, async ev => {
     if (!ev.link) return;
-    ev.description = await fetchDescription(ev.link).catch(() => null);
+    const detail = await fetchDetail(ev.link).catch(() => ({ description: null, price: null }));
+    ev.description = detail.description;
+    ev.price = detail.price;
   });
 
   return out;
 }
 
-module.exports = { fetchEvents, fetchDescription };
+module.exports = { fetchEvents, fetchDescription, priceForLink };

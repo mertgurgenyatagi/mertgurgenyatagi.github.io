@@ -69,6 +69,18 @@ function pickCategory(ev) {
   return (cat && cat.name) || 'Etkinlik';
 }
 
+// starting_from already ships in the same calendar payload this module
+// decodes for title/date/venue (confirmed live: a ready-to-use pre-formatted
+// "starting_from_format" string even exists alongside the raw number) — no
+// extra request needed. `show_price`/`for_sale` are always equal to each
+// other in practice (confirmed live, 22/22 lockstep) and both false means
+// "tickets not on sale yet / lineup TBA", where starting_from reads 0 as a
+// placeholder, not a real free price — must be treated as unknown, not 0.
+function pickPrice(ev) {
+  if (!ev.show_price || !ev.for_sale) return null;
+  return typeof ev.starting_from === 'number' ? ev.starting_from : null;
+}
+
 // `desc` is sometimes a real string, sometimes empty, and sometimes an
 // unresolved React Server Component reference token like "$6f" (the actual
 // text lives in another part of the stream this doesn't attempt to
@@ -109,6 +121,7 @@ async function fetchEvents({ start, end }) {
         image: ev.image || null,
         description: pickDescription(ev.desc),
         link,
+        price: pickPrice(ev),
       });
     }
   }

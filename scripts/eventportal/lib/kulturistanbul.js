@@ -50,6 +50,14 @@ function parseCard(card) {
   const venue = (card.match(/wpem-event-location-text">\s*([^<]+?)\s*</) || [])[1];
   const image = (card.match(/background-image:\s*url\('([^']+)'\)/) || [])[1];
   const category = (card.match(/wpem-event-type-text event-type [^"]*">([^<]+)</) || [])[1];
+  // The site's own event_listing_type taxonomy has a literal "Ücretsiz"
+  // (free) term applied as this class marker on the card wrapper (confirmed
+  // live) — a reliable, zero-cost free/paid signal. There's no "paid"
+  // counterpart term consistently applied, so absence of this marker means
+  // "unknown", not "paid" — the taxonomy also has a rarer "Satışta" (on-sale)
+  // term confirmed live to route through Passo, but not via any link
+  // structured enough to resolve automatically yet (see the research doc).
+  const isFree = /\bevent-type-ucretsiz\b/.test(card);
 
   if (!link || !title || !dateTimeRaw) return null;
   return {
@@ -59,6 +67,7 @@ function parseCard(card) {
     venue: venue ? stripHtml(venue) : null,
     image: image || null,
     dateTime: parseDateTimeText(dateTimeRaw.replace(/\s+/g, ' ')),
+    price: isFree ? 0 : null,
   };
 }
 
@@ -98,6 +107,7 @@ async function fetchEvents({ start, end }) {
       image: ev.image,
       description: null,
       link: ev.link,
+      price: ev.price,
     });
   }
 

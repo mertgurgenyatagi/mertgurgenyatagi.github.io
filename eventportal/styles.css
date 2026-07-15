@@ -352,6 +352,8 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
 .event-sub .icon { width: 12px; height: 12px; color: var(--color-muted-soft); }
 .event-sub .tag-cat { color: var(--color-body); }
 .event-sub .tag-src { color: var(--color-muted-soft); }
+.tag-price { color: var(--color-ink); font-weight: 500; }
+.tag-price.is-free { color: var(--color-success); }
 .event-sub .event-more-dates { color: var(--color-muted-soft); font-family: var(--font-mono); font-size: 12px; }
 
 .event-score {

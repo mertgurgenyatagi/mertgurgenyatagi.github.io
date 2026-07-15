@@ -36,7 +36,7 @@
 // anything about our request rate or headers (those were identical). No
 // other source in this app needed this; if it turns out to be needed
 // elsewhere, promote curlFetch() into util.js.
-const { withinWindow, wideWindow, splitIsoLike, stripHtml, sleep, UA, mapLimit, makeId } = require('./util');
+const { withinWindow, wideWindow, splitIsoLike, stripHtml, sleep, UA, mapLimit, makeId, lowestOfferPrice } = require('./util');
 const { execFile } = require('child_process');
 const cache = require('./cache');
 
@@ -194,6 +194,12 @@ function toNormalizedEvent(d, fallbackLink) {
     image: image || null,
     description: stripHtml(d.description) || null,
     link,
+    // The same JSON-LD block already carries a complete `offers` array
+    // (confirmed live: `price:"1660.00"`, string not number, already plain
+    // TRY not kuruş) — no extra request needed. A genuinely free event's
+    // offer already reads price "0.00", so this needs no separate
+    // free/unknown special-casing.
+    price: lowestOfferPrice(d.offers),
   };
 }
 
@@ -268,8 +274,15 @@ async function fetchDescription(link) {
   return (d && stripHtml(d.description)) || null;
 }
 
+// Used by oggusto.js when it only has a bare Biletino event link.
+async function priceForLink(link) {
+  const html = await curlFetch(link);
+  const d = extractJsonLdEvent(html);
+  return d ? lowestOfferPrice(d.offers) : null;
+}
+
 // crawlAll is also exported directly (not just registered with cache.js) so
 // the one-shot export script can await one full crawl synchronously instead
 // of going through the interval-based background-refresh machinery, which
 // is built for a long-running server process, not a fresh-each-run job.
-module.exports = { fetchEvents, fetchDescription, crawlAll };
+module.exports = { fetchEvents, fetchDescription, crawlAll, priceForLink };

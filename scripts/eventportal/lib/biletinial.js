@@ -100,25 +100,54 @@ async function fetchEvents({ start, end }) {
     if (!data.HasMore) break;
   }
 
-  // Resolve descriptions once per unique link (an event's several showtime
-  // sessions all share one link) rather than once per row, then fan the
-  // result back out — avoids redundant fetches across a multi-session event.
+  // Resolve description+price once per unique link (an event's several
+  // showtime sessions all share one link, and both fields live on the same
+  // detail page) rather than once per row or per field — avoids redundant
+  // fetches across a multi-session event and keeps price genuinely free
+  // (same page load already needed for the description).
   const uniqueLinks = [...new Set(out.map(ev => ev.link))];
-  const descByLink = new Map();
+  const detailByLink = new Map();
   await mapLimit(uniqueLinks, DESCRIPTION_CONCURRENCY, async link => {
-    descByLink.set(link, await fetchDescription(link).catch(() => null));
+    detailByLink.set(link, await fetchDetailPage(link).catch(() => ({ description: null, price: null })));
   });
-  for (const ev of out) ev.description = descByLink.get(ev.link) || null;
+  for (const ev of out) {
+    const detail = detailByLink.get(ev.link) || { description: null, price: null };
+    ev.description = detail.description;
+    ev.price = detail.price;
+  }
 
   return out;
 }
 
-async function fetchDescription(link) {
-  const res = await fetchWithRetry(link);
-  const html = await res.text();
-  const m = html.match(/itemprop="description"\s+content="([^"]*)"/);
+// The detail page carries a complete schema.org Offer block right next to
+// the itemprop="description" meta this module already reads (confirmed live
+// across 6 real events in 4 categories): `<span itemprop="price"
+// content="1200,00">` — Turkish decimal notation (comma), "starting from"
+// the lowest active ticket tier, matching what the page itself headlines.
+function extractPrice(html) {
+  const m = html.match(/itemprop="price"[\s\S]*?content="([^"]*)"/);
   if (!m) return null;
-  return stripHtml(m[1]) || null;
+  const n = parseFloat(m[1].replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
 }
 
-module.exports = { fetchEvents, fetchDescription };
+async function fetchDetailPage(link) {
+  const res = await fetchWithRetry(link);
+  const html = await res.text();
+  const descMatch = html.match(/itemprop="description"\s+content="([^"]*)"/);
+  return {
+    description: descMatch ? stripHtml(descMatch[1]) || null : null,
+    price: extractPrice(html),
+  };
+}
+
+async function fetchDescription(link) {
+  return (await fetchDetailPage(link)).description;
+}
+
+// Used by oggusto.js when it only has a bare Biletinial event link.
+async function priceForLink(link) {
+  return (await fetchDetailPage(link)).price;
+}
+
+module.exports = { fetchEvents, fetchDescription, priceForLink };

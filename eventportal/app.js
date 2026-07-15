@@ -123,6 +123,16 @@ function formatDateTime(dateStr, timeStr) {
   return `${label} · ${timeStr || '--:--'}`;
 }
 
+// price is TRY, or null when unknown (not every source resolves it — see
+// scripts/eventportal/lib/*.js and EVENTPORTAL-PRICING-RESEARCH.md). Free
+// events resolve to a real 0, not null, so they get their own label rather
+// than silently rendering as "₺0".
+function formatPrice(price) {
+  if (price == null) return null;
+  if (price === 0) return 'Ücretsiz';
+  return `₺${price.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}`;
+}
+
 // ---------- Sorting ----------
 const SORT_COMPARATORS = {
   'date-asc': (a, b) => (a.date + a.time).localeCompare(b.date + b.time),
@@ -260,6 +270,10 @@ function eventRowHtml(ev) {
   const scoreHtml = ev.tasteScore != null
     ? `<div class="event-score" title="Bana Göre tahmini puan"><span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span></div>`
     : `<div class="event-score event-score-empty"></div>`;
+  const priceLabel = formatPrice(ev.price);
+  const priceHtml = priceLabel
+    ? `<span class="sub-item tag-price${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</span>`
+    : '';
 
   return `
     <article class="event-row${isDismissed ? ' dismissed' : ''}" data-id="${ev.id}">
@@ -270,6 +284,7 @@ function eventRowHtml(ev) {
         <div class="event-sub">
           ${ev.venue ? `<span class="sub-item">${icon('pin')}${escapeHtml(ev.venue)}</span>` : ''}
           <span class="sub-item tag-cat">${escapeHtml(ev.category)}</span>
+          ${priceHtml}
           <span class="sub-item tag-src">${escapeHtml(ev.source)}</span>
           ${moreDatesHtml}
         </div>
@@ -451,6 +466,7 @@ function openModal(ev) {
         .join('')}</div>`
     : '';
   const primaryLink = (ev.sessions && ev.sessions[0] && ev.sessions[0].link) || ev.link;
+  const modalPriceLabel = formatPrice(ev.price);
   modal.innerHTML = `
     <div class="modal-media">
       ${ev.image ? `<img src="${escapeHtml(ev.image)}" alt="">` : icon('image')}
@@ -460,7 +476,7 @@ function openModal(ev) {
       <div class="modal-eyebrow">${formatDateTime(ev.date, ev.time)}</div>
       <h2 class="modal-title">${escapeHtml(ev.title)}</h2>
       ${ev.venue ? `<div class="modal-meta-row">${icon('pin')}${escapeHtml(ev.venue)}</div>` : ''}
-      <div class="modal-tags">${escapeHtml(ev.category)} · ${escapeHtml(ev.source)}${ev.tasteScore != null ? ` · <span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>` : ''}</div>
+      <div class="modal-tags">${escapeHtml(ev.category)}${modalPriceLabel ? ` · <span class="tag-price${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(modalPriceLabel)}</span>` : ''} · ${escapeHtml(ev.source)}${ev.tasteScore != null ? ` · <span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>` : ''}</div>
       ${ev.description ? `<div class="modal-desc">${escapeHtml(ev.description)}</div>` : ''}
       ${sessionsHtml}
       <div class="modal-actions">

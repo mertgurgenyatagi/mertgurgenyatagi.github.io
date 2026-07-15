@@ -37,10 +37,18 @@ const cache = require('./cache');
 
 const IMAGE_BASE = 'https://www.biletix.com/static/images/live/event/eventimages/';
 const SITEMAP_URL = 'https://www.biletix.com/wbtxapi/api/v1/siteMap/event';
+const CHANNEL = 'INTERNET';
 
 // No subprocess overhead on this origin (unlike Biletino), so a higher
 // concurrency is fine — measured live with 100% success up to 40.
 const DETAIL_CONCURRENCY = 30;
+
+// Price resolution is 2 extra requests per kept event (getPerformanceList +
+// getPriceByProfiles, on top of the getEventDetail already fetched above),
+// only run against events that already passed the Istanbul+window filter —
+// same concurrency ballpark as DETAIL_CONCURRENCY, both endpoints confirmed
+// live to be as cheap/stateless as getEventDetail.
+const PRICE_CONCURRENCY = 30;
 
 // Cache stores a wide raw pool so a refresh doesn't need to land exactly at
 // local-midnight — fetchEvents() below re-filters to the real window.
@@ -75,10 +83,65 @@ async function harvestSitemapCodes() {
 }
 
 async function fetchEventDetail(code) {
-  const url = `https://www.biletix.com/wbtxapi/api/v1/bxcached/event/getEventDetail/${code}/INTERNET/tr`;
+  const url = `https://www.biletix.com/wbtxapi/api/v1/bxcached/event/getEventDetail/${code}/${CHANNEL}/tr`;
   const res = await fetchWithRetry(url);
   const json = await res.json();
   return json.status === 'SUCCESS' ? json.data : null;
+}
+
+async function fetchPerformanceList(code) {
+  const url = `https://www.biletix.com/wbtxapi/api/v1/bxcached/event/getPerformanceList/${code}/${CHANNEL}/tr`;
+  const res = await fetchWithRetry(url);
+  const json = await res.json();
+  return json.status === 'SUCCESS' && Array.isArray(json.data) ? json.data : [];
+}
+
+// getPriceByProfiles is the endpoint the live Angular app actually uses
+// (found by reading its production bundle) — a same-named-but-different
+// endpoint, getPriceInfos, looked plausible from the bundle's method names
+// too but returns nothing but 500s live; getPriceByProfiles is fully public
+// and stateless, confirmed live with a clean curl, no cookies/session. A
+// single event/performance can expose more than one simultaneous price key
+// (seat category × campaign/discount variant, confirmed live on 6 of 8
+// sampled events) — this takes the lowest maxPrice across all of them as the
+// "starting from" figure, mirroring what Biletix's own detail page would
+// headline. Values are kuruş (TRY/100); a present-but-empty tier list is a
+// real, observed possibility (not an error) and just yields no price.
+async function fetchPriceByProfiles(code, performanceCode) {
+  const url = `https://www.biletix.com/wbtxapi/api/v1/bxcached/event/getPriceByProfiles/${code}/${performanceCode}/${CHANNEL}/tr`;
+  const res = await fetchWithRetry(url);
+  const json = await res.json();
+  if (json.status !== 'SUCCESS' || !json.data) return null;
+  let min = null;
+  for (const tiers of Object.values(json.data)) {
+    for (const tier of tiers || []) {
+      const n = typeof tier.maxPrice === 'number' ? tier.maxPrice / 100 : null;
+      if (n != null && (min === null || n < min)) min = n;
+    }
+  }
+  return min;
+}
+
+// Resolves price for a specific performance if performanceCode is already
+// known, else picks the event's earliest still-relevant performance first.
+// getPerformanceList isn't perfectly date-sorted at the past/future boundary
+// (already-elapsed performances can appear out of order at the end of the
+// array, confirmed live) — matching by exact performanceDate against
+// firstPerformanceDate (when available, e.g. from getEventDetail) is the
+// correct selection rule; falling back to "first non-elapsed entry" when no
+// target date is known (e.g. when called from oggusto.js with only a bare
+// link). Exported for oggusto.js's own Biletix-affiliate-link dispatch.
+async function priceForEventCode(code, performanceCode, firstPerformanceDate) {
+  let perfCode = performanceCode;
+  if (!perfCode) {
+    const performances = await fetchPerformanceList(code);
+    const match =
+      (firstPerformanceDate != null && performances.find(p => p.performanceDate === firstPerformanceDate)) ||
+      performances.find(p => p.status !== 's13_old_over');
+    if (!match) return null;
+    perfCode = match.performanceCode;
+  }
+  return fetchPriceByProfiles(code, perfCode);
 }
 
 // The full crawl: sitemap-wide code discovery, then resolve every candidate
@@ -90,6 +153,10 @@ async function crawlAll() {
   const details = await mapLimit(codes, DETAIL_CONCURRENCY, c => fetchEventDetail(c));
 
   const out = [];
+  // {ev, code, firstPerformanceDate} kept alongside `out` so the price pass
+  // below can resolve the correct performance without re-deriving it from
+  // the already-normalized event shape.
+  const pending = [];
   for (const d of details) {
     if (!d || !d.firstPerformanceDate) continue;
     if (!isIstanbul(d.venueCity)) continue;
@@ -102,7 +169,7 @@ async function crawlAll() {
     const time = istanbul.toISOString().slice(11, 16);
     if (!withinWindow(date, start, end)) continue;
 
-    out.push({
+    const ev = {
       id: makeId('Biletix', d.eventCode, null),
       source: 'Biletix',
       title: d.eventName,
@@ -113,8 +180,19 @@ async function crawlAll() {
       image: d.image ? `${IMAGE_BASE}${d.image}` : null,
       description: stripHtml(d.eventDescription) || null,
       link: `https://www.biletix.com/etkinlik/${d.eventCode}/TURKIYE/tr`,
-    });
+      price: null,
+    };
+    out.push(ev);
+    pending.push({ ev, code: d.eventCode, firstPerformanceDate: d.firstPerformanceDate });
   }
+
+  // Only price-resolve events that survived the Istanbul+window filter above
+  // (not all ~2,300 sitemap candidates) — 2 extra requests each, but against
+  // a much smaller, already-relevant set.
+  await mapLimit(pending, PRICE_CONCURRENCY, async p => {
+    p.ev.price = await priceForEventCode(p.code, null, p.firstPerformanceDate).catch(() => null);
+  });
+
   return out;
 }
 
@@ -140,4 +218,4 @@ async function fetchDescription(link) {
 // the one-shot export script can await one full crawl synchronously instead
 // of going through the interval-based background-refresh machinery, which
 // is built for a long-running server process, not a fresh-each-run job.
-module.exports = { fetchEvents, fetchDescription, crawlAll };
+module.exports = { fetchEvents, fetchDescription, crawlAll, priceForEventCode };

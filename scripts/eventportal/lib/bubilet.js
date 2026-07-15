@@ -124,6 +124,19 @@ function pickImage(files) {
   return `${CDN}/cdn-cgi/image/width=200,quality=45,format=webp${file.url}`;
 }
 
+// price/discountedPrice/isFreeTicket already ship in the same event object
+// this module decodes for title/date/venue (confirmed live: `price: 32500,
+// discountedPrice: 27625, discountAmount: 4875` etc, internally consistent
+// with discountPercentage) — no extra request needed. Values are plain TRY
+// floats, not kuruş (fractional values like 3102.4 appear directly). Prefer
+// discountedPrice (what you'd actually pay today) when it differs from the
+// undiscounted list price.
+function pickPrice(ev) {
+  if (ev.isFreeTicket) return 0;
+  const p = ev.discountedPrice != null ? ev.discountedPrice : ev.price;
+  return typeof p === 'number' ? p : null;
+}
+
 // The 8 listing pages above are each individually capped at ~20-55 curated
 // events with no pagination mechanism (confirmed live: no loadMore/nextPage/
 // currentPage/infiniteScroll markers anywhere in the embedded RSC data), so
@@ -167,6 +180,7 @@ async function fetchEvents({ start, end }) {
     const title = (ev.name || '').trim();
     const venue = (ev.venues && ev.venues[0] && ev.venues[0].name) || null;
     const link = `https://www.bubilet.com.tr/istanbul/etkinlik/${ev.slug}`;
+    const price = pickPrice(ev);
     for (const iso of ev.dates) {
       // Bubilet's dates[] are true UTC instants, unlike the other two
       // sources — see splitUtcToIstanbul() for why this differs from them.
@@ -175,7 +189,7 @@ async function fetchEvents({ start, end }) {
       // One ev.id can produce several output rows (one per session date), so
       // the date/session instant has to be part of the id, not just ev.id.
       const id = makeId('Bubilet', `${ev.id}-${iso}`, link);
-      out.push({ id, source: 'Bubilet', title, date, time, category, venue, image, description: null, link });
+      out.push({ id, source: 'Bubilet', title, date, time, category, venue, image, description: null, link, price });
     }
   }
 
@@ -214,4 +228,22 @@ async function fetchDescription(link) {
   return null;
 }
 
-module.exports = { fetchEvents, fetchDescription };
+// Used by oggusto.js when it only has a bare Bubilet event link (Oggusto's
+// own affiliate link resolves straight to this URL shape), not the raw event
+// object fetchEvents() already has in hand. A single event page's RSC stream
+// embeds a "you might also like"-style events[] array, not just the one
+// event being viewed (confirmed live) — so the target event is picked out by
+// matching its slug (parsed from the link) against that array, rather than
+// assuming array[0].
+async function priceForLink(link) {
+  const m = link.match(/\/etkinlik\/([^/?]+)/);
+  if (!m) return null;
+  const slug = m[1];
+  const res = await fetchWithRetry(link);
+  const html = await res.text();
+  const events = extractEventObjects(decodeRscStream(html));
+  const ev = events.find(e => e.slug === slug);
+  return ev ? pickPrice(ev) : null;
+}
+
+module.exports = { fetchEvents, fetchDescription, priceForLink };

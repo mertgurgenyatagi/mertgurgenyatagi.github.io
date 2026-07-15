@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { execFile } = require('child_process');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
 
@@ -153,6 +154,24 @@ async function mapLimit(items, limit, fn, staggerMs = 0) {
   return results;
 }
 
+// Lowest numeric price across a schema.org offers[] array (JSON-LD
+// Event.offers), used by sources whose already-fetched detail-page JSON-LD
+// includes real ticket pricing (confirmed live on Luma and Biletino).
+// Offer.price can be a string ("1660.00") or a number depending on source;
+// both coerce fine through Number(). A genuinely free event's offer already
+// reads price 0 numerically, so no separate currency-code special-casing is
+// needed to detect "free".
+function lowestOfferPrice(offers) {
+  if (!Array.isArray(offers) || offers.length === 0) return null;
+  let min = null;
+  for (const offer of offers) {
+    const n = Number(offer && offer.price);
+    if (!Number.isFinite(n)) continue;
+    if (min === null || n < min) min = n;
+  }
+  return min;
+}
+
 async function fetchWithRetry(url, options = {}, attempts = 3) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
@@ -179,7 +198,48 @@ async function fetchWithRetry(url, options = {}, attempts = 3) {
   throw lastErr;
 }
 
+const CURL_STATUS_MARKER = '\n__EPA_CURL_STATUS__';
+
+// Some origins (confirmed live: Biletino, Passo) fingerprint Node's native
+// fetch (undici) at the TLS/HTTP-client level and block it via Cloudflare —
+// a plain 403 from fetch() that a curl replay of the *identical* URL and
+// headers doesn't reproduce (verified live: alternating fetch() vs curl
+// requests to the same Passo endpoint back to back, fetch() blocked every
+// time, curl passed every time). Use this instead of fetchWithRetry for any
+// origin that shows the same split. execFile (not exec) passes each arg to
+// the process directly with no shell involved, so header values containing
+// quotes (e.g. a `sec-ch-ua` client-hint value) don't need any escaping.
+function curlFetchOnce(url, headers) {
+  const args = ['-s', '-L', '-A', UA, '--max-time', '20', '-w', `${CURL_STATUS_MARKER}%{http_code}`];
+  for (const [k, v] of Object.entries(headers || {})) args.push('-H', `${k}: ${v}`);
+  args.push(url);
+  return new Promise((resolve, reject) => {
+    execFile('curl', args, { maxBuffer: 20 * 1024 * 1024 }, (err, stdout) => {
+      if (err) return reject(err);
+      const idx = stdout.lastIndexOf(CURL_STATUS_MARKER);
+      if (idx === -1) return reject(new Error('curl: response missing status marker'));
+      resolve({ body: stdout.slice(0, idx), status: Number(stdout.slice(idx + CURL_STATUS_MARKER.length)) });
+    });
+  });
+}
+
+async function curlFetchJson(url, headers, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    if (i > 0) await sleep(300 * i);
+    try {
+      const { body, status } = await curlFetchOnce(url, headers);
+      if (status >= 200 && status < 300) return JSON.parse(body);
+      lastErr = new Error(`curl HTTP ${status} for ${url}`);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+
 module.exports = {
   UA, sevenDayWindow, wideWindow, istanbulToday, addDaysToDateStr, targetDayWindow,
   withinWindow, splitIsoLike, splitUtcToIstanbul, stripHtml, fetchWithRetry, sleep, mapLimit, makeId,
+  lowestOfferPrice, curlFetchJson,
 };

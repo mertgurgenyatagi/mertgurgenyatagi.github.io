@@ -34,7 +34,12 @@ function mergeDay(poolEvents, rawEvents, index) {
   let created = 0, sessionsAdded = 0;
 
   for (const r of rawEvents) {
-    const session = { id: r.id, date: r.date, time: r.time, source: r.source, link: r.link };
+    // price lives per-session, not first-seen-wins like title/venue/etc:
+    // it's tied to a specific source's specific showtime (confirmed live,
+    // e.g. Biletix resolves price per performanceCode), so a different
+    // source or a later date for the same canonical event can genuinely
+    // have a different price.
+    const session = { id: r.id, date: r.date, time: r.time, source: r.source, link: r.link, price: r.price ?? null };
     const indexKey = `${r.source}::${r.link}`;
 
     let canonical = null;
@@ -83,6 +88,7 @@ function mergeDay(poolEvents, rawEvents, index) {
         tasteTier: 'unscored',
         date: r.date,
         time: r.time,
+        price: session.price,
         sessions: [session],
       };
       poolEvents.push(newEv);
@@ -113,6 +119,7 @@ function pruneAndDerive(poolEvents, today) {
     if (ev.sessions.length === 0) continue;
     ev.date = ev.sessions[0].date;
     ev.time = ev.sessions[0].time;
+    ev.price = ev.sessions[0].price ?? null;
     survivors.push(ev);
   }
 
