@@ -124,13 +124,6 @@ function formatDateTime(dateStr, timeStr) {
   return `${dateLabel(dateStr)} · ${timeStr || '--:--'}`;
 }
 
-function truncateText(str, maxLen) {
-  if (!str) return '';
-  const trimmed = str.trim();
-  if (trimmed.length <= maxLen) return trimmed;
-  return trimmed.slice(0, maxLen).trimEnd() + '…';
-}
-
 // price is TRY, or null when unknown (not every source resolves it — see
 // scripts/eventportal/lib/*.js and EVENTPORTAL-PRICING-RESEARCH.md). Free
 // events resolve to a real 0, not null, so they get their own label rather
@@ -277,35 +270,28 @@ function eventRowHtml(ev) {
   const dismissBtn = isDismissed
     ? `<button class="action-btn active" data-action="undismiss" title="Geri yükle">${icon('undo')}</button>`
     : `<button class="action-btn" data-action="dismiss" title="Gizle">${icon('x')}</button>`;
-  const moreDatesHtml = ev.sessions && ev.sessions.length > 1
-    ? `<span class="sub-item event-more-dates">+${ev.sessions.length - 1} tarih daha</span>`
-    : '';
   const scorePill = ev.tasteScore != null
     ? `<span class="score-pill" title="Bana Göre tahmini puan" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>`
     : '';
   const priceLabel = formatPrice(ev.price);
-  const pricePill = priceLabel
-    ? `<span class="price-pill${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</span>`
+  const priceCell = priceLabel
+    ? `<div class="cell cell-price${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</div>`
     : '';
-  const descSnippet = truncateText(ev.description, 90);
 
-  // Tiered by importance: photo/date/title (1) > price/rating (2) >
-  // description/hour (3) > venue/extra dates/source/category (4, footer).
+  // Only photo/title (1) and date&time/price/rating (2, each its own
+  // designated cell) remain -- venue/category/source/extra-dates/
+  // description are all intentionally gone from the card.
   return `
     <article class="event-row${isDismissed ? ' dismissed' : ''}" data-id="${ev.id}">
       <div class="event-thumb">${ev.image ? `<img src="${escapeHtml(ev.image)}" alt="" loading="lazy">` : icon('image')}</div>
       <div class="event-main">
-        <div class="event-meta">${dateLabel(ev.date)}<span class="event-time">${ev.time || '--:--'}</span></div>
         <h3 class="event-title">${escapeHtml(ev.title)}</h3>
-        ${descSnippet ? `<p class="event-desc">${escapeHtml(descSnippet)}</p>` : ''}
-        <div class="event-footer">
-          ${ev.venue ? `<span class="sub-item">${icon('pin')}${escapeHtml(ev.venue)}</span>` : ''}
-          <span class="sub-item tag-cat">${escapeHtml(ev.category)}</span>
-          <span class="sub-item tag-src">${escapeHtml(ev.source)}</span>
-          ${moreDatesHtml}
+        <div class="event-cells">
+          <div class="cell cell-datetime"><span class="cell-date">${dateLabel(ev.date)}</span><span class="cell-time">${ev.time || '--:--'}</span></div>
+          ${priceCell}
+          ${scorePill}
         </div>
       </div>
-      <div class="event-badges">${pricePill}${scorePill}</div>
       <div class="event-actions">
         <button class="action-btn${isFav ? ' active' : ''}" data-action="favorite" title="Favorile">${icon('heart')}</button>
         <button class="action-btn${inList ? ' active' : ''}" data-action="list" title="Listeye ekle">${icon('bookmark')}</button>
