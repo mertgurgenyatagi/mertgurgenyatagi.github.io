@@ -94,6 +94,7 @@ a { color: inherit; }
 .icon-lock { -webkit-mask-image: url('assets/icons/lock.svg'); mask-image: url('assets/icons/lock.svg'); }
 .icon-image { -webkit-mask-image: url('assets/icons/image-placeholder.svg'); mask-image: url('assets/icons/image-placeholder.svg'); }
 .icon-sparkles { -webkit-mask-image: url('assets/icons/sparkles.svg'); mask-image: url('assets/icons/sparkles.svg'); }
+.icon-calendar { -webkit-mask-image: url('assets/icons/calendar.svg'); mask-image: url('assets/icons/calendar.svg'); }
 
 /* ---------- Header ---------- */
 .app-header {

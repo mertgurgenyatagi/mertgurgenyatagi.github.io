@@ -145,6 +145,7 @@ const state = {
     favOnly: false,
     showDismissed: false,
     tasteOnly: false,
+    weekendOnly: false,
   },
 };
 let windowBounds = { start: null, end: null };
@@ -153,8 +154,19 @@ function defaultFilters() {
   return {
     dateFrom: windowBounds.start, dateTo: windowBounds.end,
     categories: new Set(), list: '',
-    favOnly: false, showDismissed: false, tasteOnly: true,
+    favOnly: false, showDismissed: false, tasteOnly: true, weekendOnly: false,
   };
+}
+
+// Friday 17:00 through (exclusive) Monday 00:00, Istanbul wall-clock -- date/
+// time on every event are already Istanbul local values (see lib/util.js),
+// so plain Date#getDay() on a bare "YYYY-MM-DD" (parsed as local midnight)
+// gives the right weekday without any timezone conversion.
+function isWeekendSession(date, time) {
+  const day = new Date(date + 'T00:00:00').getDay(); // 0=Sun ... 5=Fri, 6=Sat
+  if (day === 6 || day === 0) return true;
+  if (day === 5) return (time || '00:00') >= '17:00';
+  return false;
 }
 
 // ---------- Data load ----------
@@ -196,6 +208,7 @@ function eventMatchesFilters(ev, f, q, { skipCategory = false } = {}) {
   if (f.tasteOnly && (ev.tasteScore == null || ev.tasteScore < TASTE_THRESHOLD)) return false;
   if (f.dateFrom && ev.date < f.dateFrom) return false;
   if (f.dateTo && ev.date > f.dateTo) return false;
+  if (f.weekendOnly && !isWeekendSession(ev.date, ev.time)) return false;
   if (!skipCategory && f.categories.size && !f.categories.has(ev.category)) return false;
   if (f.list && !listsForEvent(ev.id).includes(f.list)) return false;
   if (!matchesSearch(ev, q)) return false;
@@ -338,6 +351,7 @@ function syncToolbarControls() {
   document.getElementById('favOnlyChip').classList.toggle('active', f.favOnly);
   document.getElementById('showDismissedChip').classList.toggle('active', f.showDismissed);
   document.getElementById('tasteOnlyChip').classList.toggle('active', f.tasteOnly);
+  document.getElementById('weekendOnlyChip').classList.toggle('active', f.weekendOnly);
 }
 
 // ---------- List popover ----------
@@ -525,6 +539,9 @@ function wireEvents() {
   });
   document.getElementById('tasteOnlyChip').addEventListener('click', () => {
     state.filters.tasteOnly = !state.filters.tasteOnly; state.page = 1; applyFilters();
+  });
+  document.getElementById('weekendOnlyChip').addEventListener('click', () => {
+    state.filters.weekendOnly = !state.filters.weekendOnly; state.page = 1; applyFilters();
   });
   document.getElementById('categoryStrip').addEventListener('click', e => {
     const chip = e.target.closest('.category-chip');
