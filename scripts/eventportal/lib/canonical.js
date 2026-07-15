@@ -67,9 +67,16 @@ function mergeDay(poolEvents, rawEvents, index) {
     }
 
     if (canonical) {
-      if (!canonical.sessions.some(s => s.id === session.id)) {
+      const existingSession = canonical.sessions.find(s => s.id === session.id);
+      if (!existingSession) {
         canonical.sessions.push(session);
         sessionsAdded++;
+      } else if (existingSession.price == null && session.price != null) {
+        // Price can genuinely resolve on a later run even for an
+        // already-seen session (e.g. a transient failure the first time
+        // this session was merged) -- backfill it rather than leaving a
+        // stale null forever just because the session itself isn't new.
+        existingSession.price = session.price;
       }
       index[indexKey] = canonical.id;
     } else {
