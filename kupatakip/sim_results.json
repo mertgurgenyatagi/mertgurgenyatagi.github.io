@@ -1,19 +1,19 @@
 {
-  "_generated": "2026-07-14T21:51:12.213Z",
+  "_generated": "2026-07-15T21:02:38.785Z",
   "_numSims": 1000000,
-  "_matchesPlayed": 29,
-  "currentTopScore": 44,
+  "_matchesPlayed": 30,
+  "currentTopScore": 48,
   "participants": {
     "Yusuf Şahin": {
       "currentScore": 30,
-      "peakPoss": 35,
-      "avgPts": 32.5,
+      "peakPoss": 30,
+      "avgPts": 30,
       "eliminated": true
     },
     "Batu Balcı": {
-      "currentScore": 30,
+      "currentScore": 35,
       "peakPoss": 43,
-      "avgPts": 34.5,
+      "avgPts": 39,
       "eliminated": true
     },
     "Emre Bulut": {
@@ -23,51 +23,51 @@
       "eliminated": true
     },
     "Barış Başar": {
-      "currentScore": 30,
+      "currentScore": 35,
       "peakPoss": 43,
-      "avgPts": 34.5,
+      "avgPts": 39,
       "eliminated": true
     },
     "Serhat Gürgenyatağı": {
-      "currentScore": 43,
+      "currentScore": 48,
       "peakPoss": 56,
-      "avgPts": 49.5,
+      "avgPts": 52,
       "eliminated": false
     },
     "Burak Arslantürk": {
-      "currentScore": 39,
+      "currentScore": 44,
       "peakPoss": 44,
-      "avgPts": 41.5,
-      "eliminated": false
+      "avgPts": 44,
+      "eliminated": true
     },
     "Kuzey Emre": {
-      "currentScore": 36,
+      "currentScore": 41,
       "peakPoss": 49,
-      "avgPts": 40.5,
+      "avgPts": 45,
       "eliminated": false
     },
     "Emin Balçın": {
       "currentScore": 38,
-      "peakPoss": 51,
-      "avgPts": 44.5,
-      "eliminated": false
+      "peakPoss": 46,
+      "avgPts": 42,
+      "eliminated": true
     },
     "Berk Uzun": {
-      "currentScore": 37,
+      "currentScore": 42,
       "peakPoss": 50,
-      "avgPts": 41.5,
+      "avgPts": 46,
       "eliminated": false
     },
     "Yiğit Yıldırım": {
-      "currentScore": 30,
+      "currentScore": 35,
       "peakPoss": 43,
-      "avgPts": 34.5,
+      "avgPts": 39,
       "eliminated": true
     },
     "Enes Özşen": {
-      "currentScore": 29,
+      "currentScore": 34,
       "peakPoss": 42,
-      "avgPts": 33.5,
+      "avgPts": 38,
       "eliminated": true
     },
     "Bahadır Seril": {
@@ -77,9 +77,9 @@
       "eliminated": true
     },
     "Burak Onur Uysal": {
-      "currentScore": 37,
+      "currentScore": 42,
       "peakPoss": 42,
-      "avgPts": 39.5,
+      "avgPts": 42,
       "eliminated": true
     },
     "Emir Çiftçi": {
@@ -90,32 +90,32 @@
     },
     "Talha Kılıç": {
       "currentScore": 34,
-      "peakPoss": 39,
-      "avgPts": 36.5,
+      "peakPoss": 34,
+      "avgPts": 34,
       "eliminated": true
     },
     "Bedirhan Çakır": {
-      "currentScore": 38,
+      "currentScore": 43,
       "peakPoss": 51,
-      "avgPts": 42.5,
+      "avgPts": 47,
       "eliminated": false
     },
     "Batu Çataklı": {
-      "currentScore": 32,
+      "currentScore": 37,
       "peakPoss": 37,
-      "avgPts": 34.5,
+      "avgPts": 37,
       "eliminated": true
     },
     "Demir Öztürk": {
       "currentScore": 44,
-      "peakPoss": 57,
-      "avgPts": 50.5,
+      "peakPoss": 52,
+      "avgPts": 48,
       "eliminated": false
     },
     "Mert Gürgenyatağı": {
       "currentScore": 35,
-      "peakPoss": 40,
-      "avgPts": 37.5,
+      "peakPoss": 35,
+      "avgPts": 35,
       "eliminated": true
     }
   }
