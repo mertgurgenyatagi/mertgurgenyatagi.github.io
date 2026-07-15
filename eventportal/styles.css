@@ -232,15 +232,15 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   color: var(--color-primary);
 }
 
-.source-strip {
+.category-strip {
   display: flex;
   gap: 6px;
   overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
 }
-.source-strip::-webkit-scrollbar { display: none; }
-.source-chip {
+.category-strip::-webkit-scrollbar { display: none; }
+.category-chip {
   flex-shrink: 0;
   height: 28px;
   padding: 0 var(--space-sm);
@@ -252,13 +252,13 @@ select.tb-select:focus { outline: none; border-color: var(--color-hairline-stron
   cursor: pointer;
   white-space: nowrap;
 }
-.source-chip .count { color: var(--color-muted-soft); margin-left: 4px; }
-.source-chip.active {
+.category-chip .count { color: var(--color-muted-soft); margin-left: 4px; }
+.category-chip.active {
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
-.source-chip.active .count { color: var(--color-primary); opacity: 0.75; }
-.source-chip.zero { opacity: 0.45; }
+.category-chip.active .count { color: var(--color-primary); opacity: 0.75; }
+.category-chip.zero { opacity: 0.45; }
 
 .result-line {
   font-family: var(--font-mono);

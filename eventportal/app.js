@@ -5,7 +5,7 @@ const DATA_URL = 'data/events.json';
 const PAGE_SIZE = 20;
 // Below this predicted 1.0-5.0 taste score (see scripts/eventportal/score-events.js
 // and research/smart-filter-analysis.md), "Bana Göre" hides an event.
-const TASTE_THRESHOLD = 3.5;
+const TASTE_THRESHOLD = 4;
 
 // Score badge color: red (1.0) -> amber (3.0) -> green (5.0), piecewise-lerped
 // in RGB. Stops were chosen so every point on the sweep keeps white text at
@@ -21,7 +21,10 @@ function scoreColor(score) {
   return `rgb(${rgb.join(',')})`;
 }
 
-const ALL_SOURCES =['Bubilet', 'Biletinial', 'Oggusto', 'Luma', 'IKSV', 'Biletino', 'Bugece', 'KulturIstanbul', 'Biletix'];
+const ALL_CATEGORIES = [
+  'Çocuk Etkinlikleri', 'Stand-up', 'Atölye', 'Sergi', 'Tiyatro', 'Sinema',
+  'Festival', 'Sosyal', 'Spor & Açık Hava', 'Parti', 'Konser', 'Diğer',
+];
 
 // ---------- localStorage ----------
 const LS_FAVORITES = 'eventportal:favorites';
@@ -125,7 +128,7 @@ const SORT_COMPARATORS = {
   'date-asc': (a, b) => (a.date + a.time).localeCompare(b.date + b.time),
   'score-desc': (a, b) => (b.tasteScore ?? -1) - (a.tasteScore ?? -1) || (a.date + a.time).localeCompare(b.date + b.time),
 };
-const DEFAULT_SORT = 'date-asc';
+const DEFAULT_SORT = 'score-desc';
 
 // ---------- State ----------
 const state = {
@@ -137,9 +140,7 @@ const state = {
   filters: {
     dateFrom: null,
     dateTo: null,
-    category: '',
-    sources: new Set(),
-    venue: '',
+    categories: new Set(),
     list: '',
     favOnly: false,
     showDismissed: false,
@@ -151,8 +152,8 @@ let windowBounds = { start: null, end: null };
 function defaultFilters() {
   return {
     dateFrom: windowBounds.start, dateTo: windowBounds.end,
-    category: '', sources: new Set(), venue: '', list: '',
-    favOnly: false, showDismissed: false, tasteOnly: false,
+    categories: new Set(), list: '',
+    favOnly: false, showDismissed: false, tasteOnly: true,
   };
 }
 
@@ -196,9 +197,7 @@ function applyFilters() {
     if (f.tasteOnly && (ev.tasteScore == null || ev.tasteScore < TASTE_THRESHOLD)) return false;
     if (f.dateFrom && ev.date < f.dateFrom) return false;
     if (f.dateTo && ev.date > f.dateTo) return false;
-    if (f.category && ev.category !== f.category) return false;
-    if (f.sources.size && !f.sources.has(ev.source)) return false;
-    if (f.venue && ev.venue !== f.venue) return false;
+    if (f.categories.size && !f.categories.has(ev.category)) return false;
     if (f.list && !listsForEvent(ev.id).includes(f.list)) return false;
     if (!matchesSearch(ev, q)) return false;
     return true;
@@ -304,21 +303,9 @@ function distinctValues(key) {
 
 function renderToolbarOptions() {
   const catCounts = distinctValues('category');
-  const catNames = [...catCounts.keys()].sort((a, b) => a.localeCompare(b, 'tr'));
-  document.getElementById('categorySelect').innerHTML =
-    `<option value="">Tüm kategoriler</option>` +
-    catNames.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)} (${catCounts.get(c)})</option>`).join('');
-
-  const venueCounts = distinctValues('venue');
-  const venueNames = [...venueCounts.keys()].sort((a, b) => a.localeCompare(b, 'tr'));
-  document.getElementById('venueSelect').innerHTML =
-    `<option value="">Tüm mekanlar</option>` +
-    venueNames.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)} (${venueCounts.get(v)})</option>`).join('');
-
-  const srcCounts = distinctValues('source');
-  document.getElementById('sourceStrip').innerHTML = ALL_SOURCES.map(s => {
-    const n = srcCounts.get(s) || 0;
-    return `<button type="button" class="source-chip${n === 0 ? ' zero' : ''}" data-source="${escapeHtml(s)}">${escapeHtml(s)}<span class="count">${n}</span></button>`;
+  document.getElementById('categoryStrip').innerHTML = ALL_CATEGORIES.map(c => {
+    const n = catCounts.get(c) || 0;
+    return `<button type="button" class="category-chip${n === 0 ? ' zero' : ''}" data-category="${escapeHtml(c)}">${escapeHtml(c)}<span class="count">${n}</span></button>`;
   }).join('');
 
   renderListOptions();
@@ -336,15 +323,13 @@ function renderListOptions() {
 
 function syncToolbarControls() {
   const f = state.filters;
-  document.getElementById('categorySelect').value = f.category;
-  document.getElementById('venueSelect').value = f.venue;
   document.getElementById('sortSelect').value = state.sort;
   if (!document.getElementById('listSelectWrap').hidden) document.getElementById('listSelect').value = f.list;
   document.getElementById('favOnlyChip').classList.toggle('active', f.favOnly);
   document.getElementById('showDismissedChip').classList.toggle('active', f.showDismissed);
   document.getElementById('tasteOnlyChip').classList.toggle('active', f.tasteOnly);
-  document.querySelectorAll('.source-chip').forEach(chip => {
-    chip.classList.toggle('active', f.sources.has(chip.dataset.source));
+  document.querySelectorAll('.category-chip').forEach(chip => {
+    chip.classList.toggle('active', f.categories.has(chip.dataset.category));
   });
 }
 
@@ -519,12 +504,6 @@ function wireEvents() {
     state.filters.dateTo = e.target.value || windowBounds.end;
     state.page = 1; applyFilters();
   });
-  document.getElementById('categorySelect').addEventListener('change', e => {
-    state.filters.category = e.target.value; state.page = 1; applyFilters();
-  });
-  document.getElementById('venueSelect').addEventListener('change', e => {
-    state.filters.venue = e.target.value; state.page = 1; applyFilters();
-  });
   document.getElementById('sortSelect').addEventListener('change', e => {
     state.sort = e.target.value; state.page = 1; applyFilters();
   });
@@ -540,11 +519,11 @@ function wireEvents() {
   document.getElementById('tasteOnlyChip').addEventListener('click', () => {
     state.filters.tasteOnly = !state.filters.tasteOnly; state.page = 1; applyFilters();
   });
-  document.getElementById('sourceStrip').addEventListener('click', e => {
-    const chip = e.target.closest('.source-chip');
+  document.getElementById('categoryStrip').addEventListener('click', e => {
+    const chip = e.target.closest('.category-chip');
     if (!chip) return;
-    const s = chip.dataset.source;
-    if (state.filters.sources.has(s)) state.filters.sources.delete(s); else state.filters.sources.add(s);
+    const c = chip.dataset.category;
+    if (state.filters.categories.has(c)) state.filters.categories.delete(c); else state.filters.categories.add(c);
     state.page = 1; applyFilters();
   });
 
