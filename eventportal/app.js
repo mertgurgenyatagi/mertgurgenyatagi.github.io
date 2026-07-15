@@ -114,13 +114,21 @@ function addDaysStr(dateStr, days) {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 }
-function formatDateTime(dateStr, timeStr) {
+function dateLabel(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
-  let label;
-  if (dateStr === todayStr()) label = 'Bugün';
-  else if (dateStr === addDaysStr(todayStr(), 1)) label = 'Yarın';
-  else label = `${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
-  return `${label} · ${timeStr || '--:--'}`;
+  if (dateStr === todayStr()) return 'Bugün';
+  if (dateStr === addDaysStr(todayStr(), 1)) return 'Yarın';
+  return `${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
+}
+function formatDateTime(dateStr, timeStr) {
+  return `${dateLabel(dateStr)} · ${timeStr || '--:--'}`;
+}
+
+function truncateText(str, maxLen) {
+  if (!str) return '';
+  const trimmed = str.trim();
+  if (trimmed.length <= maxLen) return trimmed;
+  return trimmed.slice(0, maxLen).trimEnd() + '…';
 }
 
 // price is TRY, or null when unknown (not every source resolves it — see
@@ -272,29 +280,32 @@ function eventRowHtml(ev) {
   const moreDatesHtml = ev.sessions && ev.sessions.length > 1
     ? `<span class="sub-item event-more-dates">+${ev.sessions.length - 1} tarih daha</span>`
     : '';
-  const scoreHtml = ev.tasteScore != null
-    ? `<div class="event-score" title="Bana Göre tahmini puan"><span class="score-pill" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span></div>`
-    : `<div class="event-score event-score-empty"></div>`;
-  const priceLabel = formatPrice(ev.price);
-  const priceHtml = priceLabel
-    ? `<span class="sub-item tag-price${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</span>`
+  const scorePill = ev.tasteScore != null
+    ? `<span class="score-pill" title="Bana Göre tahmini puan" style="background-color:${scoreColor(ev.tasteScore)}">${ev.tasteScore.toFixed(1)}</span>`
     : '';
+  const priceLabel = formatPrice(ev.price);
+  const pricePill = priceLabel
+    ? `<span class="price-pill${ev.price === 0 ? ' is-free' : ''}">${escapeHtml(priceLabel)}</span>`
+    : '';
+  const descSnippet = truncateText(ev.description, 90);
 
+  // Tiered by importance: photo/date/title (1) > price/rating (2) >
+  // description/hour (3) > venue/extra dates/source/category (4, footer).
   return `
     <article class="event-row${isDismissed ? ' dismissed' : ''}" data-id="${ev.id}">
       <div class="event-thumb">${ev.image ? `<img src="${escapeHtml(ev.image)}" alt="" loading="lazy">` : icon('image')}</div>
       <div class="event-main">
-        <div class="event-meta">${formatDateTime(ev.date, ev.time)}</div>
+        <div class="event-meta">${dateLabel(ev.date)}<span class="event-time">${ev.time || '--:--'}</span></div>
         <h3 class="event-title">${escapeHtml(ev.title)}</h3>
-        <div class="event-sub">
+        ${descSnippet ? `<p class="event-desc">${escapeHtml(descSnippet)}</p>` : ''}
+        <div class="event-footer">
           ${ev.venue ? `<span class="sub-item">${icon('pin')}${escapeHtml(ev.venue)}</span>` : ''}
           <span class="sub-item tag-cat">${escapeHtml(ev.category)}</span>
-          ${priceHtml}
           <span class="sub-item tag-src">${escapeHtml(ev.source)}</span>
           ${moreDatesHtml}
         </div>
       </div>
-      ${scoreHtml}
+      <div class="event-badges">${pricePill}${scorePill}</div>
       <div class="event-actions">
         <button class="action-btn${isFav ? ' active' : ''}" data-action="favorite" title="Favorile">${icon('heart')}</button>
         <button class="action-btn${inList ? ' active' : ''}" data-action="list" title="Listeye ekle">${icon('bookmark')}</button>
