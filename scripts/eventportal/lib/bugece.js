@@ -76,9 +76,25 @@ function pickCategory(ev) {
 // other in practice (confirmed live, 22/22 lockstep) and both false means
 // "tickets not on sale yet / lineup TBA", where starting_from reads 0 as a
 // placeholder, not a real free price — must be treated as unknown, not 0.
+//
+// A manual price audit found this bucket is really two different things
+// wearing the same flag: genuinely-not-yet-priced shows, AND venues (e.g.
+// "Joanna" Rooftop/The Dock, "BAILA!") that never sell tickets directly at
+// all — they're "request invitation" only, permanently show_price:false, and
+// will never resolve a real number no matter how many times this re-fetches.
+// Bugece's own data has no field distinguishing the two. Rather than leave
+// both indistinguishable from "unresolved (yet)" as null, default to a 1000
+// TRY sentinel (an explicit "expensive/unknown, don't undersell it" flag
+// rather than treating it as free or hiding it from price sorting) — per
+// explicit user direction after manually checking these. If a show in this
+// bucket genuinely goes on sale later, the next fetch's real starting_from
+// naturally overwrites the sentinel (canonical.js's session-merge always
+// takes the latest non-null reading).
+const UNPRICED_SENTINEL = 1000;
+
 function pickPrice(ev) {
-  if (!ev.show_price || !ev.for_sale) return null;
-  return typeof ev.starting_from === 'number' ? ev.starting_from : null;
+  if (!ev.show_price || !ev.for_sale) return UNPRICED_SENTINEL;
+  return typeof ev.starting_from === 'number' ? ev.starting_from : UNPRICED_SENTINEL;
 }
 
 // `desc` is sometimes a real string, sometimes empty, and sometimes an

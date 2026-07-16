@@ -7,6 +7,7 @@
 // with no structured JSON. So: pull the AJAX fragment for the card fields,
 // and lazily hit the REST API by slug for the description on demand.
 const { withinWindow, stripHtml, fetchWithRetry, mapLimit, makeId } = require('./util');
+const passo = require('./passo');
 
 // Resolving descriptions requires a second fetch per event (see
 // fetchDescription below) — this used to be lazy/on-demand only, but a
@@ -71,6 +72,40 @@ function parseCard(card) {
   };
 }
 
+// A manual price audit found the site's own event page (not the AJAX card,
+// which carries no link at all for this) sometimes embeds a plain-text
+// "Dış bağlantı linki: <a href=...>" ("external link") pointing at wherever
+// tickets actually get sold — confirmed live on a "satışta" (on-sale)
+// tagged exhibit whose external link was a Passo *group* page (a group
+// bundles many dated instances of a recurring exhibit under one id; resolve
+// by picking the instance nearest the target date and delegating to Passo's
+// regular per-event pricing). Not every such link resolves this way — e.g. a
+// multi-act open-air venue's listing linked to a Biletix *event-group* page
+// instead, which has no single coherent price to extract (dozens of
+// different shows across months) and is correctly left unresolved here.
+async function resolveExternalPrice(link, date) {
+  const res = await fetchWithRetry(link);
+  const html = await res.text();
+  const m = html.match(/Dış bağlantı linki:\s*<a href="([^"]+)"/);
+  if (!m) return null;
+  const externalUrl = m[1];
+  const group = passo.parseEventGroupUrl(externalUrl);
+  if (group) return passo.priceForEventGroup(group.seoUrl, group.id, date).catch(() => null);
+  const single = passo.parseEventUrl(externalUrl);
+  if (single) return passo.priceForEvent(single.seoUrl, single.id).catch(() => null);
+  return null;
+}
+
+// Anything still unresolved after that attempt (no external link at all, or
+// one this doesn't know how to dispatch) is genuinely indeterminate from
+// here — confirmed live on a bare exhibit listing with no ticketing
+// information anywhere on its page, and separately on the open-air venue
+// case above. Default to a 1000 TRY sentinel rather than null per explicit
+// user direction after manually checking these; self-corrects if a later
+// fetch's resolveExternalPrice succeeds (canonical.js always takes the
+// latest non-null reading).
+const UNPRICED_SENTINEL = 1000;
+
 async function fetchEvents({ start, end }) {
   const res = await fetchWithRetry(AJAX_URL);
   const data = await res.json();
@@ -113,6 +148,11 @@ async function fetchEvents({ start, end }) {
 
   await mapLimit(out, DESCRIPTION_CONCURRENCY, async ev => {
     ev.description = await fetchDescription(ev.link).catch(() => null);
+  });
+
+  await mapLimit(out.filter(ev => ev.price == null), DESCRIPTION_CONCURRENCY, async ev => {
+    const resolved = await resolveExternalPrice(ev.link, ev.date).catch(() => null);
+    ev.price = resolved ?? UNPRICED_SENTINEL;
   });
 
   return out;

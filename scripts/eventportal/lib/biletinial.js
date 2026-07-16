@@ -120,15 +120,35 @@ async function fetchEvents({ start, end }) {
 }
 
 // The detail page carries a complete schema.org Offer block right next to
-// the itemprop="description" meta this module already reads (confirmed live
-// across 6 real events in 4 categories): `<span itemprop="price"
-// content="1200,00">` — Turkish decimal notation (comma), "starting from"
-// the lowest active ticket tier, matching what the page itself headlines.
+// the itemprop="description" meta this module already reads: `<span
+// itemprop="price" content="1200,00">` — Turkish decimal notation (comma).
+//
+// A page with multiple upcoming showtimes repeats this Offer block once per
+// showtime, and a manual price audit caught real cases where those blocks
+// disagree (confirmed live: an Othello page carrying 336,00 / 180,00 /
+// 336,00 across its three showtimes) — taking only the first occurrence, as
+// this used to, grabbed whichever showtime happened to render first, not the
+// cheapest currently on sale. Take the minimum across every occurrence
+// instead, matching what a real buyer would actually pay.
+//
+// Some pages carry no Offer block at all: sold out (a disabled
+// "tukendi-yeni" button with no price renders instead), "coming soon", or a
+// distinct calendar/cinema-style booking template ("yn_cinemaList") whose
+// price loads via a separate client-side call this doesn't chase — confirmed
+// live on 3 different pages, all genuinely priced but none resolvable from
+// the static HTML. Rather than leave these indistinguishable from "not yet
+// attempted" as null, default to a 1000 TRY sentinel per explicit user
+// direction after manually checking these pages — self-corrects if a later
+// fetch (e.g. after restock) finds a real Offer block.
+const UNPRICED_SENTINEL = 1000;
+
 function extractPrice(html) {
-  const m = html.match(/itemprop="price"[\s\S]*?content="([^"]*)"/);
-  if (!m) return null;
-  const n = parseFloat(m[1].replace(',', '.'));
-  return Number.isFinite(n) ? n : null;
+  let min = null;
+  for (const m of html.matchAll(/itemprop="price"[\s\S]*?content="([^"]*)"/g)) {
+    const n = parseFloat(m[1].replace(',', '.'));
+    if (Number.isFinite(n) && (min === null || n < min)) min = n;
+  }
+  return min === null ? UNPRICED_SENTINEL : min;
 }
 
 async function fetchDetailPage(link) {

@@ -63,4 +63,28 @@ function parseEventUrl(url) {
   return m ? { seoUrl: m[1], id: m[2] } : null;
 }
 
-module.exports = { priceForEvent, parseEventUrl };
+// A "group" URL ("/en/event-group/{seoUrl}/{id}") is a different shape from
+// a single event's — confirmed live on kultur.istanbul's own external link
+// for a recurring exhibit ("Düşler Zamanı: Japonya"), which points at a
+// Passo group page, not a single-event one. A group bundles many dated
+// instances of the same exhibit under one id (confirmed live: 14 daily
+// instances, each its own {seoUrl, id} pair reusing the *group's* seoUrl)
+// rather than exposing a price itself — resolve by picking the instance
+// closest to the target date and delegating to priceForEvent on it.
+function parseEventGroupUrl(url) {
+  const m = String(url || '').match(/passo\.com\.tr\/[a-z]{2}\/event-group\/([^/?]+)\/(\d+)/i);
+  return m ? { seoUrl: m[1], id: m[2] } : null;
+}
+
+async function priceForEventGroup(seoUrl, id, targetDate) {
+  const url = `https://ticketingweb.passo.com.tr/api/passoweb/geteventgroupdetails/${seoUrl}/${id}/${LANG_ID_TR}`;
+  const json = await curlFetchJson(url, BROWSER_HEADERS);
+  const instances = (json && json.value && json.value.events) || [];
+  if (instances.length === 0) return null;
+  const match =
+    (targetDate && instances.find(e => typeof e.date === 'string' && e.date.startsWith(targetDate))) ||
+    instances[0];
+  return priceForEvent(match.seoUrl, match.id);
+}
+
+module.exports = { priceForEvent, parseEventUrl, priceForEventGroup, parseEventGroupUrl };

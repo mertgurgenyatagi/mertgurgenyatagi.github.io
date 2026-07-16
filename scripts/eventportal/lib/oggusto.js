@@ -40,21 +40,29 @@ function pickImage(photoCredit) {
   return sizes.thumbnail || sizes.card || sizes.medium || photo.url || null;
 }
 
-// evyy.net embeds the real destination directly in its own `?u=` query
-// param — no request needed, pure string decoding (confirmed live). sjv.io
-// and bit.ly are opaque short codes that need one redirect hop resolved
-// (confirmed live: both land on a real destination page after exactly one
-// hop). Both "ticketmaster"-branded wrappers (sjv.io, evyy.net) resolved to
-// Biletix on every sample checked in this app's own research — bit.ly is
-// genuinely mixed and must actually be resolved per link, not assumed.
+// evyy.net *sometimes* embeds the real destination directly in its own
+// `?u=` query param — no request needed, pure string decoding (confirmed
+// live on links shaped like that). But a manual price audit found evyy.net
+// links that are instead a bare opaque short path (e.g.
+// "ticketmaster.evyy.net/xLVbzd", no query string at all) which only reveal
+// their `u=` param a couple of redirect hops later, through an intermediate
+// ojrq.net bounce — confirmed live by following the chain with curl. The
+// param shortcut silently returned the *unresolved* short link itself for
+// these (empty searchParams.get('u') falling back to `link`), which then
+// matched none of the 5 known ticketing hostnames below and gave up with a
+// wrongly-null price. Fall back to actually following the redirect chain
+// (same mechanism already used for sjv.io/bit.ly below) whenever the
+// shortcut isn't available. sjv.io and bit.ly are opaque short codes that
+// need one-or-more redirect hops resolved regardless (confirmed live).
 async function resolveDestination(link) {
   let u;
   try { u = new URL(link); } catch (e) { return link; }
 
   if (u.hostname.endsWith('evyy.net')) {
-    return u.searchParams.get('u') || link;
+    const embedded = u.searchParams.get('u');
+    if (embedded) return embedded;
   }
-  if (u.hostname.endsWith('sjv.io') || u.hostname === 'bit.ly') {
+  if (u.hostname.endsWith('evyy.net') || u.hostname.endsWith('sjv.io') || u.hostname === 'bit.ly') {
     try {
       const res = await fetchWithRetry(link);
       return res.url || link;
@@ -95,6 +103,27 @@ async function priceForTicketLink(rawLink) {
   const destination = await resolveDestination(rawLink);
   return priceForDestination(destination);
 }
+
+// Occasionally the price actually lives in the venue/location text instead
+// of anywhere ticket-related — confirmed live on an event with no
+// event_ticket_link at all whose event_location_name read "Yapı Kredi
+// bomontiada (Ücretsiz Konser)" ("Ücretsiz Konser" = free concert). Too
+// one-off a placement to generalize beyond this literal "(Ücretsiz ...)"
+// marker, but it's a free, zero-risk check to make before giving up.
+function freePriceFromLocation(locationName) {
+  return /\(Ücretsiz\b/i.test(locationName || '') ? 0 : null;
+}
+
+// Anything still unresolved after dispatch is either a genuinely postponed/
+// cancelled event ("ertelendi" — confirmed live: a Black Label Society link
+// that resolves cleanly to a real Biletix event with no scheduled
+// performance date at all, i.e. nothing to price), or one of the ~5% of
+// links to a platform outside the 5 this app can dispatch to. Oggusto's
+// entire price story is "dispatch to somewhere else that might work", so an
+// event that falls all the way through is exactly as indeterminate as the
+// sentinel-default cases in the other sources — default to the same 1000 TRY
+// sentinel per the same user direction, rather than leaving it null.
+const UNPRICED_SENTINEL = 1000;
 
 async function fetchEvents({ start, end }) {
   const controller = new AbortController();
@@ -137,7 +166,8 @@ async function fetchEvents({ start, end }) {
   }
 
   await mapLimit(out, PRICE_CONCURRENCY, async ev => {
-    ev.price = await priceForTicketLink(ev._ticketLink).catch(() => null);
+    const resolved = await priceForTicketLink(ev._ticketLink).catch(() => null);
+    ev.price = resolved ?? freePriceFromLocation(ev.venue) ?? UNPRICED_SENTINEL;
     delete ev._ticketLink;
   });
 

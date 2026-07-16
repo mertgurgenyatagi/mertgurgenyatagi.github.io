@@ -21,7 +21,27 @@ function canonicalId(key) {
   return 'evt-' + crypto.createHash('sha1').update(key).digest('hex').slice(0, 12);
 }
 
-const FUZZY_TITLE_THRESHOLD = 0.6;
+// Was 0.6 until a manual price-accuracy audit caught it false-merging
+// distinct real-world events that share a templated title with only one
+// differing word -- e.g. "İstanbul Workshops Vitray Atölyesi" vs "...Tezhip
+// Atölyesi" vs "...Parfüm Atölyesi" (same venue, 3/5 token overlap = 0.6,
+// just enough to match) collapsed into one canonical card whose price then
+// came from whichever of the three got inserted first. Raised well above
+// every false positive found in that audit (worst case measured: 0.667, two
+// different Anka Workshop statue models) while Tier 1/2 (source+link exact,
+// title+venue exact) still cover the overwhelming majority of real merges --
+// Tier 3 only needs to catch genuine minor text drift, which scores much
+// higher than a swapped-out subject word.
+const FUZZY_TITLE_THRESHOLD = 0.8;
+
+// tokenSet() (textsim.js) splits on non-letter characters, so it drops
+// digits entirely -- two titles differing only by a number (age brackets
+// like "Yaş Grubu:7-11" vs "...4-6", or "Sesimi... 6-9" vs "...7-12") come
+// out token-identical (confirmed live: Jaccard 1.0) and would slip past any
+// threshold. Require digit sequences to match exactly as an extra gate.
+function extractDigits(title) {
+  return (title.match(/\d+/g) || []).join(',');
+}
 
 // index: plain object, "<source>::<link>" -> canonicalId, persisted across
 // runs in canonical-index.json. Mutated in place.
@@ -60,8 +80,10 @@ function mergeDay(poolEvents, rawEvents, index) {
     if (!canonical && r.venue) {
       const rVenue = normalize(r.venue);
       const rTokens = tokenSet(r.title);
+      const rDigits = extractDigits(r.title);
       for (const ev of poolEvents) {
         if (normalize(ev.venue) !== rVenue) continue;
+        if (rDigits !== extractDigits(ev.title)) continue;
         if (jaccard(rTokens, tokenSet(ev.title)) >= FUZZY_TITLE_THRESHOLD) { canonical = ev; break; }
       }
     }
@@ -71,11 +93,19 @@ function mergeDay(poolEvents, rawEvents, index) {
       if (!existingSession) {
         canonical.sessions.push(session);
         sessionsAdded++;
-      } else if (existingSession.price == null && session.price != null) {
-        // Price can genuinely resolve on a later run even for an
-        // already-seen session (e.g. a transient failure the first time
-        // this session was merged) -- backfill it rather than leaving a
-        // stale null forever just because the session itself isn't new.
+      } else if (session.price != null) {
+        // Price is live, mutable fact, not a stable identifier -- it can
+        // resolve for the first time on a later run (a transient failure
+        // the first time this session was merged), but it can also
+        // genuinely change (discount added/expired, demand pricing) even
+        // once already resolved. A manual price audit caught several
+        // sessions frozen at a stale value from the day they were first
+        // seen (e.g. a Biletix price recorded weeks ago no longer matching
+        // the site today) -- always take the latest non-null reading rather
+        // than only backfilling a null once. A fetch that itself failed to
+        // resolve a price (session.price == null) must NOT blank out an
+        // already-known good value, so this only ever moves null -> value
+        // or value -> a newer value, never value -> null.
         existingSession.price = session.price;
       }
       index[indexKey] = canonical.id;
@@ -126,7 +156,18 @@ function pruneAndDerive(poolEvents, today) {
     if (ev.sessions.length === 0) continue;
     ev.date = ev.sessions[0].date;
     ev.time = ev.sessions[0].time;
-    ev.price = ev.sessions[0].price ?? null;
+    // Cross-source merges routinely carry several genuinely different prices
+    // for what's the same real-world event (e.g. the same theater showtime
+    // sold through Bubilet, Biletinial and Biletix at once, or the same
+    // exhibit's different daily time-slots each getting their own ticket
+    // code) -- sessions[0].price picked whichever session happened to merge
+    // in first, which a manual audit showed was frequently the MORE
+    // expensive option while a cheaper one for the same event sat right
+    // there in sessions[1+]. A real buyer would pick the cheapest available
+    // ticket, so derive price as the minimum across all currently-known
+    // session prices instead.
+    const known = ev.sessions.map(s => s.price).filter(p => p != null);
+    ev.price = known.length ? Math.min(...known) : null;
     survivors.push(ev);
   }
 
