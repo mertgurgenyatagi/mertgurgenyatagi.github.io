@@ -1,71 +1,71 @@
 {
-  "generatedAt": "2026-07-17T03:59:13.208Z",
-  "startedAt": "2026-07-17T03:58:18.167Z",
+  "generatedAt": "2026-07-18T03:54:14.916Z",
+  "startedAt": "2026-07-18T03:53:30.773Z",
   "window": {
-    "start": "2026-07-25",
-    "end": "2026-07-25"
+    "start": "2026-07-26",
+    "end": "2026-07-26"
   },
-  "totalEvents": 373,
+  "totalEvents": 423,
   "anyFailed": true,
   "sources": {
     "Bubilet": {
       "ok": true,
-      "count": 52,
-      "durationMs": 10647,
+      "count": 31,
+      "durationMs": 8110,
       "error": null
     },
     "Biletinial": {
       "ok": true,
-      "count": 140,
-      "durationMs": 19342,
+      "count": 111,
+      "durationMs": 14274,
       "error": null
     },
     "Oggusto": {
       "ok": true,
-      "count": 5,
-      "durationMs": 7545,
+      "count": 2,
+      "durationMs": 8190,
       "error": null
     },
     "Luma": {
       "ok": true,
       "count": 0,
-      "durationMs": 492,
+      "durationMs": 364,
       "error": null
     },
     "IKSV": {
       "ok": true,
       "count": 0,
-      "durationMs": 3722,
+      "durationMs": 2744,
       "error": null
     },
     "Biletino": {
       "ok": false,
       "count": 0,
-      "durationMs": 1182,
+      "durationMs": 1113,
       "error": "curl HTTP 403 for https://biletino.com/sitemap.xml -- Attention Required! | Cloudflare body{margin:0;padding:0} if (!navigator.cookieEnabled) { window.addEventListener('DOMContentLoaded', function () { var cookieEl = document.getElementById('cookie-alert"
     },
     "Bugece": {
       "ok": true,
-      "count": 10,
-      "durationMs": 1774,
+      "count": 2,
+      "durationMs": 532,
       "error": null
     },
     "KulturIstanbul": {
       "ok": true,
-      "count": 5,
-      "durationMs": 7538,
+      "count": 4,
+      "durationMs": 10501,
       "error": null
     },
     "Biletix": {
       "ok": true,
-      "count": 46,
-      "durationMs": 54915,
+      "count": 21,
+      "durationMs": 44000,
       "error": null
     }
   },
-  "poolSizeBefore": 262,
-  "poolSizeAfter": 373,
-  "canonicalEventsCreatedThisRun": 111,
-  "sessionsAddedThisRun": 254,
+  "poolSizeBefore": 373,
+  "poolSizeAfter": 423,
+  "canonicalEventsCreatedThisRun": 50,
+  "sessionsAddedThisRun": 167,
   "sessionsPrunedThisRun": 0
 }
