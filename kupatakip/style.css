@@ -1494,3 +1494,179 @@ section {
   .poss-grid { grid-template-columns: 1fr; gap: 16px; }
   .poss-cell { justify-content: center; }
 }
+
+/* ── Kutlama Overlay ──────────────────────────────────────── */
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+#celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: cel-fade-in 0.5s ease;
+}
+
+@keyframes cel-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cel-panel {
+  position: relative;
+  background: rgba(18, 18, 28, 0.96);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 20px;
+  padding: 36px 40px 32px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 60px rgba(212, 175, 55, 0.18), 0 24px 80px rgba(0,0,0,0.6);
+  animation: cel-rise 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+
+@keyframes cel-rise {
+  from { transform: translateY(40px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.cel-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.cel-champ-flag {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.cel-champ-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+}
+
+.cel-trophy {
+  font-size: 4rem;
+  line-height: 1;
+  margin: 8px 0 4px;
+  animation: cel-trophy-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes cel-trophy-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.08) rotate(3deg); }
+}
+
+.cel-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 28px;
+}
+
+.cel-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.cel-place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 150px;
+}
+
+.cel-first { width: 180px; }
+
+.cel-medal { font-size: 1.8rem; line-height: 1; }
+.cel-first .cel-medal { font-size: 2.2rem; }
+
+.cel-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.12);
+}
+
+.cel-first .cel-photo {
+  width: 88px;
+  height: 88px;
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212,175,55,0.35);
+}
+
+.cel-pname {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.cel-first .cel-pname { font-size: 1.2rem; color: var(--gold); }
+
+.cel-pts {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+}
+
+.cel-pts span { font-size: 11px; }
+
+.cel-bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-bottom: none;
+}
+
+.cel-place:nth-child(1) .cel-bar { background: rgba(192,192,192,0.08); border-color: rgba(192,192,192,0.15); }
+.cel-place:nth-child(2) .cel-bar { background: rgba(212,175,55,0.10); border-color: rgba(212,175,55,0.3); }
+.cel-place:nth-child(3) .cel-bar { background: rgba(205,127,50,0.08); border-color: rgba(205,127,50,0.15); }
+
+.cel-close {
+  display: inline-block;
+  padding: 10px 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(212,175,55,0.3);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cel-close:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+@media (max-width: 520px) {
+  .cel-panel { padding: 28px 20px 24px; }
+  .cel-podium { gap: 6px; }
+  .cel-place { width: 110px; }
+  .cel-first { width: 130px; }
+  .cel-photo { width: 52px; height: 52px; }
+  .cel-first .cel-photo { width: 70px; height: 70px; }
+}

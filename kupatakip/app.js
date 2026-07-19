@@ -68,6 +68,8 @@ async function init() {
 
   document.getElementById('loading-screen').classList.add('hidden');
 
+  if (STATE.champion) setTimeout(renderCelebration, 600);
+
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { closeMatchModal(); closeParticipantModal(); }
   });
@@ -524,6 +526,109 @@ function toggleScenario(matchId) {
   renderLeaderboard();
 }
 
+// ── KUTLAMA ────────────────────────────────────────────────
+function renderCelebration() {
+  if (document.getElementById('celebration-overlay')) return;
+
+  const sorted = [...PARTICIPANTS].sort((a, b) =>
+    SCORES[b].pts - SCORES[a].pts || SCORES[b].maxPts - SCORES[a].maxPts
+  );
+  const top3 = sorted.slice(0, 3).map(name => ({ name, pts: SCORES[name].pts }));
+  const champTR = toTR(STATE.champion);
+  const champFlag = flagUrl(STATE.champion);
+
+  // Confetti canvas (behind overlay)
+  const canvas = document.createElement('canvas');
+  canvas.id = 'confetti-canvas';
+  document.body.appendChild(canvas);
+
+  const ctx = canvas.getContext('2d');
+  let W, H;
+  function resizeCanvas() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const COLORS = ['#D4AF37','#F5E47A','#FFFFFF','#FF4444','#4488FF','#44CC66','#FF9900','#CC44FF'];
+  const particles = Array.from({ length: 160 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * window.innerHeight - window.innerHeight * 0.5,
+    w: 7 + Math.random() * 9,
+    h: 4 + Math.random() * 5,
+    rot: Math.random() * Math.PI * 2,
+    rotSpd: (Math.random() - 0.5) * 0.12,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2.5 + Math.random() * 3.5,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    alpha: 0.9 + Math.random() * 0.1,
+  }));
+
+  let rafId, frame = 0, stopped = false;
+  function drawConfetti() {
+    if (stopped) return;
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.x += p.vx + Math.sin(frame * 0.02 + p.y * 0.01) * 0.5;
+      p.y += p.vy;
+      p.rot += p.rotSpd;
+      if (p.y > H + 20) { p.y = -20; p.x = Math.random() * W; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    frame++;
+    rafId = requestAnimationFrame(drawConfetti);
+  }
+  drawConfetti();
+
+  function stopCelebration() {
+    stopped = true;
+    cancelAnimationFrame(rafId);
+    canvas.remove();
+    document.getElementById('celebration-overlay')?.remove();
+  }
+
+  // Podium order: 2nd left, 1st center, 3rd right
+  const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
+  const podiumHeights = { 0: 80, 1: 120, 2: 60 }; // 2nd, 1st, 3rd bar heights
+  const podiumMedals  = { 0: '🥈', 1: '🥇', 2: '🥉' };
+
+  const overlay = document.createElement('div');
+  overlay.id = 'celebration-overlay';
+  overlay.innerHTML = `
+    <div class="cel-panel">
+      <div class="cel-header">
+        ${champFlag ? `<img class="cel-champ-flag" src="${champFlag}" alt="${champTR}">` : ''}
+        <div class="cel-champ-name">${champTR.toUpperCase()} ŞAMPİYON</div>
+        ${champFlag ? `<img class="cel-champ-flag" src="${champFlag}" alt="${champTR}">` : ''}
+      </div>
+      <div class="cel-trophy">🏆</div>
+      <div class="cel-subtitle">FIFA Dünya Kupası 2026 · #kupatakip</div>
+      <div class="cel-podium">
+        ${podiumOrder.map((p, idx) => `
+          <div class="cel-place ${idx === 1 ? 'cel-first' : ''}">
+            <div class="cel-medal">${podiumMedals[idx]}</div>
+            <img class="cel-photo" src="${PARTICIPANT_PICS[p.name]}" alt="${p.name}" onerror="this.style.background='#333'">
+            <div class="cel-pname">${p.name.split(' ')[0]}</div>
+            <div class="cel-pts">${p.pts} <span>puan</span></div>
+            <div class="cel-bar" style="height:${podiumHeights[idx]}px"></div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="cel-close" onclick="document.getElementById('celebration-overlay').__stop()">Kutlamayı Kapat</button>
+    </div>`;
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) stopCelebration(); });
+  overlay.__stop = stopCelebration;
+  document.body.appendChild(overlay);
+}
+
 // ── LEADERBOARD ────────────────────────────────────────────
 function renderLeaderboard() {
   const el = document.getElementById('leaderboard-body');
@@ -548,7 +653,7 @@ function renderLeaderboard() {
   sorted.forEach((name, i) => {
     const s = SCORES[name];
     const rank = i + 1;
-    const isOut = s.maxPts < currentTopPts;
+    const isOut = !STATE.champion && s.maxPts < currentTopPts;
     const rowClass = rank === 1 ? 'lb-gold' : rank === 2 ? 'lb-silver' : rank === 3 ? 'lb-bronze' : isOut ? 'lb-out' : '';
     const gain = gains[name];
 
@@ -1079,7 +1184,7 @@ function renderPossibility() {
 
   sorted.forEach((name, i) => {
     const s = SCORES[name];
-    const isOut = s.maxPts < currentTopPts;
+    const isOut = !STATE.champion && s.maxPts < currentTopPts;
     const isLeader = i === 0 && s.pts > 0;
     const champEn  = TR_TO_EN[PREDICTIONS[name].champion] || PREDICTIONS[name].champion;
     const champTR  = toTR(champEn);
