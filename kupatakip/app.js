@@ -58,7 +58,7 @@ async function init() {
 
   renderHero();
   renderUpcomingMatches();
-  renderPossibilities();
+  renderPodium();
   renderLeaderboard();
   renderScenarioToggles();
   renderBracket();
@@ -537,17 +537,14 @@ function renderCelebration() {
   const champTR = toTR(STATE.champion);
   const champFlag = flagUrl(STATE.champion);
 
-  // Confetti canvas (behind overlay)
+  // Confetti canvas — lives independently of the overlay
   const canvas = document.createElement('canvas');
   canvas.id = 'confetti-canvas';
   document.body.appendChild(canvas);
 
   const ctx = canvas.getContext('2d');
   let W, H;
-  function resizeCanvas() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
+  function resizeCanvas() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
@@ -565,9 +562,9 @@ function renderCelebration() {
     alpha: 0.9 + Math.random() * 0.1,
   }));
 
-  let rafId, frame = 0, stopped = false;
+  let rafId, frame = 0, confettiStopped = false;
   function drawConfetti() {
-    if (stopped) return;
+    if (confettiStopped) return;
     ctx.clearRect(0, 0, W, H);
     particles.forEach(p => {
       p.x += p.vx + Math.sin(frame * 0.02 + p.y * 0.01) * 0.5;
@@ -587,22 +584,31 @@ function renderCelebration() {
   }
   drawConfetti();
 
-  function stopCelebration() {
-    stopped = true;
-    cancelAnimationFrame(rafId);
-    canvas.remove();
+  // Closing the overlay leaves confetti running; it fades and cleans up after 20s
+  function closeOverlay() {
     document.getElementById('celebration-overlay')?.remove();
+    const fadeStart = frame;
+    (function fadeTick() {
+      if (confettiStopped) return;
+      const elapsed = frame - fadeStart;
+      if (elapsed > 300) { // ~5s at 60fps
+        particles.forEach(p => { p.alpha = Math.max(0, p.alpha - 0.012); });
+        if (particles[0].alpha <= 0) { confettiStopped = true; cancelAnimationFrame(rafId); canvas.remove(); return; }
+      }
+      requestAnimationFrame(fadeTick);
+    })();
   }
 
   // Podium order: 2nd left, 1st center, 3rd right
   const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
-  const podiumHeights = { 0: 80, 1: 120, 2: 60 }; // 2nd, 1st, 3rd bar heights
+  const podiumHeights = { 0: 80, 1: 120, 2: 60 };
   const podiumMedals  = { 0: '🥈', 1: '🥇', 2: '🥉' };
 
   const overlay = document.createElement('div');
   overlay.id = 'celebration-overlay';
   overlay.innerHTML = `
     <div class="cel-panel">
+      <button class="cel-x" id="cel-x-btn">✕</button>
       <div class="cel-header">
         ${champFlag ? `<img class="cel-champ-flag" src="${champFlag}" alt="${champTR}">` : ''}
         <div class="cel-champ-name">${champTR.toUpperCase()} ŞAMPİYON</div>
@@ -621,12 +627,56 @@ function renderCelebration() {
           </div>
         `).join('')}
       </div>
-      <button class="cel-close" onclick="document.getElementById('celebration-overlay').__stop()">Kutlamayı Kapat</button>
     </div>`;
 
-  overlay.addEventListener('click', e => { if (e.target === overlay) stopCelebration(); });
-  overlay.__stop = stopCelebration;
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeOverlay(); });
+  overlay.querySelector('#cel-x-btn').addEventListener('click', closeOverlay);
   document.body.appendChild(overlay);
+}
+
+// ── PODIUM (sayfa bölümü) ───────────────────────────────────
+function renderPodium() {
+  const el = document.getElementById('podium-body');
+  if (!el) return;
+
+  const sorted = [...PARTICIPANTS].sort((a, b) =>
+    SCORES[b].pts - SCORES[a].pts || SCORES[b].maxPts - SCORES[a].maxPts
+  );
+  const top3 = sorted.slice(0, 3).map(name => ({ name, pts: SCORES[name].pts }));
+  const champTR = toTR(STATE.champion);
+  const champFlag = flagUrl(STATE.champion);
+
+  const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
+  const podiumHeights = { 0: '80px', 1: '120px', 2: '60px' };
+  const podiumMedals  = { 0: '🥈', 1: '🥇', 2: '🥉' };
+
+  el.innerHTML = `
+    <div class="pd-champion">
+      ${champFlag ? `<img class="pd-champ-flag" src="${champFlag}" alt="${champTR}">` : ''}
+      <span>${champTR.toUpperCase()} ŞAMPİYON</span>
+      ${champFlag ? `<img class="pd-champ-flag" src="${champFlag}" alt="${champTR}">` : ''}
+    </div>
+    <div class="pd-podium">
+      ${podiumOrder.map((p, idx) => `
+        <div class="pd-place ${idx === 1 ? 'pd-first' : ''}">
+          <div class="pd-medal">${podiumMedals[idx]}</div>
+          <img class="pd-photo" src="${PARTICIPANT_PICS[p.name]}" alt="${p.name}" onerror="this.style.background='#333'">
+          <div class="pd-name">${p.name.split(' ')[0]}</div>
+          <div class="pd-pts">${p.pts} <span>puan</span></div>
+          <div class="pd-bar" style="height:${podiumHeights[idx]}"></div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="pd-rest">
+      ${sorted.slice(3).map((name, i) => `
+        <div class="pd-rest-row">
+          <span class="pd-rest-rank">${i + 4}.</span>
+          <img class="pd-rest-avatar" src="${PARTICIPANT_PICS[name]}" alt="${name}" onerror="this.style.background='#333'">
+          <span class="pd-rest-name">${name}</span>
+          <span class="pd-rest-pts">${SCORES[name].pts}</span>
+        </div>
+      `).join('')}
+    </div>`;
 }
 
 // ── LEADERBOARD ────────────────────────────────────────────
@@ -1474,8 +1524,8 @@ function setupAccordion() {
     });
   });
 
-  // Open leaderboard and possibilities by default
-  ['leaderboard', 'possibilities'].forEach(id => {
+  // Open leaderboard and podium by default
+  ['leaderboard', 'podium'].forEach(id => {
     const s = document.getElementById(id);
     if (s) {
       s.querySelector('.section-body')?.classList.add('open');
