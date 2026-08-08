@@ -1,20 +1,13 @@
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { LoginButton } from "../auth/LoginButton";
 import { AvatarStack } from "./AvatarStack";
-import { SlotNumber } from "./SlotNumber";
 import { useCountdown } from "./useCountdown";
-import { useIrregularCounter } from "./useIrregularCounter";
-import { PREDICTIONS_CLOSE_MS, formatDeadline } from "@/data/deadlines";
+import { CrestMarquee } from "./CrestMarquee";
+import { GlitchSeason } from "@/components/ui/GlitchSeason";
+import { PREDICTIONS_CLOSE_MS, formatDeadline, predictionsAreOpen } from "@/data/deadlines";
 import { CLUB_COUNT } from "@/data/clubs";
 import type { Player } from "../profile/usePlayers";
 
-// What it is, how it works, when it happens — in that order, deliberately
-// brief. The scoring formula belongs on /scoring, not here.
-const MISSION_COPY =
-  "Rank all twenty clubs before a ball is kicked, call both cups and the six individual awards, then live with it for nine months.";
-
-// Matches --ease-cotton in index.css so this reveal and the CSS-keyframe ones
-// elsewhere feel like one system rather than two animation vocabularies.
 const EASE_COTTON = [0.22, 0.61, 0.36, 1] as const;
 
 const riseIn: Variants = {
@@ -27,22 +20,13 @@ const staggerGroup: Variants = {
   visible: { transition: { staggerChildren: 0.09, delayChildren: 0.08 } },
 };
 
-/** The single Google CTA on this page. */
-function SignupCta() {
-  return (
-    <div className="[&_button]:rounded-full [&_button]:px-6 [&_button]:py-3.5 [&_button]:text-sm [&_button]:font-semibold [&_svg]:size-[1.05rem] [&_[role=alert]]:mt-2 [&_[role=alert]]:text-xs">
-      <LoginButton label="Sign in and play" />
-    </div>
-  );
-}
-
 function CountdownDigit({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <span className="font-display text-3xl font-semibold text-color_text tnum sm:text-4xl">
+    <div className="flex flex-col items-center gap-1 sm:gap-1.5">
+      <span className="type-numeral text-[clamp(1.9rem,7vw,2.8rem)] text-color_text tabular font-bold">
         {String(value).padStart(2, "0")}
       </span>
-      <span className="font-mono text-[0.6rem] tracking-[0.22em] text-color_textsecondary uppercase">
+      <span className="type-label text-[0.6rem] tracking-[0.16em] uppercase text-color_textsecondary">
         {label}
       </span>
     </div>
@@ -50,72 +34,80 @@ function CountdownDigit({ value, label }: { value: number; label: string }) {
 }
 
 /**
- * Home, logged out and pre-season — the one page a visitor sees before signing
- * in, and the first thing The Irish Guy will look at.
- *
- * A single screen, no scroll: one hero band, headline and CTA left, mission
- * and countdown right. Cloned from kupatakipucl, with `DustHaze` dropped —
- * irishtable's ruled grid is already the background, and five drifting blurred
- * blobs on top of a ruled field is two competing textures.
+ * Logged-out Landing Hero — Desktop & Tablet view.
+ * Single screen view (no scrolling down).
  */
 export function HomeLandingLoggedOut({ players }: { players: Player[] }) {
   const countdown = useCountdown(PREDICTIONS_CLOSE_MS);
-  const liveCount = useIrregularCounter(players.length);
   const reduceMotion = useReducedMotion();
   const initial = reduceMotion ? "visible" : "hidden";
 
   return (
-    <section className="relative flex h-full min-h-0 flex-1 items-center overflow-hidden">
+    <section className="relative flex h-full min-h-0 flex-1 items-center overflow-hidden py-4 sm:py-8">
       <motion.div
         initial={initial}
         animate="visible"
         variants={staggerGroup}
-        className="relative z-10 mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-10 px-6 sm:px-10 lg:grid-cols-[3fr_2fr] lg:gap-16"
+        className="relative z-10 mx-auto flex w-full max-w-[1300px] flex-col gap-7 px-6 sm:px-10"
       >
-        <div className="flex flex-col gap-6">
-          <motion.h1
-            variants={riseIn}
-            className="max-w-3xl text-balance font-display text-4xl leading-[0.98] font-semibold tracking-[-0.02em] text-color_text sm:text-5xl lg:text-6xl"
-          >
-            {CLUB_COUNT} clubs. <SlotNumber value={liveCount} /> players. 1 season.
-          </motion.h1>
-          <motion.p
-            variants={riseIn}
-            className="max-w-xl text-base text-color_textsecondary sm:text-lg"
-          >
-            Predict the Premier League table. Then argue about it until May.
-          </motion.p>
+        <motion.p variants={riseIn} className="type-label text-accent">
+          2026/27 PREMIER LEAGUE
+        </motion.p>
 
-          <motion.div variants={riseIn} className="flex flex-wrap items-center gap-6 pt-2">
-            <SignupCta />
-            {players.length > 0 && (
-              <div className="flex items-center gap-3">
-                <AvatarStack players={players} />
-                <span className="font-mono text-xs text-color_textsecondary">
-                  {players.length} {players.length === 1 ? "person has" : "people have"} joined
-                </span>
-              </div>
-            )}
-          </motion.div>
-        </div>
+        <motion.h1
+          variants={riseIn}
+          className="type-display text-[clamp(2.4rem,7.5vw,4.5rem)] leading-[0.98] font-semibold text-color_text"
+        >
+          PREDICT THE TABLE.
+          <br />
+          LIVE WITH IT FOR A <GlitchSeason text="SEASON" />.
+        </motion.h1>
+
+        <motion.p
+          variants={riseIn}
+          className="max-w-2xl text-base text-color_textsecondary sm:text-lg leading-relaxed"
+        >
+          Rank all {CLUB_COUNT} clubs from first to last, call both cups and the six
+          individual awards, then watch nine months of football decide whether you were
+          right. One entry each. No edits after {formatDeadline()}. Made for the Irish Guy YouTube channel.
+        </motion.p>
 
         <motion.div
           variants={riseIn}
-          className="flex flex-col gap-7 lg:border-l lg:border-color_border1/30 lg:pl-12"
+          className="flex flex-col gap-6 pt-2 lg:flex-row lg:items-center lg:justify-between"
         >
-          <p className="text-balance font-display text-lg leading-snug text-color_text sm:text-xl">
-            {MISSION_COPY}
-          </p>
+          {/* Sign in button & social proof */}
+          <div className="flex flex-col gap-3">
+            {predictionsAreOpen() ? (
+              <LoginButton size="lg" variant="primary" label="SIGN IN AND PLAY" />
+            ) : (
+              <p className="type-label text-remove">Entries are closed for this season</p>
+            )}
 
-          <div className="flex flex-col gap-4">
-            <span className="font-mono text-[0.62rem] tracking-[0.28em] text-color_textsecondary uppercase">
-              Entries close {formatDeadline()}
-            </span>
-            <div className="flex items-start gap-5 sm:gap-7">
-              <CountdownDigit value={countdown.days} label="Days" />
-              <CountdownDigit value={countdown.hours} label="Hrs" />
-              <CountdownDigit value={countdown.minutes} label="Min" />
-              <CountdownDigit value={countdown.seconds} label="Sec" />
+            {players.length > 0 && (
+              <div className="flex items-center gap-3 pt-1">
+                <AvatarStack players={players} />
+                <p className="text-sm text-color_textsecondary">
+                  <span className="type-numeral text-color_text font-bold">{players.length}</span>{" "}
+                  {players.length === 1 ? "person has" : "people have"} joined
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Seamless Club Crest Conveyor Belt */}
+          <div className="hidden min-w-0 flex-1 px-8 lg:block">
+            <CrestMarquee />
+          </div>
+
+          {/* Countdown Strip */}
+          <div className="flex flex-col gap-2">
+            <p className="type-label text-right lg:text-left">PREDICTIONS CLOSE IN</p>
+            <div className="flex items-start gap-4 sm:gap-6">
+              <CountdownDigit value={countdown.days} label="DAYS" />
+              <CountdownDigit value={countdown.hours} label="HOURS" />
+              <CountdownDigit value={countdown.minutes} label="MINS" />
+              <CountdownDigit value={countdown.seconds} label="SECS" />
             </div>
           </div>
         </motion.div>

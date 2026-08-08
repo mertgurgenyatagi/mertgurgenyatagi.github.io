@@ -40,19 +40,21 @@ export function HomePage() {
   const imageUrls = useMemo(() => homeImageUrls(signedIn, players), [signedIn, players]);
   const imagesReady = useImagePreload(imageUrls);
 
-  if (authLoading || playersLoading || !imagesReady) {
+  if (authLoading) {
     return signedIn ? <HomeBentoSkeleton /> : <HomeHeroBandSkeleton />;
   }
 
-  // Mobile runs its own composition per state — a separate tree, not a reflow
-  // of the desktop one. The logged-in branch forks one level deeper instead,
-  // inside LoggedInHome, so the (substantial) fetching logic isn't duplicated.
+  // Signed out landing page materializes immediately without waiting on image preloading
   if (!signedIn) {
     return isMobile ? (
       <MobileHomeLoggedOut players={players} />
     ) : (
       <HomeLandingLoggedOut players={players} />
     );
+  }
+
+  if (playersLoading && players.length === 0 && !imagesReady) {
+    return <HomeBentoSkeleton />;
   }
 
   return <LoggedInHome players={players} />;

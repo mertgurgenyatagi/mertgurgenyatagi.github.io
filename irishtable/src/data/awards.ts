@@ -1,19 +1,14 @@
 /**
  * The eight non-table predictions: two cup winners and six individual awards.
  *
- * Every shortlist is *derived* from clubs.ts / people.ts rather than hand-
- * listed, so correcting a squad in one place fixes every picker at once. Each
- * award exposes a uniform `Candidate[]`, which is what lets one picker
- * component render all eight steps.
- *
- * Point values live in scoring.ts and are re-exported onto each award here, so
- * the prediction flow and the Scoring page cannot disagree about what a pick
- * is worth.
+ * Shortlists are authoritatively supplied by Mert and mapped to their respective
+ * club crests and ids.
  */
 
-import { CLUBS, type Club } from "./clubs";
-import { MANAGERS, PLAYERS, SEASON_START_YEAR, type Player } from "./people";
+import { getClub, type ClubId } from "./clubs";
 import { AWARD_POINTS } from "./scoring";
+
+export const YOUNG_PLAYER_MAX_AGE = 23;
 
 export type AwardId =
   | "faCup"
@@ -25,120 +20,220 @@ export type AwardId =
   | "goldenGlove"
   | "bestPlaymaker";
 
-/** What a picker row renders. Uniform across clubs, players and managers. */
 export type Candidate = {
   id: string;
   name: string;
-  /** Club name for a player/manager; nothing for a club itself. */
   subtitle?: string;
-  /** Crest to show alongside — the club's own, or the person's club. */
   crest?: string;
 };
 
 export type Award = {
   id: AwardId;
   label: string;
-  /** One line explaining what is actually being predicted. */
   blurb: string;
   points: number;
-  /** Plural noun for the picker's search box — "Search players…". Kept
-   *  explicit because lowercasing the label mangles acronyms ("fa cup"). */
   searchNoun: string;
   candidates: readonly Candidate[];
 };
 
-/** Young Player of the Season follows the Premier League's U23 convention:
- *  eligible if 23 or younger at the start of the season. */
-export const YOUNG_PLAYER_MAX_AGE = 23;
-
-function isYoung(p: Player): boolean {
-  return SEASON_START_YEAR - p.bornYear <= YOUNG_PLAYER_MAX_AGE;
+function clubCand(clubId: ClubId, customName?: string): Candidate {
+  const club = getClub(clubId);
+  return {
+    id: clubId,
+    name: customName ?? club?.name ?? clubId,
+    crest: club?.crest,
+  };
 }
 
-const CLUB_BY_ID = new Map<string, Club>(CLUBS.map((c) => [c.id, c]));
-
-function clubCandidate(club: Club): Candidate {
-  return { id: club.id, name: club.name, crest: club.crest };
+function personCand(id: string, name: string, clubId: ClubId): Candidate {
+  const club = getClub(clubId);
+  return {
+    id,
+    name,
+    subtitle: club?.shortName ?? club?.name,
+    crest: club?.crest,
+  };
 }
 
-function playerCandidate(p: Player): Candidate {
-  const club = CLUB_BY_ID.get(p.clubId);
-  return { id: p.id, name: p.name, subtitle: club?.shortName, crest: club?.crest };
-}
+// 1. FA Cup Winner (10 candidates)
+const FA_CUP_CANDIDATES: Candidate[] = [
+  clubCand("arsenal"),
+  clubCand("man-city"),
+  clubCand("chelsea"),
+  clubCand("liverpool"),
+  clubCand("man-united"),
+  clubCand("aston-villa"),
+  clubCand("tottenham"),
+  clubCand("newcastle"),
+  clubCand("brighton"),
+  clubCand("coventry"),
+];
 
-/** Alphabetical by display name — no implied ranking or favouritism in the
- *  order a shortlist is presented in. */
-function byName(a: Candidate, b: Candidate): number {
-  return a.name.localeCompare(b.name);
-}
+// 2. Carabao Cup Winner (10 candidates)
+const CARABAO_CANDIDATES: Candidate[] = [
+  clubCand("man-city"),
+  clubCand("arsenal"),
+  clubCand("liverpool"),
+  clubCand("chelsea"),
+  clubCand("man-united"),
+  clubCand("tottenham"),
+  clubCand("aston-villa"),
+  clubCand("newcastle"),
+  clubCand("brentford"),
+  clubCand("everton"),
+];
 
-const CLUB_CANDIDATES: readonly Candidate[] = CLUBS.map(clubCandidate);
+// 3. Player of the Season (20 candidates)
+const PLAYER_OF_SEASON_CANDIDATES: Candidate[] = [
+  personCand("erling-haaland", "Erling Haaland", "man-city"),
+  personCand("bruno-fernandes", "Bruno Fernandes", "man-united"),
+  personCand("declan-rice", "Declan Rice", "arsenal"),
+  personCand("william-saliba", "William Saliba", "arsenal"),
+  personCand("bukayo-saka", "Bukayo Saka", "arsenal"),
+  personCand("morgan-rogers", "Morgan Rogers", "chelsea"),
+  personCand("martin-odegaard", "Martin Ødegaard", "arsenal"),
+  personCand("cole-palmer", "Cole Palmer", "chelsea"),
+  personCand("victor-munoz", "Víctor Muñoz", "liverpool"),
+  personCand("elliot-anderson", "Elliot Anderson", "man-city"),
+  personCand("rayan-cherki", "Rayan Cherki", "man-city"),
+  personCand("alexander-isak", "Alexander Isak", "newcastle"),
+  personCand("antoine-semenyo", "Antoine Semenyo", "man-city"),
+  personCand("johan-manzambi", "Johan Manzambi", "aston-villa"),
+  personCand("sandro-tonali", "Sandro Tonali", "tottenham"),
+  personCand("virgil-van-dijk", "Virgil van Dijk", "liverpool"),
+  personCand("joao-gomes", "João Gomes", "aston-villa"),
+  personCand("florian-wirtz", "Florian Wirtz", "chelsea"),
+  personCand("gabriel-magalhaes", "Gabriel Magalhães", "arsenal"),
+  personCand("dominik-szoboszlai", "Dominik Szoboszlai", "liverpool"),
+];
 
-const ALL_PLAYERS: readonly Candidate[] = PLAYERS.map(playerCandidate).sort(byName);
+// 4. Young Player of the Season (20 candidates)
+const YOUNG_PLAYER_CANDIDATES: Candidate[] = [
+  personCand("geovany-quenda", "Geovany Quenda", "chelsea"),
+  personCand("caleb-yirenkyi", "Caleb Yirenkyi", "coventry"),
+  personCand("victor-munoz-yp", "Víctor Muñoz", "liverpool"),
+  personCand("savinho", "Savinho", "man-city"),
+  personCand("alejandro-garnacho", "Alejandro Garnacho", "aston-villa"),
+  personCand("claudio-echeverri", "Claudio Echeverri", "man-city"),
+  personCand("marco-palestra", "Marco Palestra", "chelsea"),
+  personCand("bazoumana-toure", "Bazoumana Touré", "newcastle"),
+  personCand("ewen-jaouen", "Ewen Jaouen", "newcastle"),
+  personCand("kobbie-mainoo", "Kobbie Mainoo", "man-united"),
+  personCand("leny-yoro", "Leny Yoro", "man-united"),
+  personCand("max-dowman", "Max Dowman", "arsenal"),
+  personCand("sean-steur", "Sean Steur", "newcastle"),
+  personCand("dastan-satpaev", "Dastan Satpaev", "chelsea"),
+  personCand("aladji-bamba", "Aladji Bamba", "newcastle"),
+  personCand("mateus-fernandes", "Mateus Fernandes", "tottenham"),
+  personCand("jeremy-jacquet", "Jérémy Jacquet", "liverpool"),
+  personCand("giovanni-leoni", "Giovanni Leoni", "liverpool"),
+  personCand("antonin-kinsky-yp", "Antonín Kinský", "tottenham"),
+  personCand("billy-ray-cullinane", "Billy-Ray Cullinane", "brighton"),
+];
 
-const YOUNG_PLAYERS: readonly Candidate[] = PLAYERS.filter(isYoung)
-  .map(playerCandidate)
-  .sort(byName);
+// 5. Manager of the Season (10 candidates)
+const MANAGER_CANDIDATES: Candidate[] = [
+  personCand("mikel-arteta", "Mikel Arteta", "arsenal"),
+  personCand("enzo-maresca", "Enzo Maresca", "man-city"),
+  personCand("xabi-alonso", "Xabi Alonso", "chelsea"),
+  personCand("andoni-iraola", "Andoni Iraola", "liverpool"),
+  personCand("michael-carrick", "Michael Carrick", "man-united"),
+  personCand("unai-emery", "Unai Emery", "aston-villa"),
+  personCand("roberto-de-zerbi", "Roberto De Zerbi", "tottenham"),
+  personCand("fabian-hurzeler", "Fabian Hürzeler", "brighton"),
+  personCand("frank-lampard", "Frank Lampard", "coventry"),
+  personCand("matthias-jaissle", "Matthias Jaissle", "newcastle"),
+];
 
-const KEEPERS: readonly Candidate[] = PLAYERS.filter((p) => p.position === "GK")
-  .map(playerCandidate)
-  .sort(byName);
+// 6. Golden Boot Winner (10 candidates)
+const GOLDEN_BOOT_CANDIDATES: Candidate[] = [
+  personCand("erling-haaland-gb", "Erling Haaland", "man-city"),
+  personCand("bukayo-saka-gb", "Bukayo Saka", "arsenal"),
+  personCand("alexander-isak-gb", "Alexander Isak", "newcastle"),
+  personCand("viktor-gyokeres", "Viktor Gyökeres", "arsenal"),
+  personCand("cole-palmer-gb", "Cole Palmer", "chelsea"),
+  personCand("marcus-rashford-gb", "Marcus Rashford", "man-united"),
+  personCand("danny-welbeck", "Danny Welbeck", "chelsea"),
+  personCand("joshua-zirkzee", "Joshua Zirkzee", "man-united"),
+  personCand("brian-brobbey", "Brian Brobbey", "sunderland"),
+  personCand("victor-munoz-gb", "Víctor Muñoz", "liverpool"),
+];
 
-/** Golden Boot and Best Playmaker both draw from everyone who plausibly
- *  scores or creates — defenders and keepers are excluded rather than
- *  cluttering a list nobody will pick them from. */
-const ATTACKERS: readonly Candidate[] = PLAYERS.filter(
-  (p) => p.position === "FW" || p.position === "MF"
-)
-  .map(playerCandidate)
-  .sort(byName);
+// 7. Golden Glove Winner (10 candidates)
+const GOLDEN_GLOVE_CANDIDATES: Candidate[] = [
+  personCand("david-raya", "David Raya", "arsenal"),
+  personCand("gianluigi-donnarumma", "Gianluigi Donnarumma", "man-city"),
+  personCand("alisson-becker", "Alisson Becker", "liverpool"),
+  personCand("robert-sanchez", "Robert Sánchez", "chelsea"),
+  personCand("jordan-pickford", "Jordan Pickford", "everton"),
+  personCand("senne-lammens", "Senne Lammens", "man-united"),
+  personCand("antonin-kinsky", "Antonín Kinský", "tottenham"),
+  personCand("carl-rushworth", "Carl Rushworth", "coventry"),
+  personCand("bart-verbruggen", "Bart Verbruggen", "brighton"),
+  personCand("caoimhin-kelleher", "Caoimhín Kelleher", "brentford"),
+];
 
-const MANAGER_CANDIDATES: readonly Candidate[] = MANAGERS.map((m) => {
-  const club = CLUB_BY_ID.get(m.clubId);
-  return { id: m.id, name: m.name, subtitle: club?.shortName, crest: club?.crest };
-}).sort(byName);
+// 8. Best Playmaker (20 candidates)
+const BEST_PLAYMAKER_CANDIDATES: Candidate[] = [
+  personCand("bruno-fernandes-bp", "Bruno Fernandes", "man-united"),
+  personCand("martin-odegaard-bp", "Martin Ødegaard", "arsenal"),
+  personCand("morgan-rogers-bp", "Morgan Rogers", "chelsea"),
+  personCand("rayan-cherki-bp", "Rayan Cherki", "man-city"),
+  personCand("cole-palmer-bp", "Cole Palmer", "chelsea"),
+  personCand("bukayo-saka-bp", "Bukayo Saka", "arsenal"),
+  personCand("elliot-anderson-bp", "Elliot Anderson", "man-city"),
+  personCand("johan-manzambi-bp", "Johan Manzambi", "aston-villa"),
+  personCand("victor-munoz-bp", "Víctor Muñoz", "liverpool"),
+  personCand("dominik-szoboszlai-bp", "Dominik Szoboszlai", "liverpool"),
+  personCand("florian-wirtz-bp", "Florian Wirtz", "chelsea"),
+  personCand("sandro-tonali-bp", "Sandro Tonali", "tottenham"),
+  personCand("youri-tielemans", "Youri Tielemans", "man-united"),
+  personCand("antoine-semenyo-bp", "Antoine Semenyo", "man-city"),
+  personCand("marcus-rashford-bp", "Marcus Rashford", "man-united"),
+  personCand("alejandro-garnacho-bp", "Alejandro Garnacho", "aston-villa"),
+  personCand("declan-rice-bp", "Declan Rice", "arsenal"),
+  personCand("joao-pedro", "João Pedro", "chelsea"),
+  personCand("xavi-simons", "Xavi Simons", "tottenham"),
+  personCand("eberechi-eze", "Eberechi Eze", "crystal-palace"),
+];
 
-/**
- * Order matters — this is the exact order the prediction flow walks through
- * after the table and before the review step.
- */
 export const AWARDS: readonly Award[] = [
   {
     id: "faCup",
     label: "FA Cup Winner",
-    blurb: "Who lifts the FA Cup. Only Premier League clubs are listed here.",
+    blurb: "Who lifts the FA Cup.",
     points: AWARD_POINTS.faCup,
     searchNoun: "clubs",
-    candidates: CLUB_CANDIDATES,
+    candidates: FA_CUP_CANDIDATES,
   },
   {
     id: "carabao",
     label: "Carabao Cup Winner",
-    blurb: "Who lifts the League Cup. Only Premier League clubs are listed here.",
+    blurb: "Who lifts the League Cup.",
     points: AWARD_POINTS.carabao,
     searchNoun: "clubs",
-    candidates: CLUB_CANDIDATES,
+    candidates: CARABAO_CANDIDATES,
   },
   {
     id: "playerOfSeason",
     label: "Player of the Season",
-    blurb: "The season's outstanding player, whoever takes the official award.",
+    blurb: "The season's outstanding player.",
     points: AWARD_POINTS.playerOfSeason,
     searchNoun: "players",
-    candidates: ALL_PLAYERS,
+    candidates: PLAYER_OF_SEASON_CANDIDATES,
   },
   {
     id: "youngPlayerOfSeason",
     label: "Young Player of the Season",
-    blurb: `Aged ${YOUNG_PLAYER_MAX_AGE} or under at the start of the season.`,
+    blurb: "Young player of the season.",
     points: AWARD_POINTS.youngPlayerOfSeason,
     searchNoun: "players",
-    candidates: YOUNG_PLAYERS,
+    candidates: YOUNG_PLAYER_CANDIDATES,
   },
   {
     id: "managerOfSeason",
     label: "Manager of the Season",
-    blurb: "One per club. Sacked mid-season? You still keep the pick.",
+    blurb: "Manager of the season.",
     points: AWARD_POINTS.managerOfSeason,
     searchNoun: "managers",
     candidates: MANAGER_CANDIDATES,
@@ -149,7 +244,7 @@ export const AWARDS: readonly Award[] = [
     blurb: "Most league goals across the season.",
     points: AWARD_POINTS.goldenBoot,
     searchNoun: "players",
-    candidates: ATTACKERS,
+    candidates: GOLDEN_BOOT_CANDIDATES,
   },
   {
     id: "goldenGlove",
@@ -157,7 +252,7 @@ export const AWARDS: readonly Award[] = [
     blurb: "Most clean sheets across the season.",
     points: AWARD_POINTS.goldenGlove,
     searchNoun: "goalkeepers",
-    candidates: KEEPERS,
+    candidates: GOLDEN_GLOVE_CANDIDATES,
   },
   {
     id: "bestPlaymaker",
@@ -165,7 +260,7 @@ export const AWARDS: readonly Award[] = [
     blurb: "Most league assists across the season.",
     points: AWARD_POINTS.bestPlaymaker,
     searchNoun: "players",
-    candidates: ATTACKERS,
+    candidates: BEST_PLAYMAKER_CANDIDATES,
   },
 ];
 
@@ -177,14 +272,11 @@ export function getAward(id: string): Award | undefined {
   return AWARD_BY_ID.get(id);
 }
 
-/** Resolve any award pick to a display name, regardless of which pool it
- *  came from. Falls back to the stored id so nothing renders blank. */
 export function candidateName(awardId: AwardId, candidateId: string): string {
   const award = AWARD_BY_ID.get(awardId);
   return award?.candidates.find((c) => c.id === candidateId)?.name ?? candidateId;
 }
 
-/** Case- and accent-insensitive search within one award's shortlist. */
 export function searchCandidates(
   award: Award,
   query: string
@@ -200,5 +292,7 @@ function normalize(value: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ø/g, "o")
+    .replace(/Ø/g, "O")
     .toLowerCase();
 }

@@ -1,8 +1,7 @@
-import { Fragment } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion, type Variants } from "motion/react";
+import { Fragment } from "react";
 import {
-  CONTACT_EMAIL,
-  ESSENCE_TEXT,
   KEY_DATES,
   currentThresholdFor,
   formatChipDate,
@@ -10,11 +9,13 @@ import {
 } from "./aboutContent";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { MobileAboutPage } from "../mobile/MobileAboutPage";
-import { SITE_NAME } from "@/data/site";
-import { cn } from "@/lib/utils";
+import { SITE_NAME, CHANNEL_NAME } from "@/data/site";
+import { CLUB_COUNT } from "@/data/clubs";
+import { MAX_SCORE } from "@/data/scoring";
+import { formatDeadline } from "@/data/deadlines";
+import { cn, assetUrl } from "@/lib/utils";
+import { GlitchSeason } from "@/components/ui/GlitchSeason";
 
-// Matches --ease-cotton (src/styles/index.css) / HomeLandingLoggedOut.tsx's
-// own copy of the same curve, so every page's motion reads as one system.
 const EASE_COTTON = [0.22, 0.61, 0.36, 1] as const;
 
 const logoIn: Variants = {
@@ -22,28 +23,16 @@ const logoIn: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: EASE_COTTON } },
 };
 
-// A single fade/rise, not a word-by-word stagger — the essence text is a full
-// paragraph, and staggering a hundred-odd words would take several seconds to
-// finish revealing.
 const essenceIn: Variants = {
   hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_COTTON, delay: 0.3 } },
-};
-const timelineIn: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.6, ease: EASE_COTTON, delay: 1.1 } },
-};
-const contactIn: Variants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.6, ease: EASE_COTTON, delay: 1.5 } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE_COTTON, delay: 0.2 } },
 };
 
-/**
- * A stepper, not a decoration: the four dates are a genuine chronological
- * sequence (entries close → season starts → final matchday → awards). Past
- * nodes are filled, the next upcoming one blinks as the current stage,
- * everything after it stays hollow.
- */
+const timelineIn: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.6, ease: EASE_COTTON, delay: 0.6 } },
+};
+
 function DateTimeline() {
   const now = Date.now();
   const currentThreshold = currentThresholdFor(now);
@@ -92,13 +81,8 @@ function DateTimeline() {
 }
 
 /**
- * /about — open to everyone, no gating. Single no-scroll viewport.
- * Two-column poster composition: matter-of-fact essence text and contact info
- * on the left, the mark over a real-sequence date timeline on the right.
- *
- * `DustHaze` is dropped, same as the landing page — irishtable's ruled grid
- * is already the background, and drifting blurred blobs on top of a ruled
- * field is two competing textures.
+ * About Page — Desktop layout.
+ * Combines the restored prior text with the timeline component.
  */
 export function AboutPage() {
   const isMobile = useIsMobile();
@@ -106,50 +90,75 @@ export function AboutPage() {
   const initial = reduceMotion ? "visible" : "hidden";
   const animate = "visible";
 
-  // The desktop composition here is a poster, not a responsive layout —
-  // mobile gets its own rather than a reflow of something that was never
-  // meant to bend.
   if (isMobile) return <MobileAboutPage />;
 
   return (
-    <section className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-[1500px] grid-cols-[0.85fr_1.3fr] gap-12 px-14 py-9">
-        <div className="flex min-h-0 flex-col items-start justify-center gap-10">
-          <motion.p
-            initial={initial}
-            animate={animate}
-            variants={essenceIn}
-            className="max-w-2xl font-display text-lg leading-relaxed font-light text-color_text"
-          >
-            {ESSENCE_TEXT}
-          </motion.p>
+    <section className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden py-4 sm:py-6">
+      <div className="relative z-10 mx-auto grid h-full min-h-0 w-full max-w-[1500px] grid-cols-[1.1fr_1fr] gap-12 px-10 py-4">
+        {/* Left Column: Restored Prior About Text & Header */}
+        <motion.div
+          initial={initial}
+          animate={animate}
+          variants={essenceIn}
+          className="flex min-h-0 flex-col gap-6 overflow-y-auto pr-4"
+        >
+          <header className="flex flex-col gap-2">
+            <p className="type-label text-accent">2026/27</p>
+            <h1 className="type-display text-4xl sm:text-5xl font-semibold text-color_text">ABOUT</h1>
+          </header>
 
-          <motion.div
-            initial={initial}
-            animate={animate}
-            variants={contactIn}
-            className="flex flex-col items-start gap-1"
-          >
-            <span className="font-mono text-[0.62rem] tracking-[0.2em] text-color_textsecondary uppercase">
-              Contact
-            </span>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className="w-fit font-display text-sm text-color_text no-underline transition-colors duration-150 ease-[var(--ease-cotton)] hover:text-color_accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-color_text"
-            >
-              {CONTACT_EMAIL}
-            </a>
-          </motion.div>
-        </div>
+          <div className="flex max-w-2xl flex-col gap-4 text-base leading-relaxed text-color_textsecondary sm:text-lg">
+            <p>
+              {SITE_NAME} is a <GlitchSeason text="season" />-long Premier League prediction league. You rank all{" "}
+              {CLUB_COUNT} clubs from first to twentieth, pick who wins the FA Cup and the
+              Carabao Cup, and name six individual award winners. Then you wait nine months
+              to find out how wrong you were.
+            </p>
+            <p>
+              It's built for {CHANNEL_NAME}'s audience — people who already argue about the
+              table in the comments, now with a scoreboard attached. Everyone submits once,
+              everyone is scored the same way, and nobody can see anyone else's entry until
+              the deadline passes.
+            </p>
+            <p>
+              Entries close on{" "}
+              <span className="font-semibold text-color_text">{formatDeadline()}</span>, the day before the{" "}
+              <GlitchSeason text="season" /> starts. You can change your predictions as many times as you like until
+              then, and not once afterwards. A perfect entry is worth {MAX_SCORE} points —{" "}
+              <Link to="/scoring" className="text-accent underline-offset-4 hover:underline">
+                the scoring page
+              </Link>{" "}
+              explains exactly how you get there.
+            </p>
+            <p>
+              There's a forum and a chat room, both open from the moment you sign in. Use
+              them. Half the point of a prediction league is telling someone their title
+              pick is delusional.
+            </p>
+          </div>
 
-        <div className="flex min-h-0 flex-col items-center justify-center gap-20">
+          <section className="flex flex-col gap-2 border-t border-color_border1 pt-6">
+            <h2 className="type-display text-xl text-color_text">Questions</h2>
+            <p className="max-w-2xl text-color_textsecondary">
+              Post them in the{" "}
+              <Link to="/forum" className="text-accent underline-offset-4 hover:underline">
+                forum
+              </Link>
+              {" "}— that's the fastest way to get an answer, and someone else has probably
+              asked already.
+            </p>
+          </section>
+        </motion.div>
+
+        {/* Right Column: Logo & Timeline */}
+        <div className="flex min-h-0 flex-col items-center justify-center gap-14 border-l border-color_border1/30 pl-8">
           <motion.img
             initial={initial}
             animate={animate}
             variants={logoIn}
-            src="/brand/irishtable-logo.svg"
+            src={assetUrl("/brand/irishtable-logo.svg")}
             alt={SITE_NAME}
-            className="h-[clamp(11rem,32vh,18rem)] w-auto"
+            className="h-[clamp(9rem,25vh,14rem)] w-auto"
           />
           <motion.div initial={initial} animate={animate} variants={timelineIn} className="w-full">
             <DateTimeline />

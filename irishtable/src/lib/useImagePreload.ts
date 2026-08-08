@@ -26,13 +26,8 @@ export function __resetImagePreloadCache() {
 export function useImagePreload(urls: string[]): boolean {
   const [, bump] = useReducer((n: number) => n + 1, 0);
 
-  // Derived during render, not stored in state and assigned from an effect.
-  // The old version kept `ready` in state and only flipped it inside the
-  // effect, so the render where `urls` first became non-empty (data having
-  // just arrived) still saw the previous `ready === true` and painted
-  // ungated content for a frame before the effect pulled it back to a
-  // skeleton. That flash was the whole bug.
-  const ready = urls.every((url) => settled.has(url));
+  // Derive readiness from settled set or fallback timeout
+  const allSettled = urls.every((url) => settled.has(url));
 
   // The effect only ever needs to re-run when the *set* of urls changes.
   const key = urls.join("|");
@@ -40,10 +35,18 @@ export function useImagePreload(urls: string[]): boolean {
   keyRef.current = key;
 
   useEffect(() => {
-    if (ready) return;
+    if (allSettled) return;
     let cancelled = false;
     const pending = urls.filter((url) => !settled.has(url));
     if (pending.length === 0) return;
+
+    // Safety timeout: if images take more than 400ms to load/fail, unblock render anyway
+    const timer = setTimeout(() => {
+      if (!cancelled) {
+        pending.forEach((url) => settled.add(url));
+        bump();
+      }
+    }, 400);
 
     Promise.all(
       pending.map(
@@ -60,16 +63,16 @@ export function useImagePreload(urls: string[]): boolean {
           })
       )
     ).then(() => {
-      // Re-render so the derived `ready` above is recomputed. Guarded against
-      // both unmount and the url set having moved on mid-flight.
+      clearTimeout(timer);
       if (!cancelled && keyRef.current === key) bump();
     });
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, ready]);
+  }, [key, allSettled]);
 
-  return ready;
+  return allSettled;
 }

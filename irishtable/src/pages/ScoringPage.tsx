@@ -31,11 +31,11 @@ export function ScoringPage() {
   return (
     <div className="no-scrollbar mx-auto flex h-full w-full max-w-[1100px] min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:p-6">
       <header className="flex shrink-0 flex-col gap-3">
-        <span className="font-mono text-[0.62rem] tracking-[0.22em] text-color_textsecondary uppercase">
-          How it works
+        <span className="type-label text-accent uppercase">
+          HOW IT WORKS
         </span>
-        <h1 className="font-display text-[clamp(2rem,7vw,3.2rem)] leading-[1.02] font-semibold tracking-[-0.02em] text-color_text">
-          Scoring
+        <h1 className="type-display text-4xl sm:text-5xl font-semibold tracking-wide text-color_text uppercase">
+          SCORING
         </h1>
         <p className="max-w-2xl text-lg text-color_textsecondary">
           The table is what matters. Get the order right and you'll win; the cups and the
@@ -46,7 +46,7 @@ export function ScoringPage() {
       </header>
 
       <RuleGroup
-        title="The table"
+        title="THE TABLE"
         blurb={`Each of your ${CLUB_COUNT} placements is compared against where the club actually finishes.`}
         rules={TABLE_RULES}
       />
@@ -54,19 +54,19 @@ export function ScoringPage() {
       <PositionExample />
 
       <RuleGroup
-        title="Bonuses"
+        title="BONUSES"
         blurb="Two things are worth calling specifically."
         rules={BONUS_RULES}
       />
 
       <RuleGroup
-        title="The cups"
+        title="THE CUPS"
         blurb="One pick each. Only Premier League clubs are listed — if a club from outside the league wins, nobody scores it."
         rules={CUP_RULES}
       />
 
       <RuleGroup
-        title="Individual awards"
+        title="INDIVIDUAL AWARDS"
         blurb="Six picks, split into two tiers by how hard they are to call."
         rules={INDIVIDUAL_RULES}
       />
@@ -86,7 +86,7 @@ function RuleGroup({
   return (
     <Frame className="shrink-0 animate-cotton-rise">
       <FrameHeader tone="navy">
-        <FrameTitle className="text-base text-color_text sm:text-lg">{title}</FrameTitle>
+        <FrameTitle className="type-display text-base text-color_text sm:text-lg uppercase">{title}</FrameTitle>
       </FrameHeader>
       <FrameBody className="gap-0 px-4 py-2 sm:px-5">
         <p className="max-w-2xl py-2 text-sm text-color_textsecondary">{blurb}</p>

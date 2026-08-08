@@ -100,9 +100,8 @@ export function MobileShell({ children }: { children: ReactNode }) {
                     aria-hidden
                     className="size-5 shrink-0"
                   />
-                  <span className="font-display text-lg tracking-[0.01em] text-color_text">
-                    <span className="font-[450]">irish</span>
-                    <span className="font-thin">table</span>
+                  <span className="type-display text-lg tracking-[0.01em] text-color_text uppercase">
+                    #IRISHTABLE
                   </span>
                 </Link>
               )}

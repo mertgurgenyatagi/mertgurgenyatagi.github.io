@@ -11,18 +11,18 @@ describe("AwardPickerStage", () => {
     render(<AwardPickerStage award={cupAward} index={1} total={AWARDS.length} onPick={vi.fn()} />);
     expect(screen.getByText(cupAward.label)).toBeInTheDocument();
     expect(screen.getByText(cupAward.blurb)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`Award 1 of ${AWARDS.length}`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`Award 1 of ${AWARDS.length}`, "i"))).toBeInTheDocument();
   });
 
   it("states the award's own point value, from the rulebook", () => {
     render(<AwardPickerStage award={cupAward} index={1} total={AWARDS.length} onPick={vi.fn()} />);
-    expect(screen.getByText(new RegExp(`${cupAward.points} points`))).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(`${cupAward.points} (point|points)`, "i"))).toBeInTheDocument();
   });
 
   it("keeps continue disabled until something is selected, then reports the pick", () => {
     const onPick = vi.fn();
     render(<AwardPickerStage award={cupAward} index={1} total={AWARDS.length} onPick={onPick} />);
-    const confirm = screen.getByRole("button", { name: "Continue" });
+    const confirm = screen.getByRole("button", { name: /continue/i });
     expect(confirm).toBeDisabled();
 
     fireEvent.click(screen.getByTitle("Arsenal"));
@@ -35,7 +35,7 @@ describe("AwardPickerStage", () => {
     render(
       <AwardPickerStage award={cupAward} index={1} total={AWARDS.length} value="chelsea" onPick={vi.fn()} />
     );
-    expect(screen.getByRole("button", { name: "Continue" })).not.toBeDisabled();
+    expect(screen.getByRole("button", { name: /continue/i })).not.toBeDisabled();
   });
 
   // Clubs are a short list and get a crest grid; players run to hundreds and
@@ -60,6 +60,6 @@ describe("AwardPickerStage", () => {
     expect(screen.getByText(first.name)).toBeInTheDocument();
 
     fireEvent.change(search, { target: { value: "zzzzzzzz" } });
-    expect(screen.getByText("Nothing matches that.")).toBeInTheDocument();
+    expect(screen.getByText(/nothing matches that/i)).toBeInTheDocument();
   });
 });

@@ -222,9 +222,9 @@ describe("PredictionsPage", () => {
     expect(screen.getByText("One last look.")).toBeInTheDocument();
   });
 
-  it("redirects home when a prediction already exists — this page is a one-time door", () => {
+  it("allows editing when a prediction already exists with choices pre-filled", () => {
     mockPrediction = { table: CLUBS.map((c) => c.id) };
     renderPage();
-    expect(screen.getByText("redirected-to:/")).toBeInTheDocument();
+    expect(screen.getByText("One last look.")).toBeInTheDocument();
   });
 });

@@ -1,7 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AWARDS, AWARD_IDS, YOUNG_PLAYER_MAX_AGE, candidateName, searchCandidates } from "./awards";
-import { CLUBS, CLUB_COUNT } from "./clubs";
-import { MANAGERS, PLAYERS, SEASON_START_YEAR } from "./people";
+import { AWARDS, AWARD_IDS, candidateName, searchCandidates } from "./awards";
 
 describe("the award set", () => {
   it("covers the two cups and the six individual awards", () => {
@@ -37,63 +35,22 @@ describe("the award set", () => {
   });
 });
 
-describe("shortlist derivation", () => {
-  it("offers all 20 clubs for both cups", () => {
+describe("shortlist candidates", () => {
+  it("offers 10 clubs for both cups", () => {
     for (const id of ["faCup", "carabao"] as const) {
       const award = AWARDS.find((a) => a.id === id)!;
-      expect(award.candidates.length).toBe(CLUB_COUNT);
+      expect(award.candidates.length).toBe(10);
     }
   });
 
-  it("offers exactly one manager per club", () => {
+  it("offers 10 managers for Manager of the Season", () => {
     const award = AWARDS.find((a) => a.id === "managerOfSeason")!;
-    expect(award.candidates.length).toBe(CLUB_COUNT);
-    expect(new Set(MANAGERS.map((m) => m.clubId)).size).toBe(CLUB_COUNT);
+    expect(award.candidates.length).toBe(10);
   });
 
-  it("restricts Golden Glove to goalkeepers", () => {
-    const award = AWARDS.find((a) => a.id === "goldenGlove")!;
-    const keeperIds = new Set(PLAYERS.filter((p) => p.position === "GK").map((p) => p.id));
-    expect(award.candidates.length).toBe(keeperIds.size);
-    for (const candidate of award.candidates) {
-      expect(keeperIds.has(candidate.id)).toBe(true);
-    }
-  });
-
-  it("gives every club a goalkeeper, so Golden Glove can't miss a club", () => {
-    const clubsWithKeeper = new Set(
-      PLAYERS.filter((p) => p.position === "GK").map((p) => p.clubId)
-    );
-    const clubsWithout = CLUBS.filter((c) => !clubsWithKeeper.has(c.id));
-    expect(clubsWithout.map((c) => c.id)).toEqual([]);
-  });
-
-  it("restricts Young Player to the U23 cutoff", () => {
-    const award = AWARDS.find((a) => a.id === "youngPlayerOfSeason")!;
-    const eligible = new Set(
-      PLAYERS.filter((p) => SEASON_START_YEAR - p.bornYear <= YOUNG_PLAYER_MAX_AGE).map(
-        (p) => p.id
-      )
-    );
-    expect(award.candidates.length).toBe(eligible.size);
-    for (const candidate of award.candidates) {
-      expect(eligible.has(candidate.id)).toBe(true);
-    }
-  });
-
-  it("keeps defenders and keepers out of Golden Boot", () => {
-    const award = AWARDS.find((a) => a.id === "goldenBoot")!;
-    const byId = new Map(PLAYERS.map((p) => [p.id, p]));
-    for (const candidate of award.candidates) {
-      const position = byId.get(candidate.id)?.position;
-      expect(position === "FW" || position === "MF").toBe(true);
-    }
-  });
-
-  it("sorts player shortlists alphabetically", () => {
+  it("offers 20 players for Player of the Season", () => {
     const award = AWARDS.find((a) => a.id === "playerOfSeason")!;
-    const names = award.candidates.map((c) => c.name);
-    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(award.candidates.length).toBe(20);
   });
 });
 
@@ -105,13 +62,13 @@ describe("candidate search", () => {
   });
 
   it("matches case-insensitively", () => {
-    const hits = searchCandidates(potm, "SALAH");
-    expect(hits.some((c) => c.name === "Mohamed Salah")).toBe(true);
+    const hits = searchCandidates(potm, "SAKA");
+    expect(hits.some((c) => c.name === "Bukayo Saka")).toBe(true);
   });
 
   it("matches through accents, so 'odegaard' finds Ødegaard", () => {
-    const hits = searchCandidates(potm, "Fernandez");
-    expect(hits.some((c) => c.name === "Enzo Fernández")).toBe(true);
+    const hits = searchCandidates(potm, "odegaard");
+    expect(hits.some((c) => c.name === "Martin Ødegaard")).toBe(true);
   });
 
   it("matches on the club subtitle too", () => {

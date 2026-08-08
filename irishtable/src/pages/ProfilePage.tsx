@@ -8,8 +8,6 @@ import { useAuth } from "../auth/AuthProvider";
 import { useProfile } from "../profile/useProfile";
 import { usePrediction } from "../predictions/usePrediction";
 import { useSurveyResponse } from "../predictions/useSurveyResponse";
-import { awardsFrom } from "../predictions/predictionTypes";
-import { PredictionSequence } from "../predictions/PredictionSequence";
 import { RankingList } from "../predictions/RankingList";
 import { TEAMS, teamCrestSrc } from "../predictions/teams";
 import { ParticipantPopup } from "../leaderboard/ParticipantPopup";
@@ -110,7 +108,6 @@ export function ProfilePage() {
   const [nameSaving, setNameSaving] = useState(false);
   const [nameError, setNameError] = useState<string | null>(null);
 
-  const [editOpen, setEditOpen] = useState(false);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -344,7 +341,7 @@ export function ProfilePage() {
                           setNameError(null);
                           setEditingName(true);
                         }}
-                        className="flex shrink-0 cursor-pointer items-center justify-center rounded-full p-1 text-color_textsecondary transition-colors duration-150 hover:text-color_text"
+                        className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-color_border1/60 bg-color_secondary/80 text-color_textsecondary transition-all duration-150 ease-[var(--ease-cotton)] hover:border-color_accent hover:bg-hoverfill hover:text-color_accent"
                       >
                         <Pencil className="size-3.5" aria-hidden />
                       </button>
@@ -458,7 +455,7 @@ export function ProfilePage() {
                   variant="outline"
                   size="sm"
                   className="border-color_border1 text-color_text hover:bg-color_border1/20"
-                  onClick={() => setEditOpen(true)}
+                  onClick={() => navigate("/predictions")}
                 >
                   Edit
                 </Button>
@@ -547,36 +544,7 @@ export function ProfilePage() {
         </>
       )}
 
-      {/* The edit dialog runs the same PredictionSequence /predictions does,
-          in "edit" mode: it opens on the review with everything seeded, and
-          every stage is reachable from there. */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        {/* The width override HAS to carry the `sm:` prefix. DialogContent's
-            own base class ends in `sm:max-w-sm`, which is emitted after any
-            unprefixed max-w in the stylesheet — an unprefixed `max-w-5xl`
-            here would never apply above 640px, and the dialog would render at
-            ~384px on desktop. That is exactly the bug that made the parent's
-            36-club ranker unusable for weeks. */}
-        <DialogContent className="flex h-[88vh] max-h-[88vh] w-full max-w-[calc(100%-2rem)] min-h-0 flex-col gap-3 rounded-2xl border border-color_border1/60 bg-background p-4 shadow-2xl sm:max-w-[1344px] sm:p-6">
-          <DialogHeader className="shrink-0 pb-1">
-            <DialogTitle className="font-display text-lg font-bold text-color_text">
-              Edit your prediction
-            </DialogTitle>
-          </DialogHeader>
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            {prediction && (
-              <PredictionSequence
-                uid={user.uid}
-                mode="edit"
-                initialTable={prediction.table}
-                initialAwards={awardsFrom(prediction)}
-                favouriteClubId={survey?.clubSupported}
-                onDone={() => setEditOpen(false)}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       <Dialog
         open={deleteConfirmOpen}

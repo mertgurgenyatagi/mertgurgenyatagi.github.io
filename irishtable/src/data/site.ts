@@ -6,7 +6,7 @@
  * gets corrected once and missed in the second location.
  */
 
-export const SITE_NAME = "irishtable";
+export const SITE_NAME = "#irishtable";
 
 /** The channel this was built for. */
 export const CHANNEL_NAME = "The Irish Guy";

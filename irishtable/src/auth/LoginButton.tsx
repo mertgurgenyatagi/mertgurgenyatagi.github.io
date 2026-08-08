@@ -31,12 +31,12 @@ function GoogleMark() {
 export function LoginButton({
   className,
   size = "lg",
-  variant = "default",
+  variant = "primary",
   label = "Sign in with Google",
 }: {
   className?: string;
-  size?: "sm" | "default" | "lg";
-  variant?: "default" | "outline" | "ghost" | "secondary";
+  size?: "sm" | "default" | "md" | "lg";
+  variant?: "primary" | "default" | "outline" | "ghost" | "secondary";
   label?: string;
 }) {
   const { signIn, error, loading, pending } = useAuth();

@@ -39,6 +39,9 @@ export function usePlayers() {
     return onSnapshot(
       collection(db, "profiles"),
       (snap) => {
+        if (!snap.empty) {
+          setPlayers(snap.docs.map((d) => toProfile(d.data(), d.id)));
+        }
         if (snap.metadata.fromCache && !sawServerSnapshot) return;
         sawServerSnapshot = true;
         setPlayers(snap.docs.map((d) => toProfile(d.data(), d.id)));

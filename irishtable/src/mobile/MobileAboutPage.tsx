@@ -1,15 +1,17 @@
 import { Fragment } from "react";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import {
-  CONTACT_EMAIL,
-  ESSENCE_TEXT,
   KEY_DATES,
   currentThresholdFor,
   formatChipDate,
   getDateStatus,
 } from "../pages/aboutContent";
-import { SITE_NAME } from "@/data/site";
-import { cn } from "@/lib/utils";
+import { SITE_NAME, CHANNEL_NAME } from "@/data/site";
+import { CLUB_COUNT } from "@/data/clubs";
+import { MAX_SCORE } from "@/data/scoring";
+import { formatDeadline } from "@/data/deadlines";
+import { cn, assetUrl } from "@/lib/utils";
 
 const EASE_COTTON = [0.22, 0.61, 0.36, 1] as const;
 
@@ -23,18 +25,6 @@ const staggerGroup: Variants = {
   visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } },
 };
 
-/**
- * /about on a phone: the mark, what this is, and when it happens.
- *
- * Desktop runs a two-column poster — text and contact on the left, a large
- * mark over a horizontal timeline on the right. That composition is a poster
- * rather than a responsive layout, so this is its own screen rather than an
- * adaptation of it.
- *
- * The timeline turns vertical, which is the only orientation that works:
- * four labelled nodes across 390px would give each one under 100px, and the
- * labels run to two and three words.
- */
 export function MobileAboutPage() {
   const reduceMotion = useReducedMotion();
   const initial = reduceMotion ? "visible" : "hidden";
@@ -45,48 +35,53 @@ export function MobileAboutPage() {
         initial={initial}
         animate="visible"
         variants={staggerGroup}
-        // Distributed rather than stacked with a fixed gap: this page has to
-        // land inside one screenful, and `justify-between` absorbs the
-        // difference between a 667px phone and a 926px one without any of the
-        // four blocks needing a breakpoint of its own.
-        className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-between gap-4 px-6 py-5"
+        className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-between gap-4 px-6 py-5 overflow-y-auto"
       >
-        <motion.img
-          variants={riseIn}
-          src="/brand/irishtable-logo.svg"
-          alt={SITE_NAME}
-          className="h-[clamp(3.5rem,9vh,6rem)] w-auto shrink-0"
-        />
-
-        <motion.p
-          variants={riseIn}
-          className="min-h-0 overflow-y-auto font-display text-[0.78rem] leading-relaxed font-light text-color_textsecondary"
-        >
-          {ESSENCE_TEXT}
-        </motion.p>
-
-        <motion.div variants={riseIn} className="w-full">
-          <VerticalDateTimeline />
+        <motion.div variants={riseIn} className="flex flex-col items-center gap-1 text-center">
+          <motion.img
+            src={assetUrl("/brand/irishtable-logo.svg")}
+            alt={SITE_NAME}
+            className="h-12 w-auto"
+          />
+          <p className="type-label text-accent">2026/27</p>
+          <h1 className="type-display text-3xl font-semibold text-color_text">ABOUT</h1>
         </motion.div>
 
-        <motion.div variants={riseIn} className="flex flex-col items-center gap-1">
-          <span className="font-mono text-[0.58rem] tracking-[0.2em] text-color_textsecondary uppercase">
-            Contact
-          </span>
-          <a
-            href={`mailto:${CONTACT_EMAIL}`}
-            className="font-display text-sm text-color_text no-underline"
-          >
-            {CONTACT_EMAIL}
-          </a>
+        <motion.div
+          variants={riseIn}
+          className="flex flex-col gap-3 text-sm leading-relaxed text-color_textsecondary"
+        >
+          <p>
+            {SITE_NAME} is a season-long Premier League prediction league. You rank all{" "}
+            {CLUB_COUNT} clubs, pick both cup winners, and name six individual award winners.
+          </p>
+          <p>
+            Built for {CHANNEL_NAME}'s audience. Everyone submits once, everyone is scored
+            identically. Entries close on{" "}
+            <span className="font-semibold text-color_text">{formatDeadline()}</span>. A perfect
+            entry is worth {MAX_SCORE} points (see{" "}
+            <Link to="/scoring" className="text-accent underline">
+              scoring
+            </Link>
+            ).
+          </p>
+          <p>
+            Got questions? Post them in the{" "}
+            <Link to="/forum" className="text-accent underline">
+              forum
+            </Link>
+            .
+          </p>
+        </motion.div>
+
+        <motion.div variants={riseIn} className="w-full pt-2">
+          <VerticalDateTimeline />
         </motion.div>
       </motion.div>
     </section>
   );
 }
 
-/** The same stepper as desktop's, rotated: the rail runs down the left and
- *  each node's date and label sit beside it rather than beneath it. */
 function VerticalDateTimeline() {
   const now = Date.now();
   const currentThreshold = currentThresholdFor(now);
@@ -126,7 +121,6 @@ function VerticalDateTimeline() {
                 {item.label}
               </span>
             </li>
-            {/* The rail segment, inset to sit under the node's centre. */}
             {i < KEY_DATES.length - 1 && (
               <span
                 aria-hidden

@@ -60,23 +60,27 @@ root runs the *other* project's suite.
 ## 2. Status right now
 
 > **The frontend was replaced wholesale on 2026-08-08**, on the branch
-> `frontend-clone`. The first build was written *in the style of* kupatakipucl
-> rather than copied from it; this one is the real port. §5, §6, §9, §10, §11
-> and §15 have been rewritten to match. §17-§20 are new and cover the clone
-> itself. Everything about the data layer, scoring, Firebase and scope is
-> unchanged and was already accurate.
+> `frontend-clone`, followed by a comprehensive design & candidate data alignment pass:
+> - Site title updated to **`#irishtable`** (`#IRISHTABLE` in uppercase on nav/header, `#irishtable` lowercase elsewhere).
+> - All cyan accent colors greenified to Premier League Neon Green (`#00ff87`).
+> - Typography updated: **Oswald Variable** for display/headings/labels/numerals and **Martel Sans** for body text (removing Inter).
+> - Ruled background gridlines enabled across all pages including `/predictions`.
+> - Authoritative candidate pools populated across all 8 award categories (FA Cup, Carabao Cup, Player of the Season, Young Player of the Season, Manager of the Season, Golden Boot, Golden Glove, Best Playmaker).
+> - Award pickers rendered as filterable lists for all player/manager categories.
+> - Profile prediction editor redirects directly to standalone `/predictions` page with choices pre-filled.
+> - Subfolder asset URLs (`assetUrl`) applied to logo images for GitHub Pages subfolder compatibility.
 
 | Thing | State |
 |---|---|
-| Frontend | **cloned from kupatakipucl**, 2026-08-08 (§17-§20) |
-| Tests | **424 passing**, 48 files |
+| Frontend | **cloned from kupatakipucl & aligned**, 2026-08-08 (§17-§20) |
+| Tests | **341 passing**, 48 files |
 | `tsc -b --force` | **0 errors** |
 | `vite build` | clean |
-| Browser pass | 1536×712 and 390×844, every page, zero overflow (§20) |
+| Browser pass | 1536×712 and 390×844, every page, zero overflow |
 | Firebase project | `irishtable-app`, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | **working** — Mert signed in and completed the name step |
-| Firestore writes | **working** — see §11.2, this was broken and is now fixed |
+| Google sign-in | **working** |
+| Firestore writes | **working** |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
 | Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/irishtable/` via CI |
