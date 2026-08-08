@@ -766,8 +766,7 @@ its colours. One file to swap: `public/brand/irishtable-logo.svg`.
 
 ## 11. The bugs that actually happened
 
-Seven now. The first three were found by Mert in a real click-through, the last
-four by a scripted browser pass — **every one of them after the work had been
+Nine now. The first three were found by Mert in a real click-through, four by a scripted browser pass, and the last two during the GitHub Pages deployment migration — **every one of them after the work had been
 reported "verified", and every one of them with a green test suite and a clean
 `tsc`.** This is the most useful section in this document.
 
@@ -959,6 +958,18 @@ half-translated and no longer matches either language's search.
 It was caught by re-reading the verification output rather than the summary
 line. The recovery was to re-copy all 26 files clean from the parent and redo
 the pass with bounded regex. **Never `str.replace` a UI string** — see §15.
+
+### 11.8 Firebase `auth/invalid-api-key` on GitHub Pages deployment
+
+**Cause.** Vite bakes `import.meta.env.VITE_FIREBASE_*` variables into the bundle at build time. During the initial GitHub Actions run, `irishtable/.env` was excluded by `.gitignore`, so Vite compiled the production bundle with `apiKey: undefined`. When opened in the browser, Firebase initialization threw `auth/invalid-api-key`.
+
+**Fix.** Added `irishtable/.env` to Git tracking (`!.env` in `.gitignore`) and updated `.github/workflows/deploy.yml` to explicitly populate `.env` prior to running `npm run build` during CI runs.
+
+### 11.9 Assets returning 404 in GitHub Pages subfolder
+
+**Cause.** Static asset paths (`/crests/...`, `/brand/...`, `/hero/...`) were declared with absolute leading slashes. On subfolder hosting (`https://username.github.io/irishtable/`), the browser resolved those leading slashes to the domain root (`https://username.github.io/crests/...`), resulting in 404 errors.
+
+**Fix.** Created an `assetUrl()` helper in `src/lib/utils.ts` that dynamically prefixes `import.meta.env.BASE_URL`, and updated all club crests, hero images, logo tags, and favicon references to use it.
 
 ---
 
