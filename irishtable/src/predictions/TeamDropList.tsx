@@ -6,6 +6,7 @@ import { Team } from "./teams";
 import { TeamCrest } from "../leaderboard/TeamCrest";
 import { useBoundaryHover } from "./useBoundaryHover";
 import { boundaryBandRole } from "./predictionBoundary";
+import { RELEGATION_POSITIONS } from "@/data/scoring";
 import { cn } from "@/lib/utils";
 
 interface TeamDropListProps {
@@ -27,6 +28,8 @@ const ListSlot = memo(function ListSlot({
   onMove,
   onHoverStart,
   onMouseLeave,
+  isChampion,
+  isRelegation,
 }: {
   index: number;
   teamId: string | null;
@@ -40,6 +43,10 @@ const ListSlot = memo(function ListSlot({
    *  the parent doesn't hand down a fresh closure per row and defeat memo. */
   onHoverStart: (index: number) => void;
   onMouseLeave: () => void;
+  /** 1st place — only lit once a club actually occupies the slot. */
+  isChampion: boolean;
+  /** One of the three relegation places (`RELEGATION_POSITIONS`) — same. */
+  isRelegation: boolean;
 }) {
   // Every slot is a drop target.
   const { setNodeRef: setDropRef, isOver } = useDroppable({
@@ -86,11 +93,20 @@ const ListSlot = memo(function ListSlot({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "flex h-[42px] items-center gap-2 rounded-lg border px-2 py-2 select-none",
+        // 42px * 1.3, rounded — the frame around this list doesn't grow, so
+        // taller rows just mean more of the list needs a scroll to reach.
+        "flex h-[55px] items-center gap-2 rounded-lg border px-2 py-2 select-none",
         "transition-[border-color,background-color,box-shadow,opacity] duration-200 ease-[var(--ease-cotton)]",
         teamId !== null
           ? [
-              "border-color_border1/80 bg-background",
+              // Champion/relegation tint only once a club is actually sitting
+              // in the slot — an empty dashed slot tinted yellow or red reads
+              // as an error state, not a hint about the position.
+              isChampion
+                ? "border-color_champion/50 bg-color_champion/[0.07]"
+                : isRelegation
+                  ? "border-color_remove/45 bg-color_remove/[0.07]"
+                  : "border-color_border1/80 bg-background",
               "hover:border-color_border1 hover:bg-foreground/[0.03]",
               isDragging && "opacity-0 border-color_accent/40",
             ]
@@ -189,6 +205,8 @@ export function TeamDropList({ ranking, teamsById, onMove }: TeamDropListProps) 
             onMove={onMove}
             onHoverStart={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            isChampion={index === 0}
+            isRelegation={RELEGATION_POSITIONS.includes(index + 1)}
           />
         );
       })}

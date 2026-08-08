@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ChevronLeft } from "lucide-react";
 import { TeamRanker } from "./TeamRanker";
@@ -89,11 +89,22 @@ export function PredictionSequence({
   // stage is reached that way, since review is where the flow starts.
   const [cameFromReview, setCameFromReview] = useState(false);
 
-  const exampleTeamId =
-    favouriteClubId && TEAMS.some((t) => t.id === favouriteClubId)
-      ? favouriteClubId
-      : pickFallbackTeam([...TEAMS], uid).id;
-  const scoringExample = buildScoringExampleWindow([...TEAMS], exampleTeamId);
+  // Neither depends on anything that changes as the flow advances (stage,
+  // table, awards, ...), but without this PredictionSequence recomputed both
+  // — including the hash-and-slice in pickFallbackTeam/buildScoringExampleWindow
+  // and two pointless `[...TEAMS]` copies — on every single render: every
+  // stage transition, every award pick, every keystroke in an award search.
+  const exampleTeamId = useMemo(
+    () =>
+      favouriteClubId && TEAMS.some((t) => t.id === favouriteClubId)
+        ? favouriteClubId
+        : pickFallbackTeam(TEAMS, uid).id,
+    [favouriteClubId, uid]
+  );
+  const scoringExample = useMemo(
+    () => buildScoringExampleWindow(TEAMS, exampleTeamId),
+    [exampleTeamId]
+  );
 
   function advanceBeat() {
     setStage((s) => {
@@ -261,7 +272,7 @@ export function PredictionSequence({
           {stage.kind === "table" && (
             <div className="flex h-full min-h-0 w-full max-w-5xl flex-col">
               <TeamRanker
-                teams={[...TEAMS]}
+                teams={TEAMS}
                 initialOrder={table.length === TEAMS.length ? table : undefined}
                 submitLabel={mode === "edit" ? "Done" : "Continue"}
                 onSubmit={handleTableSubmit}

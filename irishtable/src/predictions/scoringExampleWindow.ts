@@ -16,7 +16,7 @@ export interface ScoringExampleWindow {
 
 /** A slice of the real club list, centred as closely as possible on
  *  `centerTeamId` — the scoring-example diagram shown in the intro. */
-export function buildScoringExampleWindow(teams: Team[], centerTeamId: string): ScoringExampleWindow {
+export function buildScoringExampleWindow(teams: readonly Team[], centerTeamId: string): ScoringExampleWindow {
   const idx = teams.findIndex((t) => t.id === centerTeamId);
   if (idx === -1) {
     return { teams: teams.slice(0, WINDOW_SIZE), centerIndex: 0 };
@@ -34,6 +34,6 @@ function hashString(s: string): number {
 /** A stable stand-in for when someone's quiz answer wasn't a real club (they
  *  picked "Another club" or "No one in particular") — hashed off their uid
  *  rather than truly random, so the example doesn't reshuffle every visit. */
-export function pickFallbackTeam(teams: Team[], uid: string): Team {
+export function pickFallbackTeam(teams: readonly Team[], uid: string): Team {
   return teams[hashString(uid) % teams.length];
 }

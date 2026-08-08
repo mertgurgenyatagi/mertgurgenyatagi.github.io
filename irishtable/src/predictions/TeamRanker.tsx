@@ -24,7 +24,7 @@ import { GripVerticalIcon } from "lucide-react";
 import { useIsMobile } from "@/lib/useIsMobile";
 
 interface TeamRankerProps {
-  teams: Team[];
+  teams: readonly Team[];
   /**
    * Optional: pre-populate the ranking list on mount.
    * Must be a full-length array (same length as `teams`) to take effect —
@@ -146,12 +146,15 @@ export function TeamRanker({ teams, initialOrder, submitLabel = "Continue", onSu
   }, []);
 
   // ── Drag handlers ──────────────────────────────────────────────────────────
+  // useCallback so DndContext (which takes these as props) doesn't see a new
+  // handler identity on every render — just on the renders that actually
+  // change what a drag should do.
 
-  function handleDragStart({ active }: DragStartEvent) {
+  const handleDragStart = useCallback(({ active }: DragStartEvent) => {
     setActiveId(String(active.id));
-  }
+  }, []);
 
-  function handleDragEnd({ active, over }: DragEndEvent) {
+  const handleDragEnd = useCallback(({ active, over }: DragEndEvent) => {
     setActiveId(null);
 
     const activeStr = String(active.id);
@@ -206,7 +209,7 @@ export function TeamRanker({ teams, initialOrder, submitLabel = "Continue", onSu
         setRanking((r) => r.map((id, i) => (i === srcSlot ? null : id)));
       }
     }
-  }
+  }, [moveSlot, placedTeamIds]);
 
   // ── Derived state ──────────────────────────────────────────────────────────
 

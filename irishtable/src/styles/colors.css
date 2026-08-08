@@ -22,7 +22,8 @@
   /* --- Brand accents --------------------------------------------------- */
   --color_accent: #00ff87;    /* PL green — CTAs, focus rings, active/selected states */
   --color_cyan: #00ff87;      /* PL green — greenified from cyan */
-  --color_remove: #e90052;    /* PL magenta — destructive actions and errors */
+  --color_remove: #e90052;    /* PL magenta — destructive actions, errors, relegation places */
+  --color_champion: #facc15;  /* trophy gold — the single 1st-place row, nothing else */
 
   /* --- Derived, all built off color_text so they stay in the family ---- */
   --color_textsecondary: color-mix(in oklch, var(--color_text) 58%, transparent);
