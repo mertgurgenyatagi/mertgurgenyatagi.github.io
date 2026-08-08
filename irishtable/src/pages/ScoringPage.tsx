@@ -92,7 +92,7 @@ function RuleGroup({
         <p className="max-w-2xl py-2 text-sm text-color_textsecondary">{blurb}</p>
         <ul className="flex flex-col divide-y divide-color_border1/50">
           {rules.map((rule) => (
-            <li key={rule.label} className="flex items-baseline gap-4 py-3">
+            <li key={rule.label} className="flex items-center gap-4 py-3">
               {/* A rule worth nothing shouldn't wear the same colour as one
                   worth points — the accent on "0" reads as a reward. */}
               <span

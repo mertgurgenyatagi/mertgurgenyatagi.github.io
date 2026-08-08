@@ -225,7 +225,22 @@ export function PredictionSequence({
           // a 620px box and the instruction line and the Reset/Continue
           // footer are simply clipped off. `flex-1` only does the work in the
           // profile dialog, whose wrapper is a column.
-          className="no-scrollbar flex max-h-full min-h-0 w-full flex-1 flex-col items-center justify-center overflow-y-auto"
+          //
+          // `self-stretch` is the second half of that same fix, added later:
+          // an `auto`-height box (capped only by `max-h-full`) is still
+          // indefinite for CSS's purposes, so any descendant with a
+          // percentage `flex-basis` (Tailwind's `flex-1` is `0%`) can't
+          // resolve it and falls back to sizing from its own content instead
+          // of splitting space evenly. That's what squeezed
+          // TeamRanker's mobile club pool to ~175px next to a ~412px ranking
+          // list on a 390×844 phone (measured) — a 50/50 `flex-1` split that
+          // was actually dividing in proportion to each panel's own content
+          // height (954px list vs 384px pool), not the space available.
+          // `self-stretch` overrides the row's `items-center` for this one
+          // item, making its height a definite 100% of the row — short
+          // stages (IntroBeat etc.) still land centred via this element's
+          // own `justify-center`, so nothing about them changes.
+          className="no-scrollbar flex max-h-full min-h-0 w-full flex-1 flex-col items-center justify-center self-stretch overflow-y-auto"
         >
           {stage.kind === "intro" && (
             <IntroBeat

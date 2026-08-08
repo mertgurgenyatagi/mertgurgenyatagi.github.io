@@ -52,9 +52,14 @@ const PoolTile = memo(function PoolTile({ team, isPlaced }: { team: Team; isPlac
       className={cn(
         "flex flex-col items-center justify-center gap-1 rounded-xl border p-1.5 select-none",
         "transition-[border-color,background-color,opacity] duration-200 ease-[var(--ease-cotton)]",
-        // touch-none is what lets the TouchSensor's press-and-hold win over
-        // the browser's own scroll gesture once a drag actually starts.
-        !isPlaced && "touch-none",
+        // touch-manipulation (not touch-none) is what lets the TouchSensor's
+        // press-and-hold win. touch-action: none blocks native panning from
+        // the very first touch, before the 200ms delay has even had a chance
+        // to decide whether this is a scroll or a hold — which is what made
+        // the pool unscrollable on a phone, since almost every pixel in the
+        // grid is a tile. manipulation still allows native scrolling; dnd-kit
+        // only needs to win once the hold is confirmed.
+        !isPlaced && "touch-manipulation",
         isPlaced
           ? "border-dashed border-color_border1/40 bg-foreground/[0.01]"
           : "border-color_border1/60 bg-background/80",

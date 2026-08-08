@@ -180,8 +180,18 @@
 
   /* Cursorify — a standing rule in both projects. The root resets to a default
    * arrow and only genuinely interactive elements opt back into a pointer. No
-   * I-beam anywhere it isn't real text entry. */
-  * {
+   * I-beam anywhere it isn't real text entry.
+   *
+   * This resets on `html`, not `*`. A universal-selector reset matches every
+   * descendant directly, which beats inheritance even at zero specificity —
+   * so an icon or text node inside a `cursor-pointer` link or button got its
+   * own `default` and never inherited the parent's pointer. That's what made
+   * the cursor over the title, the profile opener and the name-edit button
+   * flicker between pointer and default as the mouse crossed from a label
+   * onto its icon: the icon/image itself was still matched by `*`. Resetting
+   * once on the root and letting `cursor` inherit normally means an
+   * interactive element's own `cursor: pointer` reaches every child. */
+  html {
     cursor: default;
   }
   input,
