@@ -63,12 +63,16 @@ root runs the *other* project's suite.
 > `frontend-clone`, followed by a comprehensive design & candidate data alignment pass:
 > - Site title updated to **`#irishtable`** (`#IRISHTABLE` in uppercase on nav/header, `#irishtable` lowercase elsewhere).
 > - All cyan accent colors greenified to Premier League Neon Green (`#00ff87`).
-> - Typography updated: **Oswald Variable** for display/headings/labels/numerals and **Martel Sans** for body text (removing Inter).
+> - Navigation buttons strictly horizontally dead-centered on desktop header bar.
+> - Typography refined: **Oswald Variable** for display/headings/labels/numerals and **Inter Variable** for crisp body text.
 > - Ruled background gridlines enabled across all pages including `/predictions`.
 > - Authoritative candidate pools populated across all 8 award categories (FA Cup, Carabao Cup, Player of the Season, Young Player of the Season, Manager of the Season, Golden Boot, Golden Glove, Best Playmaker).
 > - Award pickers rendered as filterable lists for all player/manager categories.
 > - Profile prediction editor redirects directly to standalone `/predictions` page with choices pre-filled.
-> - Subfolder asset URLs (`assetUrl`) applied to logo images for GitHub Pages subfolder compatibility.
+> - Profile button and display name edit button upgraded with generous hover areas and pointer feedback.
+> - Periodic monochromatic sliced clip-path glitch added for "season" → "susan" inside joke with fixed layout space reservation.
+> - `usePlayers()` updated to populate participant snapshot profiles immediately.
+> - Subfolder asset URLs (`assetUrl`) applied to logo images for GitHub Pages compatibility.
 
 | Thing | State |
 |---|---|
@@ -83,7 +87,7 @@ root runs the *other* project's suite.
 | Firestore writes | **working** |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
-| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/irishtable/` via CI |
+| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/irishtable/` via `mertgurgenyatagi.github.io` repo CI |
 
 **What has *not* been verified end to end:** the signed-in screens were
 checked in a browser through a temporary harness that mounted the
