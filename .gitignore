@@ -1,2 +1,4 @@
 .env
+!irishtable/.env
 node_modules/
+

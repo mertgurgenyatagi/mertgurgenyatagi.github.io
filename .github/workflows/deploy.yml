@@ -26,6 +26,20 @@ jobs:
       - name: Cache-bust EventPortal static assets
         run: sed -i "s/__CACHEBUST__/${GITHUB_SHA::7}/g" eventportal/index.html
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'irishtable/package-lock.json'
+
+      - name: Build irishtable
+        run: |
+          cd irishtable
+          npm ci
+          npm run build
+          cp -r dist/* .
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

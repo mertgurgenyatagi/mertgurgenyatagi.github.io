@@ -1,0 +1,69 @@
+/* Single source of truth for every colour in irishtable.
+ *
+ * The palette is the real Premier League one — deep purple ground, the neon
+ * green, the magenta, the cyan. irishtable uses its own wordmark and its own
+ * crest set, never the League's lion mark, so this reads as a fan project
+ * wearing familiar colours rather than an official product.
+ *
+ * One fixed dark theme, always, regardless of the visitor's OS setting.
+ *
+ * Two values can't read a CSS variable and must be kept in sync by hand if
+ * they change: the theme-color meta tag in index.html, and the favicon.
+ */
+:root {
+  /* --- Surfaces -------------------------------------------------------- */
+  --color_main: #17021b;      /* page ground — near-black, biased hard toward purple */
+  --color_secondary: #26092c; /* every panel, card and elevated cell */
+  --color_band: #37003c;      /* the canonical PL purple — header bands, nav bar, emphasis surfaces */
+
+  /* --- Text ------------------------------------------------------------ */
+  --color_text: #f4ecf5;      /* primary text — white with the faintest purple cast, not pure #FFF */
+
+  /* --- Brand accents --------------------------------------------------- */
+  --color_accent: #00ff87;    /* PL green — CTAs, focus rings, active/selected states */
+  --color_cyan: #04f5ff;      /* PL cyan — rank numerals, counts, "you" markers */
+  --color_remove: #e90052;    /* PL magenta — destructive actions and errors */
+
+  /* --- Derived, all built off color_text so they stay in the family ---- */
+  --color_textsecondary: color-mix(in oklch, var(--color_text) 58%, transparent);
+  --color_textfaint: color-mix(in oklch, var(--color_text) 34%, transparent);
+  --color_border1: color-mix(in oklch, var(--color_text) 14%, transparent);
+  --color_border2: color-mix(in oklch, var(--color_text) 32%, transparent);
+  --color_hoverfill: color-mix(in oklch, var(--color_text) 7%, transparent);
+
+  /* --- The grid ground ------------------------------------------------- */
+  /* The ruled grid is the page's actual background, not a decorative
+   * flourish: this is a league table, so a ruled field is the subject.
+   * Kept very faint — it should register as texture, never as a wireframe. */
+  --color_grid: color-mix(in oklch, var(--color_text) 8%, transparent);
+  --grid_size: 64px;
+
+  /* --- One-offs -------------------------------------------------------- */
+  --color_shadow: rgba(0, 0, 0, 0.45);
+  --color_scrim: rgba(8, 0, 10, 0.72);  /* dialog backdrop, image lightbox */
+  --color_glow: rgba(55, 0, 60, 0.55);  /* ambient radial wash behind the hero */
+
+  /* --- Motion ---------------------------------------------------------- */
+  /* One easing curve for the whole app, carried over from the parent
+   * project where it is nicknamed "cotton". */
+  --ease-cotton: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* --- Bridge to the parent project's token names -----------------------
+   * kupatakipucl's components reference these names directly. Defining them
+   * here as aliases is what lets ~90 component files port across verbatim
+   * instead of being hand-edited. Change a value here, not at a call site.
+   *
+   * Deliberately NOT defined: --color_blob1/2/3 and --color_faintglow. Those
+   * exist only for DustHaze and .ground-radiance, both of which irishtable
+   * drops — the ruled grid is the background. Their absence is how a stray
+   * reference to either gets caught rather than silently rendering black. */
+  --color_green: var(--color_accent);        /* "this prediction is correct" — kept separate from accent so it can diverge */
+  --color_gold: var(--color_cyan);           /* rank numerals, submitted ticks, quiz-answer highlights */
+  --color_qualification: var(--color_cyan);  /* qualification-band tick (started phases only) */
+  --color_idk: var(--color_scrim);           /* dialog backdrop, image lightbox */
+  --color_hover: #ffffff;                    /* popup close-button hover fill */
+  --color_pitch: #0b5f38;                    /* pitch-diagram ground, retinted toward the PL green family */
+  --color_pitchlines: rgba(255, 255, 255, 0.45);
+  --color_pitchformation: rgba(255, 255, 255, 0.7);
+  --color_statsbar: var(--color_accent);
+}
