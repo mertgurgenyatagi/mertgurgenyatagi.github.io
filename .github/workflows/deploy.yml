@@ -23,9 +23,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache-bust EventPortal static assets
-        run: sed -i "s/__CACHEBUST__/${GITHUB_SHA::7}/g" eventportal/index.html
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
