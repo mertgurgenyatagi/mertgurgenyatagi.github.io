@@ -11,7 +11,7 @@ import { MobilePopupHost } from "./MobilePopupHost";
 import { MobileChatDrawer } from "./MobileChatDrawer";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 
 /**
  * The mobile app shell — three slots in one bar.
@@ -95,7 +95,7 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   className="flex items-center gap-2 rounded-sm leading-none no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-color_text"
                 >
                   <img
-                    src="/brand/irishtable-logo.svg"
+                    src={assetUrl("/brand/irishtable-logo.svg")}
                     alt=""
                     aria-hidden
                     className="size-5 shrink-0"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useImagePreload } from "@/lib/useImagePreload";
+import { assetUrl } from "@/lib/utils";
 
 // Portrait crops (public/hero/, pre-cropped to a 3:2 height:width box around
 // a per-photo tuned focal point + zoom — see scripts/crop-hero-images.mjs
@@ -25,7 +26,7 @@ export const HERO_IMAGES = [
   "/hero/vinijr.webp",
   "/hero/wirtz.webp",
   "/hero/yamal.webp",
-];
+].map(assetUrl);
 
 // Per-image object-position bias for object-cover — an escape hatch if a
 // head gets cropped out in a given spot once these render inside a frame

@@ -1,4 +1,5 @@
 import { CLUBS, getClub, type Club } from "@/data/clubs";
+import { assetUrl } from "@/lib/utils";
 
 /**
  * The shape the ported kupatakipucl components expect, mapped onto
@@ -29,7 +30,8 @@ export const TEAM_BY_ID: Record<string, Club> = Object.fromEntries(
 );
 
 export function teamCrestSrc(teamId: string): string {
-  return getClub(teamId)?.crest ?? "";
+  const crest = getClub(teamId)?.crest;
+  return crest ? assetUrl(crest) : "";
 }
 
 export function teamName(teamId: string): string {

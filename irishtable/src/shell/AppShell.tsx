@@ -7,7 +7,7 @@ import { useProfile } from "../profile/useProfile";
 import { LoginButton } from "../auth/LoginButton";
 import { LogoutButton } from "../auth/LogoutButton";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn, assetUrl } from "@/lib/utils";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { MobileShell } from "./MobileShell";
 import { navLinksFor } from "./navLinks";
@@ -59,7 +59,7 @@ function DesktopShell({ children }: { children: ReactNode }) {
               className="group flex items-center gap-2.5 rounded-sm leading-none no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-color_text"
             >
               <img
-                src="/brand/irishtable-logo.svg"
+                src={assetUrl("/brand/irishtable-logo.svg")}
                 alt=""
                 aria-hidden
                 className="size-6 shrink-0 sm:size-7"
