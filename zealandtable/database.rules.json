@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.val() === true"
+      }
+    },
+    "typingStatus": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid && (!data.exists() || !newData.exists() || newData.child('updatedAt').val() - data.child('updatedAt').val() >= 1000)",
+        ".validate": "newData.hasChildren(['updatedAt']) && newData.child('updatedAt').isNumber()"
+      }
+    }
+  }
+}

@@ -149,6 +149,65 @@ start copying without it landing first.
    GitHub Actions workflow changes for a second deploy target. All of this
    waits until Zealandism actually responds, per Round 1.
 
+## 5b. DONE — approved and executed, 2026-08-09
+
+Mert confirmed the §4 copy-fork approach. It is now built. **§5's open items 1–5
+are closed**; items 6–7 still stand.
+
+`zealandtable/` was created from `git archive HEAD:irishtable` — the tracked
+tree only, so no `node_modules`, `dist`, `.firebase`, `*.tsbuildinfo` or
+`.env.local` came across. 245/245 tracked files. **`irishtable/` was not
+touched** — verified clean via `git status` before and after.
+
+Verified: `npm run build` (tsc -b) clean, `npm test` **420/420 passing, 48/48
+files**.
+
+**The §5 checklist was incomplete.** These were found by grepping the copy and
+also changed, because each is user-visible or a real collision risk:
+
+- `SITE_NAME` — §5 listed only `CHANNEL_NAME`, but `SITE_NAME` was
+  `"#irishtable"` and renders on the About page via `{SITE_NAME}`. Now
+  `"#zealandtable"`.
+- `index.html` — `<title>`, `og:site_name`, `og:title`, `twitter:title`,
+  favicon href. This is the browser tab and every link preview in a pitch
+  email; it would have been the loudest tell.
+- **GlitchSeason had 5 call sites, not the 2 §5 assumed** — also
+  `AboutPage.tsx` ×2 and `AwardPickerStage.tsx`. All cut, the component file
+  deleted, all imports removed. In `AwardPickerStage` the whole
+  `label.includes("Season")` split-and-splice ternary collapsed to
+  `{award.label}`; output is character-identical because `.type-display` is
+  `text-transform: uppercase`.
+- `sessionCache.ts` `PREFIX` → `zealandtable-cache:`. **Not cosmetic** —
+  `mertgurgenyatagi.github.io/irishtable/` and `/zealandtable/` would share one
+  origin, so both apps would have read and written each other's localStorage
+  cache entries.
+- Logo renamed `irishtable-logo.svg` → `zealandtable-logo.svg` (same PL lion
+  asset — this closes §5 item 5). The path is visible in the DOM and network
+  tab, so it was a tell. 5 references updated plus the favicon and
+  `scripts/import-crests.mjs`'s `BRAND_MAP`.
+- `package.json` + `package-lock.json` name, and `README.md` rewritten for the
+  new channel and fork relationship.
+
+**One deliberate safety change, worth knowing about:** `.firebaserc` now says
+`zealandtable-app`, **a project that does not exist**. Left as `irishtable-app`,
+a stray `firebase deploy` from inside `zealandtable/` would have overwritten
+irishtable's live hosting — the exact outcome this fork exists to prevent. It
+now fails loudly instead. Repointing it at `irishtable-app` would also make the
+two apps share one Firestore. Per Round 1, no real project is provisioned yet.
+
+**`.env.local` holds placeholder values, not real credentials.** It was not
+copied from irishtable (those point at production). The placeholders exist
+because `src/firebase.ts` calls `getAuth()` at module load, so without *some*
+value 4 test files fail to import. UI boots and tests pass; nothing that
+actually talks to Firebase works.
+
+**Left alone on purpose:** internal code comments and test fixtures still
+mention irishtable/kupatakipucl/"The Irish Guy" (e.g. `chatMentions.test.ts`),
+per the Round 2 decision that internal references stay. Dev-facing only, not
+reachable from the deployed site. `IRISHTABLE_HANDOVER.md` was copied in
+unchanged — it documents how this codebase works and is still accurate for
+everything but branding; renaming it would make its contents lie.
+
 ## 6. Artifacts published this session
 
 Three questionnaire rounds, published as Claude Artifacts (private, not part
