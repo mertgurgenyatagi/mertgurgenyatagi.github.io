@@ -30,6 +30,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: |
             zealandtable/package-lock.json
+            irishtable/package-lock.json
+
+      # Served from /theirishtable/, NOT /irishtable/. The old path is burned:
+      # a pitch email to a different channel carries a hyperlink to it, and
+      # emails do not expire (see ZEALANDTABLE_HANDOVER.md 22). The source
+      # folder keeps its original name; only the published path differs.
+      - name: Build irishtable
+        run: |
+          cd irishtable
+          cat << 'EOF' > .env
+          VITE_FIREBASE_API_KEY=AIzaSyBMRHhfb3dpWY0RMgpdBvvIbGeBFIl_fbk
+          VITE_FIREBASE_AUTH_DOMAIN=irishtable-app.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID=irishtable-app
+          VITE_FIREBASE_APP_ID=1:378090040193:web:1e133f578f0b6e05c91680
+          VITE_FIREBASE_STORAGE_BUCKET=irishtable-app.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID=378090040193
+          VITE_PHOTOS_ENABLED=false
+          VITE_FIREBASE_DATABASE_URL=https://irishtable-app-default-rtdb.europe-west1.firebasedatabase.app
+          EOF
+          npm ci
+          npm run build
 
       - name: Build zealandtable
         run: |
@@ -75,14 +96,17 @@ jobs:
           mkdir -p _site/docs_for_claude
           cp -r docs_for_claude/asset_pictures _site/docs_for_claude/
 
-          # Built application: only dist/, never the source tree.
+          # Built applications: only dist/, never the source tree.
           mkdir -p _site/zealandtable
           cp -r zealandtable/dist/* _site/zealandtable/
 
-          # /irishtable/ is retired: a link to it went out in an email that
-          # was meant to point at /zealandtable/. It now bounces to a neutral
-          # 404 whose URL names neither project. To bring irishtable back,
-          # restore a build step for it and drop these two lines.
+          mkdir -p _site/theirishtable
+          cp -r irishtable/dist/* _site/theirishtable/
+
+          # /irishtable/ stays retired forever. A pitch email to Zealandism
+          # carries a hyperlink to it, and that email cannot be recalled, so
+          # anything served here would be shown to the wrong channel. It
+          # bounces to a neutral 404 whose URL names no project.
           mkdir -p _site/not-found _site/irishtable
           cp .github/pages/not-found.html _site/not-found/index.html
           cp .github/pages/retired-redirect.html _site/irishtable/index.html
@@ -92,26 +116,41 @@ jobs:
 
       # Fails the deploy if anything private reached _site. Cheap insurance
       # against a future edit to the step above.
-      - name: Verify nothing private is being published
+      # Three classes of mistake, each of which has already happened once or
+      # would have shipped: publishing private files, letting one fork's
+      # branding leak into another's bundle, and serving anything at all from
+      # the retired /irishtable/ path.
+      - name: Verify what is being published
         run: |
-          set -euo pipefail
+          set -uo pipefail
           FAIL=0
-          for pattern in \
-            '_site/**/*HANDOVER*' \
-            '_site/FORKING-PLAYBOOK.md' \
-            '_site/zealandtable-pivot' \
-            '_site/**/src' \
-            '_site/docs_for_claude/predictions' ; do
-            if compgen -G "$pattern" > /dev/null; then
-              echo "::error::private path published: $pattern"; FAIL=1
-            fi
-          done
-          if grep -rlq "Irish Guy\|irishtable-app" _site 2>/dev/null; then
-            echo "::error::_site leaks irishtable references:"
-            grep -rl "Irish Guy\|irishtable-app" _site | head
-            FAIL=1
+
+          # 1. No private file may reach the artifact. Source files are the
+          #    canary: dist/ output is .js/.css/.html, so any .ts/.tsx means
+          #    a source tree got copied.
+          LEAKED=$(find _site \
+            \( -name '*HANDOVER*' -o -name 'FORKING-PLAYBOOK.md' \
+               -o -name '*.ts' -o -name '*.tsx' -o -name 'round*-answers.md' \
+               -o -path '*/predictions/*' -o -name '.env*' \) -print)
+          if [ -n "$LEAKED" ]; then
+            echo "::error::private files in _site:"; echo "$LEAKED"; FAIL=1
           fi
-          [ "$FAIL" = "0" ] && echo "clean"
+
+          # 2. Neither fork may carry the other's branding.
+          if grep -rlq "Irish Guy\|irishtable-app" _site/zealandtable 2>/dev/null; then
+            echo "::error::zealandtable bundle leaks irishtable"; FAIL=1
+          fi
+          if grep -rlq "Zealandism\|zealandtable-app" _site/theirishtable 2>/dev/null; then
+            echo "::error::theirishtable bundle leaks zealandtable"; FAIL=1
+          fi
+
+          # 3. The burned path must serve only the redirect stub.
+          if [ "$(find _site/irishtable -type f | wc -l)" != "1" ] \
+             || ! grep -q "not-found" _site/irishtable/index.html; then
+            echo "::error::/irishtable/ must contain only the not-found redirect"; FAIL=1
+          fi
+
+          if [ "$FAIL" = "0" ]; then echo "clean"; fi
           exit $FAIL
 
       - uses: actions/configure-pages@v5
