@@ -1164,6 +1164,14 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
 > action for `iconictable/`. The one that generalises is 15 — anything about
 > the exposed-files window applies to the repository, not to any one fork.
 > iconictable's own equivalent of 12 is in §23.5.
+>
+> **Item 0, ahead of all of them, conditional on a reply:** a pitch is out
+> (§23.5) and **nothing in this app happens after the 21 August deadline** —
+> no results ingestion, no scoring run, no leaderboard (§12). While every
+> channel is silent that costs nothing, which is exactly why it has stayed
+> unbuilt across three forks. The moment one says yes it becomes the only
+> thing that matters, on a deadline set by the football calendar rather than
+> by us. If you are reading this because a channel replied, start here.
 
 1. **Review the award shortlists.** `src/data/people.ts` is drafted, not
    verified — transfers, and literal `PLACEHOLDER` entries for Coventry, Hull
@@ -2020,15 +2028,40 @@ section. **Confirmed:**
   `iconic`/`table` weight split in `WelcomeStep` are the two places to glance
   at first if anything looks off. Neither has been looked at.
 
-### 23.5 The pitch
+### 23.5 The pitch, and what it promised
 
-**Not written and not sent** as of this section. The site is the easy half;
-§8 of the playbook is blunt that automation gets you "a correct, deployed,
-empty site" and not a pitch.
+Drafted 2026-08-10 and handed to Mert, who reported it done the same day.
+Nothing in this repository can observe an email, so treat the send as reported
+rather than verified — if you need certainty, look in the sent folder.
 
-When it is sent, the one check that costs ten seconds and has already caused
-one live incident (§22.1): **click your own link in the actual email client.**
-Do not read it — click it. The zealandtable email's visible text said
+**What matters here is what the email committed to**, because that becomes the
+spec if Football Iconic says yes. Read this before building anything on the
+back of a reply:
+
+- The pitch describes ranking all 20 clubs, both domestic cups and six
+  individual awards, scored across the season, plus the chat room and forum.
+  **All of that is built.**
+- It says predictions **close on 21 August**, the day before the season starts.
+  That is the real `PREDICTIONS_CLOSE_MS` value, not a sales number.
+- It says there is "eventually a real answer to who has the best ball
+  knowledge". This was **deliberately softened** from the zealandtable email's
+  wording, which promised points accruing across the season "culminating in a
+  leaderboard". Per §12 and the README scope, **there is no leaderboard, no
+  live scoring and no results ingestion** — only the pre-season phase exists.
+  The softer phrasing is true of the game as designed without promising a
+  screen that does not exist, but the gap is real: a channel that accepts will
+  expect something to happen after 21 August, and today nothing does. **That,
+  not branding, is the first thing to build on a yes.**
+
+One further pressure worth knowing: the email went out on 2026-08-10 with an
+11-day runway to the deadline. A channel needs lead time to tell an audience,
+so this pitch has a much shorter useful life than the previous two. If it is
+now well past 21 August and no reply came, the site is still fine — but the
+deadline in `src/data/deadlines.ts` is stale and any re-pitch needs it moved.
+
+**Before any future send**, the check that costs ten seconds and has already
+caused one live incident (§22.1): **click your own link in the actual email
+client.** Do not read it — click it. The zealandtable email's visible text said
 `/zealandtable/` while the href still pointed at `/irishtable/`, copied from
 the previous pitch. Pasting a URL over an old one often keeps the old href.
 
