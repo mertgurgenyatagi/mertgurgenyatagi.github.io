@@ -53,6 +53,18 @@ diff -r irishtable/src zealandtable/src
 A clean fork should show *only* the branding differences listed in §3. Anything
 else is drift that you are about to inherit.
 
+**On Windows, add `--strip-trailing-cr` to every `diff -r` in this document.**
+`sed -i` under Git Bash rewrites the files it touches as LF while the rest of
+the tree stays CRLF, so a plain `diff -r` reports every line of every edited
+file as changed and the audit tells you nothing. Whole-file diffs on content
+you know is identical mean line endings, not drift. `core.autocrlf=true`
+normalises the committed blobs either way, so this is a working-tree artifact —
+it wastes your time rather than shipping anything wrong.
+
+Prefer whichever base already has the cuts you want. If one fork has deleted an
+in-joke (§3.4) and the other has not, forking from the one that has saves you
+re-doing the deletion across every call site.
+
 ---
 
 ## 2. Copy the tree
@@ -259,8 +271,32 @@ a hyperlink to `/irishtable/` and email cannot be recalled — that path is burn
 forever and serves a neutral 404. If you ever send a wrong link, the fix is a
 new path, never reusing the old one. See `ZEALANDTABLE_HANDOVER.md` §22.
 
-**Update the publish guard** when you add a fork: it asserts that no fork's
-bundle contains another's branding, and it needs to know about yours.
+**Update the publish guard** when you add a fork. It asserts that no fork's
+bundle contains another's branding, and as of the third fork it is a pairwise
+loop over a table — so this is **one line**, not another pair of greps:
+
+```bash
+FORKS=(
+  "zealandtable|Zealandism\|zealandtable-app"
+  "theirishtable|Irish Guy\|irishtable-app"
+  "iconictable|Football Iconic\|iconictable-app"   # <- your line
+)
+```
+
+Match on the **channel name and the Firebase project, never the site name**.
+`src/data/countries.ts` contains "New Zealand" as real country data, and a
+guard keyed on the site name would fail the build on it.
+
+The guard also fails if `_site/<fork>` is missing, and that check matters more
+than it looks: **`grep -r` over a directory that does not exist finds nothing
+and therefore passes.** Before that was added, a fork silently dropped from the
+assemble step would have sailed through the check meant to police it. Any guard
+you write here should be asked the same question — what does it do when the
+thing it inspects is absent?
+
+Guard check #1, the private-files check, needs **no** edit per fork: its
+patterns are deliberately fork-agnostic and `*HANDOVER*` catches your new
+fork's handover without being told its name. Keep it that way.
 
 > ### ⚠️ Never publish the repo
 >
@@ -339,7 +375,7 @@ Audit the diff against the source fork. It should contain the §3 list and
 nothing else:
 
 ```bash
-diff -r $SRC/src $NEW/src
+diff -r --strip-trailing-cr $SRC/src $NEW/src
 ```
 
 After deploying, verify the **served bundle**, not just your working tree —
