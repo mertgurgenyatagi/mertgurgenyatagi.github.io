@@ -208,6 +208,45 @@ reachable from the deployed site. `IRISHTABLE_HANDOVER.md` was copied in
 unchanged — it documents how this codebase works and is still accurate for
 everything but branding; renaming it would make its contents lie.
 
+## 5c. Backend provisioned, 2026-08-09 — reverses Round 1's deferral
+
+Mert asked for zealandtable to be "as functional as irishtable", which
+overrides Round 1's decision to defer all infrastructure until Zealandism
+replied. §5 item 7 is therefore closed, not deferred.
+
+**Note the README was stale on this point** and cost some reasoning: it said
+Google sign-in was "not enabled yet" on irishtable. `IRISHTABLE_HANDOVER.md`
+§ status table (newer) says sign-in is **working** and the site is **live on
+GitHub Pages** at `mertgurgenyatagi.github.io/irishtable/`. Trust the handover
+over the README.
+
+**Provisioned via CLI, all done:**
+- Firebase project `zealandtable-app` (Spark, billing off) — its own project,
+  no shared state with `irishtable-app`
+- Web app → real config now in `zealandtable/.env.local` (gitignored)
+- Firestore, `eur3`, rules deployed
+- Realtime Database, `europe-west1`, rules deployed —
+  `https://zealandtable-app-default-rtdb.europe-west1.firebasedatabase.app`
+- `.github/workflows/deploy.yml` — added a `Build zealandtable` step mirroring
+  irishtable's, so Pages serves it from `/zealandtable/`. Verified the file
+  still parses and irishtable's own step is untouched.
+- Re-verified after wiring the real config: build clean, **420/420 tests**.
+
+**`vite.config.ts` needed no change** — `base: "./"` is already relative, so
+the subfolder deploy works as-is.
+
+**Two gotchas hit, recorded so nobody re-derives them:**
+1. `gcloud` cannot reach `serviceusage.googleapis.com` from inside the agent
+   sandbox even though DNS resolves; API enablement has to run unsandboxed.
+2. The Firebase Database Management REST API rejects user credentials without
+   an `x-goog-user-project` header (`SERVICE_DISABLED`, misleadingly).
+
+**Blocked on Blaze, genuinely — not a workaround away:** enabling Google
+sign-in returns `BILLING_NOT_ENABLED : Identity Platform feature requires
+billing to be enabled`. This confirms the handover's claim rather than
+contradicting it. It must be clicked in the console, exactly as irishtable's
+was. Until then the site builds and renders but nobody can sign in.
+
 ## 6. Artifacts published this session
 
 Three questionnaire rounds, published as Claude Artifacts (private, not part

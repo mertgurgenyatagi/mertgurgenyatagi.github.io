@@ -48,37 +48,41 @@ npm run dev          # dev server
 npm test             # 424 tests, vitest
 npm run build        # tsc -b && vite build
 npm run crests       # re-import club crests from docs/pl-fork/assets/
-firebase deploy      # WILL FAIL — see "Firebase is not provisioned" below
+firebase deploy --only firestore:rules,database --project zealandtable-app
 ```
 
-## Firebase is not provisioned
+Hosting is **GitHub Pages**, not Firebase Hosting — it deploys from
+`.github/workflows/deploy.yml` on push to `main`. Don't `firebase deploy
+--only hosting`.
 
-**This fork has no backend yet, by decision.** `.firebaserc` points at
-`zealandtable-app`, a project that does not exist — so `firebase deploy` fails
-loudly rather than silently deploying over irishtable's live site. That is
-deliberate. Do not repoint it at `irishtable-app`; the two apps would share one
-Firestore, and signups here would land in irishtable's real data.
+## Firebase
 
-Provisioning a real project was deferred until Zealandism actually responds.
-Until then this folder is a local pitch artifact.
+**Own project: `zealandtable-app`.** Entirely separate from `irishtable-app` —
+separate Firestore, separate RTDB, separate users. Nothing is shared, and
+signups here cannot reach irishtable's data. Spark plan, billing off.
+
+| Service | State |
+|---|---|
+| Firestore | **live** — `eur3`, rules deployed |
+| Realtime Database | **live** — `europe-west1`, rules deployed |
+| Google sign-in | **must be enabled by hand — see below** |
+| Storage | **not set up** — needs Blaze; photos off |
+
+Never repoint `.firebaserc` at `irishtable-app`. The two apps would share one
+Firestore and one user pool.
 
 ## Setup from scratch
 
 1. `npm install`
-2. `.env.local` here currently holds **placeholder values, not real
-   credentials** — enough for `npm run dev` to boot the UI and for `npm test`
-   to pass (without it, 4 test files fail at import with
-   `auth/invalid-api-key`, because `src/firebase.ts` calls `getAuth()` at
-   module load). Anything that actually talks to Firebase — sign-in, chat,
-   submitting a prediction — will not work until this is filled in from a real
-   project of this fork's own.
+2. `.env.local` holds this project's real config and is gitignored, so it
+   won't exist on a fresh clone. Regenerate it with:
 
-   irishtable's real `.env.local` was deliberately **not** copied over: it
-   points at irishtable's production project, so signups here would land in
-   irishtable's live Firestore.
+   ```bash
+   firebase apps:sdkconfig WEB --project zealandtable-app
+   ```
 
-   (Firebase web config isn't secret — it ships in the client bundle by
-   design — it's just environment-specific.)
+   (These values aren't secret — Firebase web config ships in the client
+   bundle by design — they're just environment-specific.)
 3. `npm run dev`
 
 ## Known gaps
