@@ -1,13 +1,25 @@
-# irishtable — Handover
+# zealandtable — Handover
 
-**Written:** 2026-08-07, at the end of the session that built it.
+**Written:** 2026-08-07, at the end of the session that built irishtable.
 **Rewritten:** 2026-08-08, after the frontend was replaced wholesale (§17-§20).
+**Forked:** 2026-08-09, irishtable → zealandtable (§21). This document came
+across with the code and was updated in place.
 **Audience:** whoever picks this up next, including me with no memory of it.
 
 This is the deep document. `README.md` is the quick orientation; this is the
 one that explains *why* things are the way they are, what has already been
 tried and rejected, and where the traps are. Where the two disagree, this file
 is more detailed but the code is always ground truth.
+
+> **Read §21 first if you are new to this folder.** `zealandtable/` is a
+> copy-and-adapt fork of `irishtable/`, which was itself a fork of
+> `kupatakipucl`. Everything in §3–§20 was written about irishtable and is
+> still accurate for this codebase, because the fork changed branding and
+> nothing else. §21 is the complete list of what differs, and the playbook for
+> forking again lives at [`../FORKING-PLAYBOOK.md`](../FORKING-PLAYBOOK.md).
+>
+> **`irishtable/` is a live, separate product.** Never edit it to serve this
+> folder, and never point this folder's config at `irishtable-app`.
 
 ---
 
@@ -33,75 +45,77 @@ is more detailed but the code is always ground truth.
 18. [How ~90 files ported without being edited](#18-how-90-files-ported-without-being-edited)
 19. [Where the clone deliberately diverges from the parent](#19-where-the-clone-deliberately-diverges-from-the-parent)
 20. [What the clone deleted, and what replaced it](#20-what-the-clone-deleted-and-what-replaced-it)
+21. [The zealandtable fork](#21-the-zealandtable-fork)
 
 ---
 
 ## 1. What this is, in one screen
 
-**irishtable** is an English-language Premier League prediction game for the
-2026/27 season. A participant signs in with Google, answers a five-question
-quiz, ranks all 20 clubs from 1st to 20th, picks the winners of the FA Cup and
-the Carabao Cup, and names six individual award winners. They're scored against
-what actually happens. There's a live chat room and a forum.
+**zealandtable** is an English-language Premier League prediction game for the
+2026/27 season, built to be pitched to the football YouTuber **Zealandism**. A
+participant signs in with Google, answers a five-question quiz, ranks all 20
+clubs from 1st to 20th, picks the winners of the FA Cup and the Carabao Cup,
+and names six individual award winners. They're scored against what actually
+happens. There's a live chat room and a forum.
 
-It lives in `irishtable/` **inside the `kupatakipucl` repository** but is a
-completely separate application: its own `package.json`, `node_modules`, build
-config, Firebase project and deploy. **No module is imported across that
-boundary in either direction.** Code that came from the parent project came by
-copy-and-adapt, never by import.
+It lives in `zealandtable/` inside the **`mertgurgenyatagi.github.io`**
+repository, alongside three sibling applications — `irishtable/`,
+`kupatakip/` and `eventportal/` — but is a completely separate application:
+its own `package.json`, `node_modules`, build config, Firebase project and
+deploy. **No module is imported across any of those boundaries in either
+direction.** Code that came from a sibling came by copy-and-adapt, never by
+import.
 
-Run every command from inside `irishtable/`. Running `npm test` at the repo
-root runs the *other* project's suite.
+Run every command from inside `zealandtable/`. Running `npm test` at the repo
+root, or in a sibling folder, runs a *different* project's suite — see §15,
+this has actually caused wasted hours.
 
-**Scale:** 55 source files, ~5,950 lines in `src/`, 90 tests across 10 files.
+**Scale:** ~55 source files, ~5,950 lines in `src/`, **420 tests across 48
+files**.
+
+**Lineage:** `kupatakipucl` → `irishtable` (§17–§20) → `zealandtable` (§21).
+Each step was copy-and-adapt. All three still exist and two are live.
 
 ---
 
 ## 2. Status right now
 
-> **The frontend was replaced wholesale on 2026-08-08**, on the branch
-> `frontend-clone`, followed by a comprehensive design & candidate data alignment pass:
-> - Site title updated to **`#irishtable`** (`#IRISHTABLE` in uppercase on nav/header, `#irishtable` lowercase elsewhere).
-> - All cyan accent colors greenified to Premier League Neon Green (`#00ff87`).
-> - Navigation buttons strictly horizontally dead-centered on desktop header bar.
-> - Typography refined: **Oswald Variable** for display/headings/labels/numerals and **Inter Variable** for crisp body text.
-> - Ruled background gridlines enabled across all pages including `/predictions`.
-> - Authoritative candidate pools populated across all 8 award categories (FA Cup, Carabao Cup, Player of the Season, Young Player of the Season, Manager of the Season, Golden Boot, Golden Glove, Best Playmaker).
-> - Award pickers rendered as filterable lists for all player/manager categories.
-> - Profile prediction editor redirects directly to standalone `/predictions` page with choices pre-filled.
-> - Profile button and display name edit button upgraded with generous hover areas and pointer feedback.
-> - Periodic monochromatic sliced clip-path glitch added for "season" → "susan" inside joke with fixed layout space reservation.
-> - `usePlayers()` updated to populate participant snapshot profiles immediately.
-> - Subfolder asset URLs (`assetUrl`) applied to logo images for GitHub Pages compatibility.
+> **Forked from irishtable on 2026-08-09** (§21) and deployed the same day.
+> The fork changed branding only — no feature, layout, scoring or data change.
+> Everything §3–§20 says about the codebase is still true here.
 
 | Thing | State |
 |---|---|
-| Frontend | **cloned from kupatakipucl & aligned**, 2026-08-08 (§17-§20) |
-| Tests | **341 passing**, 48 files |
-| `tsc -b --force` | **0 errors** |
+| Frontend | inherited from irishtable, itself cloned from kupatakipucl (§17-§20) |
+| Tests | **420 passing**, 48 files |
+| `tsc -b` | **0 errors** |
 | `vite build` | clean |
-| Browser pass | 1536×712 and 390×844, every page, zero overflow |
-| Firebase project | `irishtable-app`, Firestore Native in `eur3` |
+| Firebase project | **`zealandtable-app`**, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | **working** |
-| Firestore writes | **working** |
+| Google sign-in | **working** — enabled by hand in the console, see §13 |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
-| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/irishtable/` via `mertgurgenyatagi.github.io` repo CI |
+| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/zealandtable/` |
 
-**What has *not* been verified end to end:** the signed-in screens were
-checked in a browser through a temporary harness that mounted the
-presentational components with fixture props (§20). The component trees are
-real, but the **data wiring** on those pages — `LoggedInHome`'s listeners,
-`ProfilePage`'s writes, the live prediction submit — has only been exercised by
-the test suite. Nobody has walked sign in → quiz → predict → appear in the
-participant list against the real backend, not once. That is open item #2 and
-it is the single most valuable hour anyone could spend on this next.
+**Verified on the deployed bundle**, not just locally: the served JavaScript
+contains `ZEALANDTABLE`, `Zealandism` and `zealandtable-app`, and contains no
+occurrence of `IRISHTABLE`, `Irish Guy`, `irishtable-app` or `susan`.
+`irishtable/` was confirmed still live and serving its own build at the same
+time. Re-run that check after any future fork — the command is in
+`../FORKING-PLAYBOOK.md`.
 
-**Real data in production:** one profile (`displayName: "asdasd"`, written
-2026-08-07 20:07 UTC — Mert's own test), no survey responses, no predictions.
-That profile is the proof the write path works; it was written minutes after
-the long-polling fix landed.
+**What has *not* been verified end to end:** as of the fork, nobody had walked
+sign in → quiz → predict → appear in the participant list against
+**zealandtable's own backend**. The Firebase project, provider config and
+authorized domains were all confirmed correct by API, and the identical code
+path is live on irishtable — but confirmed-by-API is not the same as
+walked-by-a-human. This inherits irishtable's open item #2 and is still the
+single most valuable hour anyone could spend here.
+
+**Real data in production:** none. `zealandtable-app` was created empty on
+2026-08-09 — no profiles, no survey responses, no predictions. Unlike
+irishtable it has never had a test write, so an empty participant list is
+expected, not a bug.
 
 **A thing that looks like a bug and isn't:** an unauthenticated REST read of
 `surveyResponses` returns `403 PERMISSION_DENIED`. That is the rules working
@@ -110,13 +124,25 @@ exactly as designed — quiz answers are readable by signed-in users only.
 
 ### On hosting
 
-The site is hosted on **GitHub Pages** under `https://mertgurgenyatagi.github.io/irishtable/` inside the `mertgurgenyatagi.github.io` repository.
+Hosted on **GitHub Pages** at `https://mertgurgenyatagi.github.io/zealandtable/`,
+from this same repository.
 
-Deployment is fully automated via GitHub Actions (`.github/workflows/deploy.yml`). Pushing changes to the `main` branch automatically installs dependencies (`npm ci`), executes `npm run build`, and publishes the output to GitHub Pages.
+`.github/workflows/deploy.yml` builds **every sibling site on every push to
+`main`** — currently irishtable and zealandtable, each in its own step, each
+writing its own `.env` inline and then `cp -r dist/* .` so Pages serves it
+from its own subfolder. Consequences worth knowing:
+
+- A change to *either* project redeploys *both*. Harmless — the builds are
+  independent — but CI takes roughly twice as long, and a build break in one
+  step fails the whole deploy including the other site.
+- The Firebase web config is written into the workflow file in plaintext.
+  That is fine and deliberate: web config is not secret, it ships in the
+  client bundle by design. Do not "fix" this by moving it to secrets.
 
 Two things support subfolder hosting seamlessly:
 - `HashRouter`, so deep links need no server rewrite rules.
-- `base: "./"` in `vite.config.ts`, so the build works from a subfolder.
+- `base: "./"` in `vite.config.ts`, so the build works from any subfolder
+  **with no per-fork change**. This is why forking needs no build config edit.
 
 ---
 
@@ -167,10 +193,10 @@ lead you to expect the parent's shapes.
 ## 4. Running it
 
 ```bash
-cd irishtable
+cd zealandtable
 npm install
 npm run dev            # http://localhost:5173 by default
-npm test               # 90 tests
+npm test               # 420 tests
 npm run build          # tsc -b && vite build
 npm run crests         # re-import crests from ../docs/pl-fork/assets/
 ```
@@ -178,11 +204,18 @@ npm run crests         # re-import crests from ../docs/pl-fork/assets/
 `.env.local` is gitignored and won't exist on a fresh clone. Regenerate it:
 
 ```bash
-firebase apps:sdkconfig WEB --project irishtable-app
+firebase apps:sdkconfig WEB --project zealandtable-app
 ```
 
 then add `VITE_PHOTOS_ENABLED=false`. The Firebase web config is not secret —
 it ships in the client bundle by design — it's just environment-specific.
+
+**Without `.env.local`, four test files fail at import** with
+`auth/invalid-api-key` — not an assertion failure, a collection error, because
+`src/firebase.ts` calls `getAuth()` at module load. If you see exactly four
+files red and zero individual tests red, you are missing the env file, not
+looking at a real regression. Any non-empty API key value clears it for the
+suite, since every test mocks Firebase anyway.
 
 **`npm run dev` alone gets you a fully working logged-out site.** Sign-in needs
 the real project, which `.env.local` already points at.
@@ -1020,8 +1053,17 @@ Three things the first build listed here are now built, by the clone:
 
 ## 13. Firebase and infrastructure
 
-Project `irishtable-app`, created via CLI during the build. Firestore Native in
-`eur3`. **Spark plan — billing is off.**
+Project **`zealandtable-app`**, created via CLI on 2026-08-09 during the fork.
+Firestore Native in `eur3`, RTDB in `europe-west1` — both regions chosen to
+match irishtable so the two stay comparable. **Spark plan — billing is off.**
+
+**This project is entirely separate from `irishtable-app`.** Separate
+Firestore, separate RTDB, separate user pool. A user who signs into one is not
+signed into the other. This separation is the entire point of the fork (§21):
+it lets irishtable stay live and pitchable while zealandtable is pitched to
+someone else. **Never repoint `.firebaserc` or `.env.local` at
+`irishtable-app`** — you would merge two products' data and two audiences into
+one database, silently.
 
 ### What that costs
 
@@ -1042,23 +1084,44 @@ offering one (§11.2). To switch on: enable Blaze, set up Storage in the console
 deploy `storage.rules`, set `VITE_PHOTOS_ENABLED=true`. No code changes.
 
 **Enabling the Google provider could not be automated.** The Identity Platform
-admin API returns `BILLING_NOT_ENABLED` on a Spark project, so it had to be done
-by hand in the console. It has been done. If a second environment is ever set
-up, expect the same manual step.
+admin API returns `BILLING_NOT_ENABLED : Identity Platform feature requires
+billing to be enabled` on a Spark project. This was true for irishtable and was
+re-confirmed the hard way for zealandtable — it is a real platform limit, not a
+missing flag or a permissions problem, and **no amount of CLI cleverness gets
+around it.** Two things must be clicked by hand in the console per project:
+
+1. Authentication → Sign-in method → **Google** → Enable → set support email.
+2. Authentication → Settings → **Authorized domains** → add
+   `mertgurgenyatagi.github.io`.
+
+Skip (2) and sign-in works on localhost but fails **only in production**, with
+`auth/unauthorized-domain`. That is a miserable way to find out, so verify it
+by API rather than trusting memory:
+
+```bash
+TOKEN=$(gcloud auth print-access-token)
+curl -s -H "Authorization: Bearer $TOKEN" \
+     -H "x-goog-user-project: zealandtable-app" \
+  "https://identitytoolkit.googleapis.com/admin/v2/projects/zealandtable-app/config" \
+  | grep -o '"authorizedDomains":\[[^]]*\]'
+```
+
+Expect `enabled: true` from the sibling `defaultSupportedIdpConfigs` endpoint
+and `mertgurgenyatagi.github.io` in the domain list.
 
 ### Deploys
 
+**Rules** — hand-run, per project:
+
 ```bash
-firebase deploy --only firestore:rules --project irishtable-app
-firebase deploy --only database --project irishtable-app    # RTDB rules
-firebase deploy --only hosting --project irishtable-app     # ONLY WHEN ASKED
+firebase deploy --only firestore:rules,database --project zealandtable-app
 ```
 
-There is no CI. Every deploy is a hand-run command.
-
-**Hosting has been deployed exactly once, without being asked, and Mert said
-so.** Don't. Work on localhost. The only thing this branch deployed was the
-RTDB rules file, which the plan explicitly called for.
+**Hosting is CI, not manual.** `.github/workflows/deploy.yml` publishes on
+every push to `main`. Do **not** run `firebase deploy --only hosting` — this
+project is served by GitHub Pages, and Firebase Hosting is not in use. The
+older instruction in this section said there was no CI; that was true when
+irishtable was first built and is no longer true for either project.
 
 ---
 
@@ -1068,17 +1131,20 @@ RTDB rules file, which the plan explicitly called for.
    verified — transfers, and literal `PLACEHOLDER` entries for Coventry, Hull
    and Ipswich. It's the only file that needs it; everything derives from it.
    **This is still the biggest gap between "works" and "ready to send".**
-2. **Walk the happy path once, for real.** Sign in → quiz → predict → appear in
-   the participant list, against the live backend, on a real device. As of
-   writing one profile exists and **no quiz response or prediction has ever
-   been written**. The clone verified geometry and logic; the *data wiring* on
-   the signed-in pages has only been exercised by the test suite, because the
-   browser pass reached those screens through a fixture harness (§20). Given
-   that five of the seven bugs in §11 were found this way and none by a test,
-   this is the highest-value hour available.
+2. **Walk the happy path once, for real — on `zealandtable-app`.** Sign in →
+   quiz → predict → appear in the participant list, against **this fork's own**
+   live backend, on a real device. Nothing has ever been written to this
+   project. Doing it on irishtable does not count: different Firebase project,
+   different rules deployment, different authorized-domain list. The config was
+   verified by API, which proves it is *configured*, not that it *works*. Given
+   that five of the seven bugs in §11 were found by clicking and none by a
+   test, this is the highest-value hour available.
 3. **Mert's Scoring page prose.** He said he'd write the body text. The
-   structured rules and a worked example are already on the page.
-4. **Hosting on GitHub Pages.** Done — live at `https://mertgurgenyatagi.github.io/irishtable/` via automated GitHub Actions CI workflow.
+   structured rules and a worked example are already on the page. Inherited
+   from irishtable and still outstanding here.
+4. **Hosting on GitHub Pages.** Done — live at
+   `https://mertgurgenyatagi.github.io/zealandtable/` via the shared CI
+   workflow.
 5. **Storage/Blaze**, if photos matter. Note the clone made photos *more*
    optional, not less: the picker is hidden entirely when the flag is off, in
    signup and on Profile.
@@ -1094,18 +1160,36 @@ RTDB rules file, which the plan explicitly called for.
     button mounts. Inherited — `dialog.tsx` diffs clean against the parent, so
     it is not something the port introduced. React 18 doesn't accept a ref on a
     function component; `Button` would need `forwardRef`.
+11. **Fork-specific: the shared assets are still irishtable's.** The logo file
+    was renamed to `zealandtable-logo.svg` but is the *same* Premier League
+    lion image, and the 17 hero portraits are still the Champions League
+    players inherited two forks back. Fine for a pitch, wrong for a launch —
+    and note that a genuinely distinct logo per fork is the one branding change
+    the playbook cannot automate.
+12. **Fork-specific: the pitch email has not been written or sent.** Zealandism
+    has never been contacted — the site was built cold, before any approach,
+    exactly as irishtable was. The site existing is not the deliverable; the
+    email is. No draft exists anywhere in this repo yet.
 
 ---
 
 ## 15. Traps
 
-**Run every command from `irishtable/`.** `npm test` at the repo root runs the
-other project's suite — and worse, `npx tsc -b` at the root **silently
-type-checks kupatakipucl and reports success**. A shell that reverts to the
-repo root mid-session therefore produces "0 errors" for a project you never
+**Run every command from `zealandtable/`.** `npm test` at the repo root runs
+another project's suite — and worse, `npx tsc -b` at the root **silently
+type-checks a sibling project and reports success**. A shell that reverts to
+the repo root mid-session therefore produces "0 errors" for a project you never
 compiled. Several "clean typecheck" results on the clone branch meant exactly
 nothing until this was noticed. Check `pwd` first, or confirm the error paths
 name files that exist here.
+
+This got sharper with the fork: there are now **four sibling projects** in this
+repo and `irishtable/` is a near-identical twin of this one. A stray `cd` into
+it will let you edit, test and even commit the wrong project's files without
+anything looking wrong. During the fork session a `cd irishtable` persisted
+across tool calls and created a directory in the wrong place; it was caught
+only because a file count came back zero. **Prefer absolute paths over `cd`**,
+and if a command's output is surprising, check `pwd` before anything else.
 
 **`npm test` does not typecheck.** Vitest transpiles without type-checking, so
 `tsc -b` catches things the suite can't. A test-file type error slipped through
@@ -1436,3 +1520,148 @@ by someone actually clicking. See open item #2.
 
 Hosting is untouched. The only thing that went out was `database.rules.json`,
 which the plan called for.
+
+---
+
+## 21. The zealandtable fork
+
+**Date:** 2026-08-09. **Supersedes:** `../zealandtable-pivot/HANDOVER-DELTA.md`,
+which was the working document during the pivot and is now folded in here. The
+questionnaire answers it refers to (`round1-answers.md` … `round3-answers.md`)
+still live in `../zealandtable-pivot/` as the raw record.
+
+### 21.1 Why a fork and not an edit
+
+Mert wanted to pitch the same product to a second YouTuber, **Zealandism**. The
+obvious move — rewrite the branding inside `irishtable/` — was rejected late in
+the process, on his steer:
+
+> "The dream would be if the irish guy version could stay as is, so if he
+> eventually looks at it, we could keep that alive."
+
+Three requirements fell out of that, and they are the reason this folder
+exists:
+
+1. **irishtable stays alive and pitchable.** The Irish Guy never replied, but
+   he might. Editing in place would have destroyed that option.
+2. **Zealandism must not be able to tell this was built for someone else
+   first.** Hence the rename of the *logo file*, the `<title>`, and the
+   localStorage prefix — not just the visible wordmark.
+3. **A third fork must stay cheap.** If Zealandism also passes, the next
+   YouTuber should cost an afternoon, not a rebuild.
+
+This directly reversed an earlier answer in the questionnaire (Round 2 Q4:
+"leave the scaffolding as irishtable"), which had assumed a single in-place
+folder. Round 1 had also deferred all infrastructure until Zealandism replied;
+that too was reversed the same day, when Mert asked for the fork to be "as
+functional as irishtable". **Both reversals were deliberate.** If you are
+reading the round answers, read them knowing this.
+
+### 21.2 What was copied, and how
+
+```bash
+git archive HEAD:irishtable | tar -x -C zealandtable
+```
+
+The tracked tree only — 245 files. This is why no `node_modules`, `dist`,
+`.firebase`, `*.tsbuildinfo` or `.env.local` came across, and it is a better
+method than `cp -r` for exactly that reason. Do it this way again.
+
+`irishtable/` was verified byte-for-byte unmodified with `git status` before
+and after, and again before committing.
+
+### 21.3 Everything that differs from irishtable
+
+This is the complete list. `diff -r irishtable/src zealandtable/src` produced
+it, and re-running that diff is the fastest way to audit the fork.
+
+| File | Change |
+|---|---|
+| `src/data/site.ts` | `SITE_NAME` → `#zealandtable`, `CHANNEL_NAME` → `Zealandism` |
+| `src/shell/AppShell.tsx` | wordmark `#IRISHTABLE` → `#ZEALANDTABLE`, logo path |
+| `src/shell/MobileShell.tsx` | same two |
+| `src/signup/steps/WelcomeStep.tsx` | bold span `irish` → `zealand` |
+| `src/home/HomeLandingLoggedOut.tsx` | credit sentence, glitch cut, import |
+| `src/home/mobile/MobileHomeLoggedOut.tsx` | same three |
+| `src/pages/AboutPage.tsx` | glitch ×2 cut, logo path, import |
+| `src/mobile/MobileAboutPage.tsx` | logo path |
+| `src/predictions/AwardPickerStage.tsx` | glitch cut, import |
+| `src/profile/deletedAccount.ts` | `DELETED_ACCOUNT_AVATAR` path |
+| `src/lib/sessionCache.ts` | localStorage `PREFIX` |
+| `src/components/ui/GlitchSeason.tsx` | **deleted** |
+| `public/brand/*.svg` | renamed `irishtable-logo` → `zealandtable-logo` |
+| `index.html` | title, `og:site_name`, `og:title`, `twitter:title`, favicon |
+| `package.json`, `package-lock.json` | `name` |
+| `.firebaserc` | `zealandtable-app` |
+| `scripts/import-crests.mjs` | `BRAND_MAP` output filename |
+| `README.md` | rewritten for the new channel and the fork relationship |
+
+**Nothing else.** No component, layout, scoring rule, club, award, security
+rule or test was touched.
+
+### 21.4 Four things the original plan missed
+
+The pivot document listed four edits. A grep of the copy found the list was
+incomplete, and each omission would have shipped:
+
+1. **`SITE_NAME` was still `#irishtable`.** The plan named only `CHANNEL_NAME`.
+   `SITE_NAME` renders on the About page via `{SITE_NAME}` and in
+   `MobileAboutPage`'s logo `alt`.
+2. **`index.html` was untouched** — browser tab title, and every Open Graph and
+   Twitter preview. A pitch email is a *link*, so this was the single most
+   visible miss.
+3. **`GlitchSeason` had five call sites, not two.** Also `AboutPage` ×2 and
+   `AwardPickerStage`. In `AwardPickerStage` the removal collapsed a
+   `label.includes("Season")` split-and-splice ternary down to `{award.label}`;
+   output is character-identical because `.type-display` sets
+   `text-transform: uppercase`, so the lowercase source label renders the same.
+4. **`sessionCache.ts`'s localStorage `PREFIX`.** Not cosmetic. Both sites are
+   served from `mertgurgenyatagi.github.io`, so they **share one origin and one
+   localStorage**. Left alone, each fork would have read and written the
+   other's cached profile and leaderboard entries.
+
+Point 4 generalises: **anything keyed by origin collides between forks.**
+localStorage, sessionStorage, IndexedDB, cookies, service workers. Grep for
+storage keys on every future fork.
+
+### 21.5 Backend
+
+`zealandtable-app`, created via CLI the same day — see §13 for the full
+picture, region choices and the manual console steps. Provisioned: Firestore
+`eur3`, RTDB `europe-west1`, both rulesets deployed, web app config written to
+`.env.local` and into the CI workflow.
+
+Two mechanical gotchas cost time and will recur:
+
+- **`gcloud` cannot reach `serviceusage.googleapis.com` from inside the agent
+  sandbox**, even though DNS resolves and the `firebase` CLI works fine. API
+  enablement has to run unsandboxed. The failure looks like a DNS error, not a
+  permissions error, which is misleading.
+- **The Firebase Database Management REST API rejects user credentials without
+  an `x-goog-user-project` header**, and reports it as `SERVICE_DISABLED` —
+  which sends you off enabling an API that is already enabled. The RTDB default
+  instance cannot be created by `firebase database:instances:create` on a fresh
+  project either; it insists on interactive `firebase init database`. Use the
+  REST call in `../FORKING-PLAYBOOK.md`.
+
+### 21.6 What is genuinely unverified
+
+Be honest about this line. The following were confirmed:
+
+- Deployed bundle contains the right branding and the right Firebase project,
+  and none of irishtable's.
+- irishtable still live and serving its own build.
+- Google provider `enabled: true`; `mertgurgenyatagi.github.io` in the
+  authorized-domain list.
+- `tsc -b` clean, 420/420 tests, on the real config.
+
+The following were **not**:
+
+- Anyone signing in to zealandtable. Not once.
+- Any write reaching `zealandtable-app`'s Firestore.
+- Any browser rendering of the fork at a real viewport. The branding was
+  verified by grepping the served JS bundle, which proves the strings shipped
+  but proves nothing about layout. Removing `GlitchSeason` deleted an
+  `inline-block` span with an absolutely-positioned overlay from two `<h1>`s
+  and one `<p>`; plain text is the simpler case and `tsc` and the suite both
+  pass, but **no human or browser has looked at those three headings.**

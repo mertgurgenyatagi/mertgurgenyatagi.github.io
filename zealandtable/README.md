@@ -12,22 +12,23 @@ relationship `irishtable` has with the `kupatakipucl` parent it came from.
 this fork. Only branding and channel-name copy differ; see
 `../zealandtable-pivot/HANDOVER-DELTA.md` for the decision trail.
 
-**Handover — read this first:** [`IRISHTABLE_HANDOVER.md`](IRISHTABLE_HANDOVER.md)
+**Handover — read this first:** [`ZEALANDTABLE_HANDOVER.md`](ZEALANDTABLE_HANDOVER.md)
 — inherited from the parent and still accurate for everything except the
 branding. Why everything is the way it is, what's already been tried, and where
 the traps are.
 
-Develop on **localhost** (`npm run dev`). The site was deployed to Firebase
-Hosting once during the build, but Mert hadn't asked for that and leans towards
-GitHub Pages — don't deploy without being asked.
+Develop on **localhost** (`npm run dev`). Hosting is automated — see below.
+
+**Live at https://mertgurgenyatagi.github.io/zealandtable/**
 
 ## What this is, relative to the repo it sits in
 
-This directory is a **fully self-contained application**. It lives inside the
-`kupatakipucl` repo but shares nothing with it — its own `package.json`,
-`node_modules`, build config, Firebase project and deploy. No module is
-imported across the boundary in either direction. Code that came from the
-parent came by copy-and-adapt.
+This directory is a **fully self-contained application**. It lives in the
+`mertgurgenyatagi.github.io` repo alongside three siblings — `irishtable/`,
+`kupatakip/` and `eventportal/` — but shares nothing with any of them: its own
+`package.json`, `node_modules`, build config, Firebase project and deploy. No
+module is imported across those boundaries in either direction. Code that came
+from a sibling came by copy-and-adapt.
 
 Run every command from inside `zealandtable/`, not the repo root.
 
@@ -45,7 +46,7 @@ Predictions close **21 August 2026**; the season starts the 22nd.
 ```bash
 npm install
 npm run dev          # dev server
-npm test             # 424 tests, vitest
+npm test             # 420 tests, vitest
 npm run build        # tsc -b && vite build
 npm run crests       # re-import club crests from docs/pl-fork/assets/
 firebase deploy --only firestore:rules,database --project zealandtable-app
@@ -65,7 +66,7 @@ signups here cannot reach irishtable's data. Spark plan, billing off.
 |---|---|
 | Firestore | **live** — `eur3`, rules deployed |
 | Realtime Database | **live** — `europe-west1`, rules deployed |
-| Google sign-in | **must be enabled by hand — see below** |
+| Google sign-in | **working** — enabled by hand in the console, 2026-08-09 |
 | Storage | **not set up** — needs Blaze; photos off |
 
 Never repoint `.firebaserc` at `irishtable-app`. The two apps would share one
@@ -87,12 +88,12 @@ Firestore and one user pool.
 
 ## Known gaps
 
-**Google sign-in is not enabled yet.** This is the one thing standing between
-the site and a working sign-up. The Identity Platform admin API refuses
-configuration writes on a free-tier project, so it has to be done by hand:
-
-> Firebase console → this fork's own project → Authentication → Get started →
-> Sign-in method → Google → Enable → set a support email → Save.
+**Nobody has signed in yet.** Google sign-in is enabled and the authorized
+domains are set, both verified by API — but no human has walked sign in → quiz
+→ predict against this project's backend, and `zealandtable-app` holds zero
+profiles, zero survey responses and zero predictions. An empty participant list
+is expected, not a bug. This is the highest-value hour available; see
+`ZEALANDTABLE_HANDOVER.md` §14 item 2.
 
 **Profile photos need a paid plan.** Firebase Storage requires Blaze on new
 projects. The photo step is optional and its upload failure is non-fatal, so
@@ -132,14 +133,14 @@ scripts/       crest importer
 scroll container. This is the substrate the whole layout system stands on — it
 gives every page a *definite* height to divide. (The first build did the
 opposite, deliberately; the reversal and what it cost are in
-`IRISHTABLE_HANDOVER.md` §10.)
+`ZEALANDTABLE_HANDOVER.md` §10.)
 
 **Mobile is a separate tree, not a reflow.** The fork is at 1024px, in one
 place: `useIsMobile`. Never read a media query anywhere else.
 
 **A green suite doesn't prove a layout or a loading fix.** Render-timing,
 Firestore `fromCache` behaviour and flexbox sizing don't reproduce in jsdom.
-Five of the seven bugs in `IRISHTABLE_HANDOVER.md` §11 were found by clicking,
+Five of the seven bugs in `ZEALANDTABLE_HANDOVER.md` §11 were found by clicking,
 none by a test. Anything touching a live listener or a full-viewport
 composition needs a real browser at a real viewport — and **measure block
 heights, don't read screenshots**.

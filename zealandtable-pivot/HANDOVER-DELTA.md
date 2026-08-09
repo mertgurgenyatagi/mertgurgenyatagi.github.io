@@ -1,5 +1,17 @@
 # zealandtable pivot — handover delta
 
+> ## ⚠️ Superseded — folded into the real handover
+>
+> This was the working document *during* the pivot. It has since been folded
+> into **`../zealandtable/ZEALANDTABLE_HANDOVER.md` §21**, which is now the
+> canonical account of the fork and is kept current. The reusable procedure
+> extracted from it lives in **`../FORKING-PLAYBOOK.md`**.
+>
+> Kept for the decision trail only. **Do not use it as instructions** — several
+> statements below were reversed the same day they were written (see §5b, §5c),
+> and the §5 checklist is known to be incomplete. The raw questionnaire answers
+> in this folder remain the primary record of what Mert actually asked for.
+
 **Written:** 2026-08-09, mid-session, handed off early to avoid context bloat.
 **Read this after:** `irishtable/IRISHTABLE_HANDOVER.md` — this file assumes that
 context and only records what's new. Where the two disagree about what's
