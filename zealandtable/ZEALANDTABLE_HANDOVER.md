@@ -142,9 +142,10 @@ intended behaviour. Do not "simplify" this back to `path: '.'`.
 
 Other things worth knowing:
 
-- **`/irishtable/` is retired** and serves a redirect to a neutral `/not-found/`
-  page (§22). irishtable is no longer built or deployed; its source is intact
-  and restoring it is two lines in the workflow.
+- **`/irishtable/` is burned permanently** and serves a redirect to a neutral
+  `/not-found/` page. irishtable itself is alive and well at
+  **`/theirishtable/`** (§22.5). Do not "tidy up" by moving it back — the
+  reason is an email that cannot be recalled, not a preference.
 - The Firebase web config is written into the workflow file in plaintext.
   That is fine and deliberate: web config is not secret, it ships in the
   client bundle by design. Do not "fix" this by moving it to secrets.
@@ -1183,11 +1184,12 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
     the playbook cannot automate.
 12. **~~The pitch email has not been written or sent.~~** Superseded: it was
     sent on 2026-08-10, with a broken link. See §22.
-13. **Decide what happens to irishtable.** It is currently dark — `/irishtable/`
-    redirects to a neutral 404 — because a link to it went out in
-    Zealandism's email (§22). The source is intact. Either leave it retired,
-    or restore it at a *different* path and send the Irish Guy a fresh link.
-    **This is an open decision, not a finished state.**
+13. **~~Decide what happens to irishtable.~~** Done — restored at
+    `/theirishtable/` on 2026-08-10 (§22.5). What remains is a *sales*
+    decision, not a technical one: **the Irish Guy has not been sent the new
+    link.** He currently holds a URL that 404s. Either send him a fresh cold
+    email — the broken link is a legitimate excuse for a second touch — or
+    leave the site parked until he surfaces.
 14. **Confirm the follow-up email was sent.** The redirect makes the wrong
     link harmless, but it does not deliver the right URL. Zealandism cannot
     reach the site at all until the correction arrives. If you are reading
@@ -1785,3 +1787,78 @@ it. Ask that question after every deploy.
 separate ways. The failure was in an email nobody checked, pointing at a URL
 that was never tested by clicking it. `../FORKING-PLAYBOOK.md` §7 now includes
 this step; it is the cheapest check in the whole process and it was skipped.
+
+### 22.5 irishtable's new address
+
+Restored on 2026-08-10 at **`https://mertgurgenyatagi.github.io/theirishtable/`**,
+on its own original Firebase project (`irishtable-app`) exactly as before.
+
+**`/irishtable/` can never serve the app again.** Zealandism's email contains
+a hyperlink to that path and email cannot be recalled, so any future click of
+it must not reach a site branded for another channel. The path stays pointed at
+the neutral 404 permanently. This is a constraint, not a preference — a future
+session that "cleans up" the redirect would silently re-open the original
+failure.
+
+**The brand did not change, only the address.** It is still `#irishtable`. The
+Irish Guy never saw the site, so the name carries no bad history, and it is
+derived from his channel — which is exactly what a re-pitch wants.
+
+No application code changed. The move was free because:
+
+- `base: "./"` in `vite.config.ts` — assets resolve relative to wherever the
+  app is served.
+- `assetUrl()` reads `import.meta.env.BASE_URL` rather than hardcoding a
+  prefix, so `/brand/...` lookups follow the base.
+- `HashRouter` — routes live in the fragment, so no path rewriting.
+- Firebase authorized domains key on **host**, not path, so
+  `mertgurgenyatagi.github.io` already covers the new location.
+
+The source folder is still named `irishtable/`; only the published path is
+`theirishtable`. Folder name and URL deliberately differ — renaming the folder
+would have churned git history for nothing.
+
+**The publish guard had to be widened**, and this is worth understanding before
+editing it. It previously failed the build on any occurrence of `Irish Guy` or
+`irishtable-app` anywhere in `_site` — correct while irishtable was dark, and
+wrong the moment it came back. It now checks three things instead:
+
+1. No private file reaches the artifact. `.ts`/`.tsx` files act as the canary:
+   `dist/` output is only `.js`/`.css`/`.html`, so any TypeScript in `_site`
+   means a source tree was copied.
+2. Neither fork carries the other's branding — `_site/zealandtable` must not
+   contain `Irish Guy`/`irishtable-app`, and `_site/theirishtable` must not
+   contain `Zealandism`/`zealandtable-app`.
+3. `_site/irishtable/` holds exactly one file and it redirects to
+   `/not-found/`.
+
+Verified live after deploy: `/theirishtable/` returns 200 with the irishtable
+title and no zealandtable strings, its logo asset loads, `/irishtable/` still
+bounces to `/not-found/`, `/zealandtable/` is unaffected, and the private URLs
+still 404.
+
+### 22.6 Still outstanding: the repository itself is public
+
+**Fixing the Pages artifact did not fix this.** `mertgurgenyatagi.github.io`
+is a **public GitHub repository**, so every file the allowlist removed from the
+website is still readable at `github.com` and `raw.githubusercontent.com` —
+this handover, the forking playbook, the pivot questionnaire, and the
+participants' names and predictions. Confirmed returning `200` anonymously on
+2026-08-10.
+
+The repository name *is* the website domain, so it is a one-hop guess from the
+live site to the source.
+
+Deleting the files would not be sufficient either: they are in **git history**,
+so any old commit still serves them.
+
+Options, none yet chosen:
+
+| Option | Cost | Fixes history |
+|---|---|---|
+| Make the repo private; Pages from a private repo needs GitHub Pro | ~$4/month | yes |
+| Private source repo, CI pushes only built output to a public one | free | yes, going forward |
+| Move sensitive docs out and rewrite history | free | yes, fiddly |
+
+Until one is done, **treat every file in this repository as published**,
+including this sentence.

@@ -87,7 +87,7 @@ root runs the *other* project's suite.
 | Firestore writes | **working** |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
-| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/irishtable/` via `mertgurgenyatagi.github.io` repo CI |
+| Hosting | **GitHub Pages** — live at `https://mertgurgenyatagi.github.io/theirishtable/` via `mertgurgenyatagi.github.io` repo CI |
 
 **What has *not* been verified end to end:** the signed-in screens were
 checked in a browser through a temporary harness that mounted the
@@ -110,7 +110,7 @@ exactly as designed — quiz answers are readable by signed-in users only.
 
 ### On hosting
 
-The site is hosted on **GitHub Pages** under `https://mertgurgenyatagi.github.io/irishtable/` inside the `mertgurgenyatagi.github.io` repository.
+The site is hosted on **GitHub Pages** under `https://mertgurgenyatagi.github.io/theirishtable/` inside the `mertgurgenyatagi.github.io` repository.
 
 Deployment is fully automated via GitHub Actions (`.github/workflows/deploy.yml`). Pushing changes to the `main` branch automatically installs dependencies (`npm ci`), executes `npm run build`, and publishes the output to GitHub Pages.
 
@@ -1078,7 +1078,7 @@ RTDB rules file, which the plan explicitly called for.
    this is the highest-value hour available.
 3. **Mert's Scoring page prose.** He said he'd write the body text. The
    structured rules and a worked example are already on the page.
-4. **Hosting on GitHub Pages.** Done — live at `https://mertgurgenyatagi.github.io/irishtable/` via automated GitHub Actions CI workflow.
+4. **Hosting on GitHub Pages.** Done — live at `https://mertgurgenyatagi.github.io/theirishtable/` via automated GitHub Actions CI workflow.
 5. **Storage/Blaze**, if photos matter. Note the clone made photos *more*
    optional, not less: the picker is hidden entirely when the flag is off, in
    signup and on Profile.

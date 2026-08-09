@@ -253,6 +253,15 @@ Two edits to `.github/workflows/deploy.yml`:
 
 Also add the new lockfile to `cache-dependency-path`.
 
+**Folder name and published path need not match.** `irishtable/` publishes to
+`/theirishtable/`, because a pitch email sent to a *different* channel contains
+a hyperlink to `/irishtable/` and email cannot be recalled — that path is burned
+forever and serves a neutral 404. If you ever send a wrong link, the fix is a
+new path, never reusing the old one. See `ZEALANDTABLE_HANDOVER.md` §22.
+
+**Update the publish guard** when you add a fork: it asserts that no fork's
+bundle contains another's branding, and it needs to know about yours.
+
 > ### ⚠️ Never publish the repo
 >
 > The workflow assembles an explicit allowlist into `_site/` and uploads only
@@ -351,7 +360,7 @@ Then confirm every *previous* fork is still serving what you expect — this is
 the whole point of forking rather than editing:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" https://mertgurgenyatagi.github.io/irishtable/
+curl -s -o /dev/null -w "%{http_code}\n" https://mertgurgenyatagi.github.io/theirishtable/
 ```
 
 ### Confirm nothing private is public
