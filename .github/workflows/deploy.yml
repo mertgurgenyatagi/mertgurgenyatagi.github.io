@@ -31,6 +31,7 @@ jobs:
           cache-dependency-path: |
             zealandtable/package-lock.json
             irishtable/package-lock.json
+            iconictable/package-lock.json
 
       # Served from /theirishtable/, NOT /irishtable/. The old path is burned:
       # a pitch email to a different channel carries a hyperlink to it, and
@@ -64,6 +65,22 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID=1046821268210
           VITE_PHOTOS_ENABLED=false
           VITE_FIREBASE_DATABASE_URL=https://zealandtable-app-default-rtdb.europe-west1.firebasedatabase.app
+          EOF
+          npm ci
+          npm run build
+
+      - name: Build iconictable
+        run: |
+          cd iconictable
+          cat << 'EOF' > .env
+          VITE_FIREBASE_API_KEY=AIzaSyCifJYAM6DKFT8-4zc7EMDvFsfUyYrfuwU
+          VITE_FIREBASE_AUTH_DOMAIN=iconictable-app.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID=iconictable-app
+          VITE_FIREBASE_APP_ID=1:765275086843:web:53ca844661e536c0d8755e
+          VITE_FIREBASE_STORAGE_BUCKET=iconictable-app.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID=765275086843
+          VITE_PHOTOS_ENABLED=false
+          VITE_FIREBASE_DATABASE_URL=https://iconictable-app-default-rtdb.europe-west1.firebasedatabase.app
           EOF
           npm ci
           npm run build
@@ -103,6 +120,9 @@ jobs:
           mkdir -p _site/theirishtable
           cp -r irishtable/dist/* _site/theirishtable/
 
+          mkdir -p _site/iconictable
+          cp -r iconictable/dist/* _site/iconictable/
+
           # /irishtable/ stays retired forever. A pitch email to Zealandism
           # carries a hyperlink to it, and that email cannot be recalled, so
           # anything served here would be shown to the wrong channel. It
@@ -128,6 +148,10 @@ jobs:
           # 1. No private file may reach the artifact. Source files are the
           #    canary: dist/ output is .js/.css/.html, so any .ts/.tsx means
           #    a source tree got copied.
+          #
+          #    These patterns are deliberately fork-agnostic -- '*HANDOVER*'
+          #    catches a new fork's handover without being told its name -- so
+          #    adding a fork needs no edit here. Keep it that way.
           LEAKED=$(find _site \
             \( -name '*HANDOVER*' -o -name 'FORKING-PLAYBOOK.md' \
                -o -name '*.ts' -o -name '*.tsx' -o -name 'round*-answers.md' \
@@ -136,13 +160,38 @@ jobs:
             echo "::error::private files in _site:"; echo "$LEAKED"; FAIL=1
           fi
 
-          # 2. Neither fork may carry the other's branding.
-          if grep -rlq "Irish Guy\|irishtable-app" _site/zealandtable 2>/dev/null; then
-            echo "::error::zealandtable bundle leaks irishtable"; FAIL=1
-          fi
-          if grep -rlq "Zealandism\|zealandtable-app" _site/theirishtable 2>/dev/null; then
-            echo "::error::theirishtable bundle leaks zealandtable"; FAIL=1
-          fi
+          # 2. No fork may carry another fork's branding. This is the check
+          #    that would catch a rebrand that missed a file -- shipping a
+          #    bundle that names the channel it was really built for is the
+          #    one outcome forking exists to prevent.
+          #
+          #    Pairwise, so it is N*(N-1) comparisons and adding a fork means
+          #    adding one line here, not 2N greps. Each entry is
+          #    "<published dir>|<pattern matching that fork's own branding>".
+          #    Match the channel name and the Firebase project, not the site
+          #    name: "New Zealand" is real country data in src/data/countries.ts
+          #    and must not trip this.
+          FORKS=(
+            "zealandtable|Zealandism\|zealandtable-app"
+            "theirishtable|Irish Guy\|irishtable-app"
+            "iconictable|Football Iconic\|iconictable-app"
+          )
+          for a in "${FORKS[@]}"; do
+            DIR_A=${a%%|*}
+            if [ ! -d "_site/$DIR_A" ]; then
+              echo "::error::_site/$DIR_A is missing -- the assemble step and this guard disagree"
+              FAIL=1
+              continue
+            fi
+            for b in "${FORKS[@]}"; do
+              DIR_B=${b%%|*}
+              PAT_B=${b#*|}
+              [ "$DIR_A" = "$DIR_B" ] && continue
+              if grep -rlq "$PAT_B" "_site/$DIR_A" 2>/dev/null; then
+                echo "::error::$DIR_A bundle leaks $DIR_B branding"; FAIL=1
+              fi
+            done
+          done
 
           # 3. The burned path must serve only the redirect stub.
           if [ "$(find _site/irishtable -type f | wc -l)" != "1" ] \
