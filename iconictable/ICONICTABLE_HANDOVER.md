@@ -104,7 +104,7 @@ three are live.
 | `vite build` | clean |
 | Firebase project | **`iconictable-app`**, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | **NOT ENABLED** — the admin API returns `CONFIGURATION_NOT_FOUND`, i.e. Auth has never been initialised on this project. Sign-in is broken on the live site until the two console clicks in §13 are done. |
+| Google sign-in | **configured** — provider `enabled: true` (console) and `mertgurgenyatagi.github.io` in the authorized domains (by API, see §23.9). Configured, not walked — see §23.4. |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
 | Hosting | **live** — `https://mertgurgenyatagi.github.io/iconictable/`, confirmed 200 |
@@ -2005,14 +2005,10 @@ section. **Confirmed:**
 
 **Not confirmed at the time this section was written:**
 
-- **Google sign-in is not merely unwalked, it is not enabled.** The Identity
-  Platform admin API returns `CONFIGURATION_NOT_FOUND` for this project, which
-  means Auth has never been initialised — not that a setting is wrong. Until
-  the two console clicks in §13 are done, sign-in on the live site fails.
-  This differs from zealandtable at the equivalent point (§21.6), where the
-  provider was confirmed `enabled: true` by API and only the human walkthrough
-  was missing. Do not read §21.6 as describing this fork's state.
 - Anyone signing in to iconictable. Not once. Same gap as both siblings.
+  Auth is now *configured* — provider enabled, domain authorized, both
+  confirmed by API (§23.9) — which proves it is configured and not that it
+  works.
 - Any write reaching `iconictable-app`'s Firestore.
 - **Any browser rendering of this fork at a real viewport.** Branding was
   verified by grepping the bundle, which proves the strings shipped and proves
@@ -2100,3 +2096,42 @@ Whole-file diffs on content you know is identical mean line endings, not drift.
 so **the committed result is correct either way** and this is a working-tree
 artifact only — but it will waste your time during the §7 audit if you do not
 recognise it. Use `--strip-trailing-cr` on every fork audit run from Windows.
+
+### 23.9 The near-miss: enabled provider, unauthorized domain
+
+The most valuable thing this fork produced is a caught failure, and it is worth
+reading before the next one.
+
+Mert enabled Google sign-in in the console and said so. Re-checking by API
+before the pitch email went out:
+
+- Google provider: `enabled: true` ✓
+- Authorized domains: `["localhost", "iconictable-app.firebaseapp.com",
+  "iconictable-app.web.app"]` — **the three defaults.
+  `mertgurgenyatagi.github.io` was missing.**
+
+That combination is the worst-shaped bug in this whole setup. Sign-in works
+perfectly on localhost, so every local check passes, and fails for **every real
+visitor** with `auth/unauthorized-domain`. The pitch email would have gone to
+Football Iconic pointing at a site whose sign-in button was broken for him and
+for his entire audience.
+
+The cause is not carelessness. **They are two different console screens.**
+"Enable Google sign-in" means the Sign-in method tab; authorized domains live
+under Settings. Doing the first and believing you have done both is the
+obvious, natural mistake — and the playbook's own wording ("the two manual
+steps") encouraged treating them as one action.
+
+Two things changed as a result:
+
+1. **Authorized domains turned out to be automatable after all.** Spark blocks
+   the *provider enable*, not the config PATCH. `../FORKING-PLAYBOOK.md` §6 now
+   carries the one-line `curl` and no longer calls this a manual step. Send the
+   whole domain list — `updateMask` replaces the field.
+2. **Verify after being told it is done.** The check that caught this ran
+   because §6 says to verify by API rather than trust that the clicks landed.
+   The report "I've done the auth" is exactly when that check is most likely to
+   be skipped and most likely to pay.
+
+Generalises past Firebase: when a task has two steps on two screens and one
+natural name, confirm the second one independently of the first.

@@ -324,22 +324,43 @@ four or five forks, consider a path filter.
 
 ---
 
-## 6. The two manual steps
+## 6. The manual step, and the one that only looks manual
 
-**These cannot be automated on the free tier.** The Identity Platform admin API
-returns `BILLING_NOT_ENABLED : Identity Platform feature requires billing to be
-enabled` on Spark. This is a real platform limit — it was hit on irishtable,
-and re-confirmed on zealandtable. Budget for it; don't burn time looking for a
-CLI flag.
+**Step 1 cannot be automated on the free tier.** The Identity Platform admin
+API returns `BILLING_NOT_ENABLED : Identity Platform feature requires billing
+to be enabled` on Spark. Real platform limit — hit on irishtable, re-confirmed
+on zealandtable and again on iconictable. Budget for it; don't hunt for a flag.
 
 In the Firebase console for the new project:
 
 1. **Authentication → Sign-in method → Google →** Enable, set a support email.
-2. **Authentication → Settings → Authorized domains →** add
-   `mertgurgenyatagi.github.io`.
 
-Miss (2) and sign-in works on localhost but fails **only in production** with
-`auth/unauthorized-domain`.
+**Step 2 — authorized domains — *can* be automated**, contrary to what this
+playbook said until 2026-08-10. It is a plain config PATCH, and it is only the
+*provider enable* that Spark blocks. Once step 1 has initialised Auth (before
+that, the config endpoint 404s with `CONFIGURATION_NOT_FOUND`):
+
+```bash
+TOKEN=$(gcloud auth print-access-token)
+curl -s -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "x-goog-user-project: $PROJECT" -H "Content-Type: application/json" \
+  -d '{"authorizedDomains":["localhost","'$PROJECT'.firebaseapp.com","'$PROJECT'.web.app","mertgurgenyatagi.github.io"]}' \
+  "https://identitytoolkit.googleapis.com/admin/v2/projects/$PROJECT/config?updateMask=authorizedDomains"
+```
+
+Send the **whole list**, not just the new entry — `updateMask` replaces the
+field, so omitting the three defaults removes them.
+
+> ### ⚠️ Enabling the provider does not add the domain
+>
+> These are two different screens, and doing "the Auth" naturally means the
+> Sign-in method tab. On iconictable the provider came back `enabled: true`
+> while the domain list was still the three defaults — **`auth/unauthorized-
+> domain` for every real visitor, working perfectly on localhost.** It was
+> caught only because the §6 verification was run before the pitch email.
+>
+> Never infer step 2 from step 1. Check it by API, every time, and check it
+> *after* someone tells you the auth is done.
 
 Verify both by API rather than trusting that the clicks landed:
 
