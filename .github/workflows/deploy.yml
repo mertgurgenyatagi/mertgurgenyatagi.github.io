@@ -29,30 +29,8 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: |
-            irishtable/package-lock.json
             zealandtable/package-lock.json
 
-      - name: Build irishtable
-        run: |
-          cd irishtable
-          cat << 'EOF' > .env
-          VITE_FIREBASE_API_KEY=AIzaSyBMRHhfb3dpWY0RMgpdBvvIbGeBFIl_fbk
-          VITE_FIREBASE_AUTH_DOMAIN=irishtable-app.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID=irishtable-app
-          VITE_FIREBASE_APP_ID=1:378090040193:web:1e133f578f0b6e05c91680
-          VITE_FIREBASE_STORAGE_BUCKET=irishtable-app.firebasestorage.app
-          VITE_FIREBASE_MESSAGING_SENDER_ID=378090040193
-          VITE_PHOTOS_ENABLED=false
-          VITE_FIREBASE_DATABASE_URL=https://irishtable-app-default-rtdb.europe-west1.firebasedatabase.app
-          EOF
-          npm ci
-          npm run build
-          cp -r dist/* .
-
-      # Second pitch site, forked from irishtable. Same pattern: build in
-      # place, then copy dist/* up one level so Pages serves it from
-      # /zealandtable/. Its own Firebase project — no shared state with
-      # irishtable, and nothing here touches the step above.
       - name: Build zealandtable
         run: |
           cd zealandtable
@@ -68,12 +46,78 @@ jobs:
           EOF
           npm ci
           npm run build
-          cp -r dist/* .
+
+      # Publish an explicit allowlist into _site, never the repo itself.
+      #
+      # This step is a security boundary, not a convenience. Uploading the
+      # whole checkout (which is what this workflow used to do) served every
+      # tracked file on the public internet: application source, the handover
+      # documents, the forking playbook, and participants' real names and
+      # predictions under docs_for_claude/. Add a line here only for something
+      # that is genuinely meant to be public.
+      - name: Assemble publishable site
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+
+          # Root redirect and the shared game script kupatakip/app.js loads.
+          cp index.html _site/
+          cp form.js simulate.js _site/
+
+          # Static sites, no build step.
+          cp -r kupatakip _site/
+          cp -r eventportal _site/
+
+          # kupatakip/index.html references this one asset directory. Copy
+          # only the images -- docs_for_claude also holds participants' names
+          # and predictions, which must never be published.
+          mkdir -p _site/docs_for_claude
+          cp -r docs_for_claude/asset_pictures _site/docs_for_claude/
+
+          # Built application: only dist/, never the source tree.
+          mkdir -p _site/zealandtable
+          cp -r zealandtable/dist/* _site/zealandtable/
+
+          # /irishtable/ is retired: a link to it went out in an email that
+          # was meant to point at /zealandtable/. It now bounces to a neutral
+          # 404 whose URL names neither project. To bring irishtable back,
+          # restore a build step for it and drop these two lines.
+          mkdir -p _site/not-found _site/irishtable
+          cp .github/pages/not-found.html _site/not-found/index.html
+          cp .github/pages/retired-redirect.html _site/irishtable/index.html
+
+          echo "--- _site contents ---"
+          find _site -maxdepth 2 -not -path '*/assets/*' | sort
+
+      # Fails the deploy if anything private reached _site. Cheap insurance
+      # against a future edit to the step above.
+      - name: Verify nothing private is being published
+        run: |
+          set -euo pipefail
+          FAIL=0
+          for pattern in \
+            '_site/**/*HANDOVER*' \
+            '_site/FORKING-PLAYBOOK.md' \
+            '_site/zealandtable-pivot' \
+            '_site/**/src' \
+            '_site/docs_for_claude/predictions' ; do
+            if compgen -G "$pattern" > /dev/null; then
+              echo "::error::private path published: $pattern"; FAIL=1
+            fi
+          done
+          if grep -rlq "Irish Guy\|irishtable-app" _site 2>/dev/null; then
+            echo "::error::_site leaks irishtable references:"
+            grep -rl "Irish Guy\|irishtable-app" _site | head
+            FAIL=1
+          fi
+          [ "$FAIL" = "0" ] && echo "clean"
+          exit $FAIL
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy (attempt 1)
         id: d1
