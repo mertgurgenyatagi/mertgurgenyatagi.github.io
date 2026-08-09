@@ -23,8 +23,9 @@ the traps are.
 
 Develop on **localhost** (`npm run dev`). Hosting is automated — see below.
 
-**Will be live at https://mertgurgenyatagi.github.io/iconictable/**
-(not deployed at the time this line was written — check before quoting it.)
+**Live at https://mertgurgenyatagi.github.io/iconictable/**
+(deployed and verified 2026-08-10 — but Google sign-in is not enabled yet, so
+the site loads and cannot be signed into. See Known gaps.)
 
 ## What this is, relative to the repo it sits in
 
@@ -78,7 +79,7 @@ plan, billing off.
 |---|---|
 | Firestore | **live** — `eur3`, rules deployed 2026-08-10 |
 | Realtime Database | **live** — `europe-west1`, rules deployed 2026-08-10 |
-| Google sign-in | enabled by hand in the console — see the playbook §6 |
+| Google sign-in | **not enabled yet** — admin API says `CONFIGURATION_NOT_FOUND`, so sign-in fails on the live site until the console step is done |
 | Storage | **not set up** — needs Blaze; photos off |
 
 Never repoint `.firebaserc` at a sibling project. The two apps would share one
@@ -100,11 +101,20 @@ Firestore and one user pool.
 
 ## Known gaps
 
+**Google sign-in is not enabled, so nobody *can* sign in.** The Identity
+Platform admin API returns `CONFIGURATION_NOT_FOUND` for `iconictable-app` —
+Auth has never been initialised on the project. This is the two-click manual
+console step that cannot be automated on the Spark plan (playbook §6):
+Authentication → Sign-in method → Google → Enable + support email, then
+Authentication → Settings → Authorized domains → add
+`mertgurgenyatagi.github.io`. **Miss the second and sign-in works on localhost
+but fails only in production** with `auth/unauthorized-domain`.
+
 **Nobody has signed in yet.** `iconictable-app` holds zero profiles, zero
 survey responses and zero predictions, so an empty participant list is
-expected, not a bug. Walking sign in → quiz → predict against *this* project's
-backend is the highest-value hour available; see `ICONICTABLE_HANDOVER.md` §14
-item 2.
+expected, not a bug. Once sign-in is enabled, walking sign in → quiz → predict
+against *this* project's backend is the highest-value hour available; see
+`ICONICTABLE_HANDOVER.md` §14 item 2.
 
 **Profile photos need a paid plan.** Firebase Storage requires Blaze on new
 projects. The photo step is optional and its upload failure is non-fatal, so

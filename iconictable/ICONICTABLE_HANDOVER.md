@@ -104,17 +104,21 @@ three are live.
 | `vite build` | clean |
 | Firebase project | **`iconictable-app`**, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | enabled by hand in the console — the manual step, see §13 and the playbook §6 |
+| Google sign-in | **NOT ENABLED** — the admin API returns `CONFIGURATION_NOT_FOUND`, i.e. Auth has never been initialised on this project. Sign-in is broken on the live site until the two console clicks in §13 are done. |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
-| Hosting | **GitHub Pages** — `https://mertgurgenyatagi.github.io/iconictable/` |
+| Hosting | **live** — `https://mertgurgenyatagi.github.io/iconictable/`, confirmed 200 |
 
-**Verified on the built bundle**, not just the source tree: `iconictable/dist`
-contains `ICONICTABLE`, `Football Iconic` and `iconictable-app`, and contains
-no occurrence of `ZEALANDTABLE`, `Zealandism`, `zealandtable-app`,
-`IRISHTABLE`, `Irish Guy`, `irishtable-app` or `susan`. Re-run that check after
-any future fork — the command is in `../FORKING-PLAYBOOK.md` §7, and it must be
-re-run against the *served* bundle after deploy, not only the local one.
+**Verified on the served bundle**, not just locally: the JavaScript actually
+returned by `https://mertgurgenyatagi.github.io/iconictable/` contains
+`ICONICTABLE`, `Football Iconic` and `iconictable-app`, and contains no
+occurrence of `ZEALANDTABLE`, `Zealandism`, `zealandtable-app`, `IRISHTABLE`,
+`Irish Guy`, `irishtable-app` or `susan`. Both sibling forks were confirmed
+still serving their own builds at the same time, `/irishtable/` still bounces
+to `/not-found/`, and the private-URL sweep returns 404 for every entry. Re-run
+all of that after any future fork — the commands are in
+`../FORKING-PLAYBOOK.md` §7. Checking the *served* bundle rather than the local
+one is the point: it is what catches a CI step that used the wrong `.env`.
 
 **What has *not* been verified end to end:** nobody has walked sign in → quiz →
 predict → appear in the participant list against **iconictable's own backend**.
@@ -1984,10 +1988,15 @@ section. **Confirmed:**
 
 - `tsc -b` clean and **420/420 tests across 48 files**, run against the real
   `.env.local`. Identical to the baseline, so the rebrand broke nothing.
-- The **built bundle** (`iconictable/dist`) contains `ICONICTABLE`,
-  `Football Iconic` and `iconictable-app`, and contains no occurrence of
-  `ZEALANDTABLE`, `Zealandism`, `zealandtable-app`, `IRISHTABLE`, `Irish Guy`,
-  `irishtable-app` or `susan`.
+- The **served** bundle — fetched from the live URL, not the local `dist` —
+  contains `ICONICTABLE`, `Football Iconic` and `iconictable-app`, and contains
+  no occurrence of `ZEALANDTABLE`, `Zealandism`, `zealandtable-app`,
+  `IRISHTABLE`, `Irish Guy`, `irishtable-app` or `susan`. The page `<title>`
+  and the logo asset were checked too.
+- Both siblings still serve their own builds (`zealandtable` and `irishtable`
+  titles respectively), `/irishtable/` still redirects to `/not-found/`, and
+  the §7 private-URL sweep returns **404 for every entry**, including this
+  handover and the playbook.
 - The CI publish guard's new pairwise logic, exercised against a mock `_site`:
   clean site passes, all three leak directions are caught, a missing fork
   directory is caught, and "New Zealand" does not trip it (§23.7).
@@ -1996,6 +2005,13 @@ section. **Confirmed:**
 
 **Not confirmed at the time this section was written:**
 
+- **Google sign-in is not merely unwalked, it is not enabled.** The Identity
+  Platform admin API returns `CONFIGURATION_NOT_FOUND` for this project, which
+  means Auth has never been initialised — not that a setting is wrong. Until
+  the two console clicks in §13 are done, sign-in on the live site fails.
+  This differs from zealandtable at the equivalent point (§21.6), where the
+  provider was confirmed `enabled: true` by API and only the human walkthrough
+  was missing. Do not read §21.6 as describing this fork's state.
 - Anyone signing in to iconictable. Not once. Same gap as both siblings.
 - Any write reaching `iconictable-app`'s Firestore.
 - **Any browser rendering of this fork at a real viewport.** Branding was
