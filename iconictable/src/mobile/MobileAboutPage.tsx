@@ -39,7 +39,7 @@ export function MobileAboutPage() {
       >
         <motion.div variants={riseIn} className="flex flex-col items-center gap-1 text-center">
           <motion.img
-            src={assetUrl("/brand/zealandtable-logo.svg")}
+            src={assetUrl("/brand/iconictable-logo.svg")}
             alt={SITE_NAME}
             className="h-12 w-auto"
           />

@@ -6,9 +6,9 @@
  * gets corrected once and missed in the second location.
  */
 
-export const SITE_NAME = "#zealandtable";
+export const SITE_NAME = "#iconictable";
 
 /** The channel this was built for. */
-export const CHANNEL_NAME = "Zealandism";
+export const CHANNEL_NAME = "Football Iconic";
 
 export const SEASON_LABEL = "2026/27";

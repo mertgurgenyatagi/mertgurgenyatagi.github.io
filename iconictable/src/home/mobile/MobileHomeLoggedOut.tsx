@@ -6,7 +6,7 @@ import { CLUB_COUNT } from "@/data/clubs";
 import type { Player } from "../../profile/usePlayers";
 
 const MISSION_COPY =
-  `Rank all ${CLUB_COUNT} clubs from first to last, call both cups and the six individual awards, then watch nine months of football decide whether you were right. One entry each. No edits after ${formatDeadline()}. Made for the Zealandism YouTube channel.`;
+  `Rank all ${CLUB_COUNT} clubs from first to last, call both cups and the six individual awards, then watch nine months of football decide whether you were right. One entry each. No edits after ${formatDeadline()}. Made for the Football Iconic YouTube channel.`;
 
 const EASE_COTTON = [0.22, 0.61, 0.36, 1] as const;
 

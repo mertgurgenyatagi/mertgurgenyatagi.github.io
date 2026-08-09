@@ -59,13 +59,13 @@ function DesktopShell({ children }: { children: ReactNode }) {
               className="group flex cursor-pointer items-center gap-2.5 rounded-sm leading-none no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-color_text"
             >
               <img
-                src={assetUrl("/brand/zealandtable-logo.svg")}
+                src={assetUrl("/brand/iconictable-logo.svg")}
                 alt=""
                 aria-hidden
                 className="size-6 shrink-0 sm:size-7"
               />
               <span className="type-display text-xl tracking-[0.02em] text-color_text sm:text-2xl uppercase">
-                #ZEALANDTABLE
+                #ICONICTABLE
               </span>
             </Link>
 

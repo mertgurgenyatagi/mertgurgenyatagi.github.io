@@ -95,13 +95,13 @@ export function MobileShell({ children }: { children: ReactNode }) {
                   className="flex items-center gap-2 rounded-sm leading-none no-underline outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-color_text"
                 >
                   <img
-                    src={assetUrl("/brand/zealandtable-logo.svg")}
+                    src={assetUrl("/brand/iconictable-logo.svg")}
                     alt=""
                     aria-hidden
                     className="size-5 shrink-0"
                   />
                   <span className="type-display text-lg tracking-[0.01em] text-color_text uppercase">
-                    #ZEALANDTABLE
+                    #ICONICTABLE
                   </span>
                 </Link>
               )}

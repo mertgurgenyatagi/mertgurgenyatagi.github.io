@@ -155,7 +155,7 @@ export function AboutPage() {
             initial={initial}
             animate={animate}
             variants={logoIn}
-            src={assetUrl("/brand/zealandtable-logo.svg")}
+            src={assetUrl("/brand/iconictable-logo.svg")}
             alt={SITE_NAME}
             className="h-[clamp(9rem,25vh,14rem)] w-auto"
           />

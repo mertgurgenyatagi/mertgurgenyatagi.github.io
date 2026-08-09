@@ -15,7 +15,7 @@
  * are kept because ported components call both.
  */
 export const DELETED_ACCOUNT_LABEL = "Deleted";
-export const DELETED_ACCOUNT_AVATAR = "/brand/zealandtable-logo.svg";
+export const DELETED_ACCOUNT_AVATAR = "/brand/iconictable-logo.svg";
 
 interface NamedPlayer {
   displayName: string;

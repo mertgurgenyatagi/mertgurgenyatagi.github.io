@@ -10,7 +10,7 @@
 //    (scaling-audit No. 15, 2026-07-31). Read/write failures (private
 //    browsing, quota, no localStorage) are swallowed — the cache just
 //    behaves as memory-only in that case, never throws.
-const PREFIX = "zealandtable-cache:";
+const PREFIX = "iconictable-cache:";
 const TTL_MS = 5 * 60 * 1000;
 
 interface StoredEntry<T> {

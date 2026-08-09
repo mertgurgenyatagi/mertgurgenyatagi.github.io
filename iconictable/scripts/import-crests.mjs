@@ -49,7 +49,7 @@ const CREST_MAP = {
 };
 
 const BRAND_MAP = {
-  "irishtable-logo.svg": "zealandtable-logo.svg",
+  "irishtable-logo.svg": "iconictable-logo.svg",
 };
 
 function clean(svg) {
