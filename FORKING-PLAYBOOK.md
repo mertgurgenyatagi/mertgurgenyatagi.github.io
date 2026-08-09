@@ -241,12 +241,33 @@ VITE_FIREBASE_DATABASE_URL=https://$PROJECT-default-rtdb.europe-west1.firebaseda
 
 ## 5. CI deploy
 
-Add a build step to `.github/workflows/deploy.yml`, copying the existing
-pattern exactly — `cd`, write `.env` via heredoc, `npm ci`, `npm run build`,
-`cp -r dist/* .`. That last line is what makes Pages serve it from
-`/$NEW/`.
+Two edits to `.github/workflows/deploy.yml`:
+
+1. A **build step** — `cd $NEW`, write `.env` via heredoc, `npm ci`,
+   `npm run build`. Copy the existing one.
+2. A line in the **assemble step**:
+
+   ```bash
+   mkdir -p _site/$NEW && cp -r $NEW/dist/* _site/$NEW/
+   ```
 
 Also add the new lockfile to `cache-dependency-path`.
+
+> ### ⚠️ Never publish the repo
+>
+> The workflow assembles an explicit allowlist into `_site/` and uploads only
+> that. **It must stay that way.** It previously used
+> `upload-pages-artifact` with `path: '.'`, which served every tracked file
+> publicly — both handovers, this playbook, all application source, and
+> participants' real names and predictions. That went unnoticed for months.
+> The full account is in `zealandtable/ZEALANDTABLE_HANDOVER.md` §22.
+>
+> Copy **`dist/` only**, never the project folder. If you ever find yourself
+> writing `path: '.'` or `cp -r $NEW _site/`, stop.
+>
+> There is a verification step that fails the build if a handover, this
+> playbook, any `src/` or the predictions folder reaches `_site/`. **Add your
+> new fork's private paths to it.**
 
 The Firebase web config goes in the workflow **in plaintext, deliberately**. It
 is not secret — it ships in the client bundle by design. Do not move it to
@@ -326,12 +347,42 @@ done
 
 New name and project **present**; old name and old project **absent**.
 
-Then confirm every *previous* fork is still live and serving its own build —
-this is the whole point of forking rather than editing:
+Then confirm every *previous* fork is still serving what you expect — this is
+the whole point of forking rather than editing:
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" https://mertgurgenyatagi.github.io/irishtable/
 ```
+
+### Confirm nothing private is public
+
+**Run this every time.** It is the check that was skipped for months:
+
+```bash
+for u in "$NEW/README.md" "$NEW/src/data/site.ts" "FORKING-PLAYBOOK.md" \
+         "$NEW/${NEW^^}_HANDOVER.md" "docs_for_claude/list_of_participants.txt"; do
+  printf "%-46s " "$u"
+  curl -s -o /dev/null -w "%{http_code}\n" "https://mertgurgenyatagi.github.io/$u"
+done
+```
+
+**Every one must be 404.** A `200` anywhere means the artifact is publishing
+the repository again — stop and fix the workflow before sending any email.
+
+### Check the link you are about to send
+
+Trivial, and skipping it caused a live incident (`ZEALANDTABLE_HANDOVER.md`
+§22): a pitch email went out whose visible text said `/zealandtable/` while the
+hyperlink behind it still pointed at `/irishtable/`, copied from the previous
+pitch.
+
+Before sending, in the actual email client:
+
+1. **Click your own link.** Do not read it — click it. Confirm the address bar
+   lands on `/$NEW/` and the page shows the right wordmark.
+2. Check the **hyperlink target**, not just the text. Pasting a URL over an
+   old one often keeps the old href.
+3. Send yourself a copy first if the client makes hover-inspection awkward.
 
 ---
 
@@ -367,3 +418,5 @@ pitch. After every fork:
 | Manual console steps | 2, unavoidable on Spark (§6) |
 | Cost per fork | £0 |
 | Photos | off everywhere — needs Blaze |
+| Deployed surface | `_site/` allowlist only — **never** `path: '.'` |
+| Last thing before sending | click your own link (§7) |

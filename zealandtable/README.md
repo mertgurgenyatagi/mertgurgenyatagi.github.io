@@ -56,6 +56,11 @@ Hosting is **GitHub Pages**, not Firebase Hosting — it deploys from
 `.github/workflows/deploy.yml` on push to `main`. Don't `firebase deploy
 --only hosting`.
 
+The workflow publishes an **explicit allowlist** into `_site/`, not the repo.
+Only `dist/` is copied, so nothing in `src/` or any `.md` here is public —
+that is deliberate and load-bearing, see `ZEALANDTABLE_HANDOVER.md` §22. To
+publish something new, add a line to the assemble step.
+
 ## Firebase
 
 **Own project: `zealandtable-app`.** Entirely separate from `irishtable-app` —

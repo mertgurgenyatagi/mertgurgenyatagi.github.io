@@ -46,6 +46,7 @@ is more detailed but the code is always ground truth.
 19. [Where the clone deliberately diverges from the parent](#19-where-the-clone-deliberately-diverges-from-the-parent)
 20. [What the clone deleted, and what replaced it](#20-what-the-clone-deleted-and-what-replaced-it)
 21. [The zealandtable fork](#21-the-zealandtable-fork)
+22. [The 2026-08-10 disclosure incident](#22-the-2026-08-10-disclosure-incident)
 
 ---
 
@@ -127,17 +128,27 @@ exactly as designed — quiz answers are readable by signed-in users only.
 Hosted on **GitHub Pages** at `https://mertgurgenyatagi.github.io/zealandtable/`,
 from this same repository.
 
-`.github/workflows/deploy.yml` builds **every sibling site on every push to
-`main`** — currently irishtable and zealandtable, each in its own step, each
-writing its own `.env` inline and then `cp -r dist/* .` so Pages serves it
-from its own subfolder. Consequences worth knowing:
+`.github/workflows/deploy.yml` builds this app, then **assembles an explicit
+allowlist of publishable files into `_site/` and uploads only that.** It does
+not upload the repository. That distinction is a security boundary, not a
+style choice — see §22, where uploading the checkout published both handovers,
+the forking playbook and participants' personal data. A verification step
+fails the build if anything private, or any irishtable reference, reaches
+`_site/`.
 
-- A change to *either* project redeploys *both*. Harmless — the builds are
-  independent — but CI takes roughly twice as long, and a build break in one
-  step fails the whole deploy including the other site.
+**To publish something new you must add a line to the assemble step.** A file
+merely existing in the repo does not put it on the web any more, which is the
+intended behaviour. Do not "simplify" this back to `path: '.'`.
+
+Other things worth knowing:
+
+- **`/irishtable/` is retired** and serves a redirect to a neutral `/not-found/`
+  page (§22). irishtable is no longer built or deployed; its source is intact
+  and restoring it is two lines in the workflow.
 - The Firebase web config is written into the workflow file in plaintext.
   That is fine and deliberate: web config is not secret, it ships in the
   client bundle by design. Do not "fix" this by moving it to secrets.
+- Every push to `main` redeploys everything. CI time grows with each fork.
 
 Two things support subfolder hosting seamlessly:
 - `HashRouter`, so deep links need no server rewrite rules.
@@ -1123,6 +1134,10 @@ project is served by GitHub Pages, and Firebase Hosting is not in use. The
 older instruction in this section said there was no CI; that was true when
 irishtable was first built and is no longer true for either project.
 
+**The workflow publishes an allowlist, not the repo.** If you add a file that
+genuinely belongs on the web, add it to the assemble step in the workflow.
+If a file you expected to be live 404s, that is the allowlist working. §22.
+
 ---
 
 ## 14. Open items, ranked
@@ -1166,10 +1181,21 @@ irishtable was first built and is no longer true for either project.
     players inherited two forks back. Fine for a pitch, wrong for a launch —
     and note that a genuinely distinct logo per fork is the one branding change
     the playbook cannot automate.
-12. **Fork-specific: the pitch email has not been written or sent.** Zealandism
-    has never been contacted — the site was built cold, before any approach,
-    exactly as irishtable was. The site existing is not the deliverable; the
-    email is. No draft exists anywhere in this repo yet.
+12. **~~The pitch email has not been written or sent.~~** Superseded: it was
+    sent on 2026-08-10, with a broken link. See §22.
+13. **Decide what happens to irishtable.** It is currently dark — `/irishtable/`
+    redirects to a neutral 404 — because a link to it went out in
+    Zealandism's email (§22). The source is intact. Either leave it retired,
+    or restore it at a *different* path and send the Irish Guy a fresh link.
+    **This is an open decision, not a finished state.**
+14. **Confirm the follow-up email was sent.** The redirect makes the wrong
+    link harmless, but it does not deliver the right URL. Zealandism cannot
+    reach the site at all until the correction arrives. If you are reading
+    this and don't know whether it went, assume it didn't and ask.
+15. **Consider whether anything archived the exposed files.** During the
+    window in §22 the private files were publicly fetchable. Nothing suggests
+    they were crawled, and the window was short, but the Wayback Machine and
+    search-engine caches were never checked.
 
 ---
 
@@ -1665,3 +1691,97 @@ The following were **not**:
   `inline-block` span with an absolutely-positioned overlay from two `<h1>`s
   and one `<p>`; plain text is the simpler case and `tsc` and the suite both
   pass, but **no human or browser has looked at those three headings.**
+
+---
+
+## 22. The 2026-08-10 disclosure incident
+
+Two separate problems surfaced within minutes of each other, one hiding the
+other. Recorded in full because the second one had been true since the very
+first deploy and nobody had noticed.
+
+### 22.1 What happened
+
+Mert sent the pitch email to Zealandism. The **link text** read
+`https://mertgurgenyatagi.github.io/zealandtable/`, but the **hyperlink behind
+it** pointed at `https://mertgurgenyatagi.github.io/irishtable/` — copied from
+the earlier Irish Guy email and not re-pointed. Both emails carried the same
+underlying URL.
+
+So a recipient told he was being shown *zealandtable* would have landed on a
+page headed `#IRISHTABLE` reading "Made for the Irish Guy YouTube channel." The
+one outcome the entire fork existed to prevent.
+
+The email had already been sent. Nothing in the codebase could change what a
+sent email points at.
+
+### 22.2 The much larger problem underneath
+
+While diagnosing the link, the served site was checked properly for the first
+time. **The Pages workflow uploaded the entire checkout** — it ran
+`cp -r dist/* .` inside each project folder and then
+`actions/upload-pages-artifact` with `path: '.'`. Every tracked file in the
+repository was therefore a public URL. Confirmed live, all returning `200`:
+
+| URL | Contents |
+|---|---|
+| `/zealandtable/ZEALANDTABLE_HANDOVER.md` | this document — states plainly that the site is a rebranded fork built for another channel |
+| `/FORKING-PLAYBOOK.md` | the entire strategy of forking the product per YouTuber |
+| `/zealandtable-pivot/HANDOVER-DELTA.md` | the questionnaire and decision trail |
+| `/zealandtable/src/**`, `/irishtable/src/**` | full application source, both forks |
+| `/docs_for_claude/predictions/*.txt` | **real participants' names and their predictions** |
+| `/docs_for_claude/list_of_participants.txt` | **real participants' names** |
+
+The last two rows are the serious ones. They are third parties' personal data,
+belong to the kupatakip friend group, have nothing to do with either pitch, and
+were published by accident for as long as this repo has had a Pages deploy.
+
+**The pitch exposure was also strictly worse than the link mixup.** A recipient
+who merely fetched one Markdown file would have learned the whole approach,
+regardless of which URL he arrived on.
+
+### 22.3 The fix
+
+Mert's call on the link, implemented as specified:
+
+- `/irishtable/` now serves a redirect to **`/not-found/`**, a neutral 404 page
+  whose URL names neither project. Whoever clicks the stale link — either
+  recipient — sees a plain broken page and nothing identifying anyone else.
+  A genuinely interested Irish Guy can reply "your link is broken", which
+  preserves that conversation; Zealandism gets the correct URL by follow-up
+  email and is none the wiser.
+- **irishtable is no longer built or deployed.** Source untouched; restoring it
+  is two lines in the workflow, marked inline.
+
+And the deploy was restructured:
+
+- The workflow assembles an **explicit allowlist** into `_site/` and uploads
+  only that. Currently: the root redirect, `form.js`, `simulate.js`,
+  `kupatakip/`, `eventportal/`, `docs_for_claude/asset_pictures/` (images only
+  — kupatakip references one of them), the built `zealandtable/dist`, the
+  retired-irishtable stub and `/not-found/`.
+- A **verification step fails the build** if a path matching a handover, the
+  playbook, the pivot folder, any `src/`, or `docs_for_claude/predictions`
+  reaches `_site/`, or if `_site/` contains the strings `Irish Guy` or
+  `irishtable-app`. Cheap insurance against a future edit undoing this.
+
+Verified after deploy: every private URL above returns `404`; `/zealandtable/`,
+`/kupatakip/`, `/eventportal/`, `/not-found/` and `/` all return `200`.
+
+### 22.4 What this should change about how you work here
+
+**A file existing in this repo used to mean it was on the internet.** Anyone
+who assumed the repo was private — a reasonable assumption, since it holds
+handovers, strategy notes and personal data — was wrong for months. Treat
+`_site` as the only public surface, and treat adding a line to the assemble
+step as a deliberate publishing decision.
+
+**Check the artifact, not the source.** Every branding verification before this
+was run against the local tree or the served *bundle*. Nobody had asked the
+simpler question: *what else is at that domain?* One `curl` would have found
+it. Ask that question after every deploy.
+
+**Verify the link, not just the site.** The site was correct and verified three
+separate ways. The failure was in an email nobody checked, pointing at a URL
+that was never tested by clicking it. `../FORKING-PLAYBOOK.md` §7 now includes
+this step; it is the cheapest check in the whole process and it was skipped.
