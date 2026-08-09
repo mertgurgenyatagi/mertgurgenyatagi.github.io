@@ -1852,7 +1852,7 @@ live site to the source.
 Deleting the files would not be sufficient either: they are in **git history**,
 so any old commit still serves them.
 
-Options, none yet chosen:
+Options:
 
 | Option | Cost | Fixes history |
 |---|---|---|
@@ -1860,5 +1860,16 @@ Options, none yet chosen:
 | Private source repo, CI pushes only built output to a public one | free | yes, going forward |
 | Move sensitive docs out and rewrite history | free | yes, fiddly |
 
-Until one is done, **treat every file in this repository as published**,
-including this sentence.
+**Decision, 2026-08-10: accepted as a known risk, not fixed.** Mert's
+reasoning — no channel has accepted yet, the sites are unannounced, nobody has
+a reason to go looking, and finding these files requires guessing a repo name
+and then a filename. That holds today.
+
+**The fix trigger is the first YouTuber who says yes**, before they announce
+anything to their audience — that is when traffic stops being zero and some
+fraction of it becomes curious and technical. The full decision, the specific
+trigger conditions, and the caveat about `docs_for_claude/` holding real
+people's personal data are written up in **`../PUBLIC-REPO-RISK.md`**.
+
+Until then, **treat every file in this repository as published**, including
+this sentence.
