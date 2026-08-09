@@ -76,9 +76,9 @@ plan, billing off.
 
 | Service | State |
 |---|---|
-| Firestore | **not provisioned yet** — will be `eur3`, to match the siblings |
-| Realtime Database | **not provisioned yet** — will be `europe-west1` |
-| Google sign-in | **not enabled yet** — manual console step, see the playbook §6 |
+| Firestore | **live** — `eur3`, rules deployed 2026-08-10 |
+| Realtime Database | **live** — `europe-west1`, rules deployed 2026-08-10 |
+| Google sign-in | enabled by hand in the console — see the playbook §6 |
 | Storage | **not set up** — needs Blaze; photos off |
 
 Never repoint `.firebaserc` at a sibling project. The two apps would share one
