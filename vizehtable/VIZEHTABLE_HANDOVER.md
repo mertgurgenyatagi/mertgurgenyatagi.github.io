@@ -1,10 +1,11 @@
-# iconictable — Handover
+# vizehtable — Handover
 
 **Written:** 2026-08-07, at the end of the session that built irishtable.
 **Rewritten:** 2026-08-08, after the frontend was replaced wholesale (§17-§20).
 **Forked:** 2026-08-09, irishtable → zealandtable (§21).
-**Forked again:** 2026-08-10, zealandtable → iconictable (§23). This document
-came across with the code both times and was updated in place.
+**Forked again:** 2026-08-10, zealandtable → iconictable (§23).
+**Forked again:** 2026-08-10, iconictable → vizehtable (§24). This document
+came across with the code every time and was updated in place.
 **Audience:** whoever picks this up next, including me with no memory of it.
 
 This is the deep document. `README.md` is the quick orientation; this is the
@@ -12,23 +13,26 @@ one that explains *why* things are the way they are, what has already been
 tried and rejected, and where the traps are. Where the two disagree, this file
 is more detailed but the code is always ground truth.
 
-> **Read §23 first if you are new to this folder.** `iconictable/` is a
-> copy-and-adapt fork of `zealandtable/`, itself a fork of `irishtable/`,
-> itself a fork of `kupatakipucl`. Everything in §3–§20 was written about
-> irishtable and is still accurate for this codebase, because both forks
-> changed branding and nothing else. §23 is the complete list of what differs
-> from zealandtable, and the playbook for forking again lives at
+> **Read §24 first if you are new to this folder.** `vizehtable/` is a
+> copy-and-adapt fork of `iconictable/`, itself a fork of `zealandtable/`,
+> itself a fork of `irishtable/`, itself a fork of `kupatakipucl`. Everything
+> in §3–§20 was written about irishtable and is still accurate for this
+> codebase, because every fork since changed branding and nothing else. §24 is
+> the complete list of what differs from iconictable, and the playbook for
+> forking again lives at
 > [`../FORKING-PLAYBOOK.md`](../FORKING-PLAYBOOK.md).
 >
-> **§21 and §22 are inherited history, kept deliberately.** They describe the
-> zealandtable fork and the disclosure incident that produced the deploy setup
-> this folder relies on. They are about sibling folders, not this one, and are
-> load-bearing reading anyway — §22 in particular explains why the Pages
-> workflow publishes an allowlist and must never go back to `path: '.'`.
+> **§21, §22 and §23 are inherited history, kept deliberately.** They describe
+> the two earlier forks and the disclosure incident that produced the deploy
+> setup this folder relies on. They are about sibling folders, not this one,
+> and are load-bearing reading anyway — §22 explains why the Pages workflow
+> publishes an allowlist and must never go back to `path: '.'`, and §23.9 is
+> the auth near-miss that every fork since has been checked against.
 >
-> **Every sibling fork is a live, separate product.** Never edit `irishtable/`
-> or `zealandtable/` to serve this folder, and never point this folder's
-> config at `irishtable-app` or `zealandtable-app`.
+> **Every sibling fork is a live, separate product.** Never edit `irishtable/`,
+> `zealandtable/` or `iconictable/` to serve this folder, and never point this
+> folder's config at `irishtable-app`, `zealandtable-app` or
+> `iconictable-app`.
 
 ---
 
@@ -57,27 +61,29 @@ is more detailed but the code is always ground truth.
 21. [The zealandtable fork](#21-the-zealandtable-fork)
 22. [The 2026-08-10 disclosure incident](#22-the-2026-08-10-disclosure-incident)
 23. [The iconictable fork](#23-the-iconictable-fork)
+24. [The vizehtable fork](#24-the-vizehtable-fork)
 
 ---
 
 ## 1. What this is, in one screen
 
-**iconictable** is an English-language Premier League prediction game for the
-2026/27 season, built to be pitched to the football YouTuber **Football
-Iconic**. A participant signs in with Google, answers a five-question quiz,
+**vizehtable** is an English-language Premier League prediction game for the
+2026/27 season, built to be pitched to the football YouTuber **Vizeh**.
+A participant signs in with Google, answers a five-question quiz,
 ranks all 20 clubs from 1st to 20th, picks the winners of the FA Cup and the
 Carabao Cup, and names six individual award winners. They're scored against
 what actually happens. There's a live chat room and a forum.
 
-It lives in `iconictable/` inside the **`mertgurgenyatagi.github.io`**
-repository, alongside four sibling applications — `irishtable/`,
-`zealandtable/`, `kupatakip/` and `eventportal/` — but is a completely separate
+It lives in `vizehtable/` inside the **`mertgurgenyatagi.github.io`**
+repository, alongside five sibling applications — `irishtable/`,
+`zealandtable/`, `iconictable/`, `kupatakip/` and `eventportal/` — but is a
+completely separate
 application: its own `package.json`, `node_modules`, build config, Firebase
 project and deploy. **No module is imported across any of those boundaries in
 either direction.** Code that came from a sibling came by copy-and-adapt, never
 by import.
 
-Run every command from inside `iconictable/`. Running `npm test` at the repo
+Run every command from inside `vizehtable/`. Running `npm test` at the repo
 root, or in a sibling folder, runs a *different* project's suite — see §15,
 this has actually caused wasted hours.
 
@@ -85,49 +91,58 @@ this has actually caused wasted hours.
 files**.
 
 **Lineage:** `kupatakipucl` → `irishtable` (§17–§20) → `zealandtable` (§21) →
-`iconictable` (§23). Each step was copy-and-adapt. All four still exist and
-three are live.
+`iconictable` (§23) → `vizehtable` (§24). Each step was copy-and-adapt. All
+five still exist and four are live.
 
 ---
 
 ## 2. Status right now
 
-> **Forked from zealandtable on 2026-08-10** (§23). The fork changed branding
+> **Forked from iconictable on 2026-08-10** (§24). The fork changed branding
 > only — no feature, layout, scoring or data change. Everything §3–§20 says
 > about the codebase is still true here.
 
 | Thing | State |
 |---|---|
-| Frontend | inherited from irishtable via zealandtable, itself cloned from kupatakipucl (§17-§20) |
+| Frontend | inherited from irishtable via zealandtable and iconictable, itself cloned from kupatakipucl (§17-§20) |
 | Tests | **420 passing**, 48 files |
 | `tsc -b` | **0 errors** |
 | `vite build` | clean |
-| Firebase project | **`iconictable-app`**, Firestore Native in `eur3` |
+| Firebase project | **`vizehtable-app`**, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | **configured** — provider `enabled: true` (console) and `mertgurgenyatagi.github.io` in the authorized domains (by API, see §23.9). Configured, not walked — see §23.4. |
+| Google sign-in | **NOT ENABLED** — the provider has never been switched on. Sign-in is broken for everyone, including on localhost. See §24.7; this is the one thing standing between here and a pitchable site. |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
-| Hosting | **live** — `https://mertgurgenyatagi.github.io/iconictable/`, confirmed 200 |
+| Hosting | **live** — `https://mertgurgenyatagi.github.io/vizehtable/`, confirmed 200 |
 
 **Verified on the served bundle**, not just locally: the JavaScript actually
-returned by `https://mertgurgenyatagi.github.io/iconictable/` contains
-`ICONICTABLE`, `Football Iconic` and `iconictable-app`, and contains no
-occurrence of `ZEALANDTABLE`, `Zealandism`, `zealandtable-app`, `IRISHTABLE`,
-`Irish Guy`, `irishtable-app` or `susan`. Both sibling forks were confirmed
-still serving their own builds at the same time, `/irishtable/` still bounces
-to `/not-found/`, and the private-URL sweep returns 404 for every entry. Re-run
-all of that after any future fork — the commands are in
-`../FORKING-PLAYBOOK.md` §7. Checking the *served* bundle rather than the local
-one is the point: it is what catches a CI step that used the wrong `.env`.
+returned by `https://mertgurgenyatagi.github.io/vizehtable/` contains
+`VIZEHTABLE`, `Vizeh` and `vizehtable-app`, and contains no occurrence of
+`ICONICTABLE`, `Football Iconic`, `iconictable-app`, `ZEALANDTABLE`,
+`Zealandism`, `zealandtable-app`, `IRISHTABLE`, `Irish Guy`, `irishtable-app`
+or `susan`. The served `<title>` and favicon are this fork's, the logo asset
+returns 200 while `iconictable-logo.svg` returns 404, all three sibling forks
+were confirmed still serving their own builds at the same time,
+`/irishtable/` still bounces to `/not-found/`, and the private-URL sweep
+returns 404 for every entry. Re-run all of that after any future fork — the
+commands are in `../FORKING-PLAYBOOK.md` §7. Checking the *served* bundle
+rather than the local one is the point: it is what catches a CI step that used
+the wrong `.env`.
 
 **What has *not* been verified end to end:** nobody has walked sign in → quiz →
-predict → appear in the participant list against **iconictable's own backend**.
-This inherits the same open item irishtable and zealandtable both still carry,
-and it is still the single most valuable hour anyone could spend here. Note
-that confirmed-by-API is not the same as walked-by-a-human — see §23.4 for what
-was and was not actually checked on this fork.
+predict → appear in the participant list against **vizehtable's own backend**,
+and on this fork nobody *can* until the Google provider is enabled (§24.7).
+This inherits the same open item every sibling still carries, and it is still
+the single most valuable hour anyone could spend here. **No browser has
+rendered this fork at a real viewport either** — branding was verified by
+grepping the bundle, which proves the strings shipped and proves nothing about
+layout. The rebrand only swapped strings inside existing elements and the new
+ones are shorter (`VIZEHTABLE` is 10 characters to `ICONICTABLE`'s 11, bold
+`vizeh` one narrower than bold `iconic`), so nothing is expected to wrap that
+did not wrap before — but the nav wordmark and the `vizeh`/`table` weight
+split in `WelcomeStep` are the two places to glance at first.
 
-**Real data in production:** none. `iconictable-app` was created empty on
+**Real data in production:** none. `vizehtable-app` was created empty on
 2026-08-10 — no profiles, no survey responses, no predictions. It has never had
 a test write, so an empty participant list is expected, not a bug.
 
@@ -138,7 +153,7 @@ exactly as designed — quiz answers are readable by signed-in users only.
 
 ### On hosting
 
-Hosted on **GitHub Pages** at `https://mertgurgenyatagi.github.io/iconictable/`,
+Hosted on **GitHub Pages** at `https://mertgurgenyatagi.github.io/vizehtable/`,
 from this same repository.
 
 `.github/workflows/deploy.yml` builds this app, then **assembles an explicit
@@ -218,7 +233,7 @@ lead you to expect the parent's shapes.
 ## 4. Running it
 
 ```bash
-cd iconictable
+cd vizehtable
 npm install
 npm run dev            # http://localhost:5173 by default
 npm test               # 420 tests
@@ -229,7 +244,7 @@ npm run crests         # re-import crests from ../docs/pl-fork/assets/
 `.env.local` is gitignored and won't exist on a fresh clone. Regenerate it:
 
 ```bash
-firebase apps:sdkconfig WEB --project iconictable-app
+firebase apps:sdkconfig WEB --project vizehtable-app
 ```
 
 then add `VITE_PHOTOS_ENABLED=false`. The Firebase web config is not secret —
@@ -601,7 +616,7 @@ typing are part of what makes the parent's chat feel alive and that liveness is
 most of the point of a room people sit in for nine months before anything
 happens.
 
-Instance `iconictable-app-default-rtdb` in **`europe-west1`**. Two paths, both
+Instance `vizehtable-app-default-rtdb` in **`europe-west1`**. Two paths, both
 readable by any signed-in user:
 
 | Path | Write rule |
@@ -620,9 +635,9 @@ database` first; the management API returns 403 without a quota project; adding
 that actually works is
 
 ```bash
-gcloud services enable firebasedatabase.googleapis.com --project iconictable-app
+gcloud services enable firebasedatabase.googleapis.com --project vizehtable-app
 # then the REST POST to the management API
-firebase deploy --only database --project iconictable-app
+firebase deploy --only database --project vizehtable-app
 ```
 
 ---
@@ -1078,7 +1093,7 @@ Three things the first build listed here are now built, by the clone:
 
 ## 13. Firebase and infrastructure
 
-Project **`iconictable-app`**, created via CLI on 2026-08-10 during the fork.
+Project **`vizehtable-app`**, created via CLI on 2026-08-10 during the fork.
 Firestore Native in `eur3`, RTDB in `europe-west1` — both regions chosen to
 match the siblings so they stay comparable. **Spark plan — billing is off.**
 
@@ -1126,8 +1141,8 @@ by API rather than trusting memory:
 ```bash
 TOKEN=$(gcloud auth print-access-token)
 curl -s -H "Authorization: Bearer $TOKEN" \
-     -H "x-goog-user-project: iconictable-app" \
-  "https://identitytoolkit.googleapis.com/admin/v2/projects/iconictable-app/config" \
+     -H "x-goog-user-project: vizehtable-app" \
+  "https://identitytoolkit.googleapis.com/admin/v2/projects/vizehtable-app/config" \
   | grep -o '"authorizedDomains":\[[^]]*\]'
 ```
 
@@ -1139,7 +1154,7 @@ and `mertgurgenyatagi.github.io` in the domain list.
 **Rules** — hand-run, per project:
 
 ```bash
-firebase deploy --only firestore:rules,database --project iconictable-app
+firebase deploy --only firestore:rules,database --project vizehtable-app
 ```
 
 **Hosting is CI, not manual.** `.github/workflows/deploy.yml` publishes on
@@ -1161,9 +1176,9 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
 >
 > **Items 12–15 are zealandtable's, kept as inherited context.** They concern
 > the Zealandism pitch email and the §22 incident, and none of them is an
-> action for `iconictable/`. The one that generalises is 15 — anything about
+> action for `vizehtable/`. The one that generalises is 15 — anything about
 > the exposed-files window applies to the repository, not to any one fork.
-> iconictable's own equivalent of 12 is in §23.5.
+> vizehtable's own equivalent of 12 is in §23.5.
 >
 > **Item 0, ahead of all of them, conditional on a reply:** a pitch is out
 > (§23.5) and **nothing in this app happens after the 21 August deadline** —
@@ -1177,7 +1192,7 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
    verified — transfers, and literal `PLACEHOLDER` entries for Coventry, Hull
    and Ipswich. It's the only file that needs it; everything derives from it.
    **This is still the biggest gap between "works" and "ready to send".**
-2. **Walk the happy path once, for real — on `iconictable-app`.** Sign in →
+2. **Walk the happy path once, for real — on `vizehtable-app`.** Sign in →
    quiz → predict → appear in the participant list, against **this fork's own**
    live backend, on a real device. Nothing has ever been written to this
    project. Doing it on a sibling does not count: different Firebase project,
@@ -1189,7 +1204,7 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
    structured rules and a worked example are already on the page. Inherited
    from irishtable and still outstanding here.
 4. **Hosting on GitHub Pages.** Done — live at
-   `https://mertgurgenyatagi.github.io/iconictable/` via the shared CI
+   `https://mertgurgenyatagi.github.io/vizehtable/` via the shared CI
    workflow.
 5. **Storage/Blaze**, if photos matter. Note the clone made photos *more*
    optional, not less: the picker is hidden entirely when the flag is off, in
@@ -1207,7 +1222,7 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
     it is not something the port introduced. React 18 doesn't accept a ref on a
     function component; `Button` would need `forwardRef`.
 11. **Fork-specific: the shared assets are still irishtable's.** The logo file
-    was renamed to `iconictable-logo.svg` but is the *same* Premier League
+    was renamed to `vizehtable-logo.svg` but is the *same* Premier League
     lion image, and the 17 hero portraits are still the Champions League
     players inherited three forks back. Fine for a pitch, wrong for a launch —
     and note that a genuinely distinct logo per fork is the one branding change
@@ -1234,7 +1249,7 @@ If a file you expected to be live 404s, that is the allowlist working. §22.
 
 ## 15. Traps
 
-**Run every command from `iconictable/`.** `npm test` at the repo root runs
+**Run every command from `vizehtable/`.** `npm test` at the repo root runs
 another project's suite — and worse, `npx tsc -b` at the root **silently
 type-checks a sibling project and reports success**. A shell that reverts to
 the repo root mid-session therefore produces "0 errors" for a project you never
@@ -2168,3 +2183,218 @@ Two things changed as a result:
 
 Generalises past Firebase: when a task has two steps on two screens and one
 natural name, confirm the second one independently of the first.
+
+---
+
+## 24. The vizehtable fork
+
+**Date:** 2026-08-10. **Source:** `iconictable/`. **Channel:** Vizeh. Fifth
+application in the lineage, fourth fork, and the second done by following
+[`../FORKING-PLAYBOOK.md`](../FORKING-PLAYBOOK.md) rather than inventing the
+procedure.
+
+### 24.1 Why iconictable was the base
+
+Playbook §1: fork from whichever existing fork is **most current**, because
+fixes land in whichever fork was being worked on and do **not** propagate.
+Checked rather than assumed:
+
+```bash
+git log --format='%h %ad %s' --date=short -3 -- iconictable/   # 2026-08-10
+git log --format='%h %ad %s' --date=short -3 -- zealandtable/  # docs only
+git log --format='%h %ad %s' --date=short -3 -- irishtable/    # 2026-08-08
+diff -r --strip-trailing-cr zealandtable/src iconictable/src   # branding only
+```
+
+iconictable had the newest work — including the §23.9 auth fix — and its diff
+against zealandtable was exactly the §23.3 branding list, so there was no
+behavioural drift to inherit. It also already has `GlitchSeason` deleted
+(inherited from zealandtable), so there was no in-joke to re-cut across five
+call sites. Take the base that already has the cuts you want.
+
+### 24.2 What was copied, and how
+
+```bash
+git archive HEAD:iconictable | tar -x -C vizehtable
+```
+
+244 files, matching `git ls-files iconictable/ | wc -l` exactly.
+`git status --porcelain iconictable/` printed nothing before and after, so the
+source fork was provably untouched. **Never `cp -r`** — it would drag
+`.env.local` across and point this site's signups at iconictable's database.
+
+Verified explicitly that no `node_modules`, `dist`, `.firebase`,
+`*.tsbuildinfo` or real `.env*` came across. The only match was `.env.example`,
+which is tracked, empty of values and safe.
+
+### 24.3 Everything that differs from iconictable
+
+`diff -r --strip-trailing-cr ../iconictable/src src` is **15 lines across 10
+files**, all branding — the same shape as §23.3. The full list including
+non-`src`:
+
+| File | Change |
+|---|---|
+| `src/data/site.ts` | `SITE_NAME` → `#vizehtable`, `CHANNEL_NAME` → `Vizeh` |
+| `src/shell/AppShell.tsx` | wordmark `#ICONICTABLE` → `#VIZEHTABLE`, logo path |
+| `src/shell/MobileShell.tsx` | same two |
+| `src/signup/steps/WelcomeStep.tsx` | bold span `iconic` → `vizeh`, and the comment above it |
+| `src/home/HomeLandingLoggedOut.tsx` | credit sentence |
+| `src/home/mobile/MobileHomeLoggedOut.tsx` | credit sentence |
+| `src/pages/AboutPage.tsx` | logo path |
+| `src/mobile/MobileAboutPage.tsx` | logo path |
+| `src/profile/deletedAccount.ts` | `DELETED_ACCOUNT_AVATAR` path |
+| `src/lib/sessionCache.ts` | localStorage `PREFIX` |
+| `public/brand/*.svg` | renamed `iconictable-logo` → `vizehtable-logo` |
+| `index.html` | title, `og:site_name`, `og:title`, `twitter:title`, favicon |
+| `package.json`, `package-lock.json` | `name` |
+| `.firebaserc` | `vizehtable-app` |
+| `scripts/import-crests.mjs` | `BRAND_MAP` output filename |
+| `README.md` | rewritten for the channel, the fork relationship and the sibling list |
+| `ICONICTABLE_HANDOVER.md` | renamed to `VIZEHTABLE_HANDOVER.md`; §1–§16 retargeted to describe this fork; §17–§23 left as inherited history; this section added |
+
+**Nothing else.** No component, layout, scoring rule, club, award, security
+rule or test was touched. `vite.config.ts` needed no change — `base: "./"` is
+already relative.
+
+Two things deliberately **not** renamed, per playbook §3.5:
+
+- **`src/data/countries.ts` still says "New Zealand"** — real country data, and
+  the reason the CI publish guard keys on channel name and Firebase project
+  rather than site name.
+- **Dev-facing fixtures naming earlier forks** (`kupatakipucl`, `"The Irish
+  Guy"` as a display-name fixture). Unreachable from the deployed site;
+  rewriting them is churn that risks breaking tests.
+
+### 24.4 One mechanical improvement over §23.8
+
+§23.8 records that `sed -i` under Git Bash rewrites the files it touches as LF
+while the rest of the tree stays CRLF, which makes the playbook's own audit
+command (`diff -r`) report every line of every edited file as changed.
+
+This fork **avoided the problem rather than working around it**: every `src`
+edit was made with an editor tool that preserves the file's existing line
+endings, so `diff -r` was readable without `--strip-trailing-cr`. The flag is
+still the right advice when something has already used `sed`, and it is still
+in the playbook — but not creating the churn beats stripping it afterwards.
+
+`sed` was used for exactly one thing: the bulk retarget of this document's
+§1–§16, restricted by line range (`sed -i '1,1584{...}'`) so the historical
+sections could not be rewritten. That range restriction matters — §21–§23
+describe *sibling* folders, and a global substitution would have silently
+rewritten another fork's history into this one's.
+
+### 24.5 Backend
+
+`vizehtable-app`, created via CLI on 2026-08-10. Firestore `eur3`, RTDB
+`europe-west1`, both rulesets deployed, web config written to `.env.local`
+(gitignored — confirmed with `git check-ignore`) and into the CI workflow in
+plaintext, which is deliberate; see §13.
+
+Both playbook §4 gotchas were pre-empted rather than rediscovered:
+
+- `gcloud services enable` was run **outside the agent sandbox** from the
+  start. From inside it cannot reach `serviceusage.googleapis.com` and the
+  failure looks like DNS rather than permissions.
+- The RTDB default instance was created with the **REST call carrying
+  `x-goog-user-project`**. Without that header the API reports `SERVICE_DISABLED`,
+  which sends you off enabling an already-enabled API.
+
+Neither cost any time on this fork, which is the playbook doing its job.
+
+### 24.6 The publish guard
+
+One line, as §23.7 intended:
+
+```bash
+"vizehtable|Vizeh\|vizehtable-app"
+```
+
+Keyed on the channel name and the Firebase project, never the site name.
+
+**The guard was exercised locally against the real `dist` before pushing**,
+in both directions — `vizehtable/dist` carries `Vizeh`, `VIZEHTABLE` and
+`vizehtable-app`, and carries no occurrence of `Football Iconic`,
+`iconictable-app`, `Zealandism`, `zealandtable-app`, `Irish Guy`,
+`irishtable-app` or `susan`. Also confirmed that no sibling's source contains
+the string `Vizeh`, so the new pattern cannot fail an existing fork's build.
+Running the guard's own logic locally is cheaper than learning the answer from
+a red CI run, and it is worth doing on every future fork.
+
+Guard check #1 needed **no** edit — its `*HANDOVER*` pattern is fork-agnostic
+and already catches `VIZEHTABLE_HANDOVER.md`. Keep it that way.
+
+### 24.7 What was checked, and what was not
+
+**Confirmed:**
+
+- `tsc -b` clean and **420/420 tests across 48 files**, run against the real
+  `.env.local`. Identical to the baseline, so the rebrand broke nothing.
+- The **served** bundle — fetched from the live URL, not the local `dist` —
+  contains `VIZEHTABLE`, `Vizeh` and `vizehtable-app`, and no occurrence of
+  any of the ten strings belonging to the three sibling forks. The `<title>`,
+  the favicon and the logo asset were checked too; `iconictable-logo.svg`
+  correctly 404s under this fork's path.
+- All three siblings still serve their own builds (`iconictable`,
+  `zealandtable` and `irishtable` titles respectively), `/irishtable/` still
+  bounces to `/not-found/`, and the §7 private-URL sweep returns **404 for
+  every entry**, including this handover, the playbook and `PUBLIC-REPO-RISK.md`.
+- Firestore and RTDB created, both rulesets deployed, regions matching the
+  siblings. `.env.local` confirmed gitignored via `git check-ignore`.
+
+**Not confirmed:**
+
+- **Google sign-in is not enabled at all.** The provider enable is the one
+  genuinely manual step — Spark returns `BILLING_NOT_ENABLED` to the admin
+  API, now confirmed on four separate projects — and it had not been done when
+  this section was written. `.../admin/v2/projects/vizehtable-app/config`
+  returns `CONFIGURATION_NOT_FOUND`, which is the expected 404 *before* Auth is
+  initialised, not an error.
+
+  **Because Auth is uninitialised, the authorized-domain PATCH cannot run
+  yet either.** The order is fixed: enable the provider in the console, *then*
+  PATCH the domains, *then* verify both by API. Do not treat the first as
+  implying the second — that is §23.9, the near-miss where a provider came back
+  `enabled: true` while the domain list was still the three defaults, giving
+  perfect localhost sign-in and `auth/unauthorized-domain` for every real
+  visitor.
+- Anyone signing in. Not once — and until the provider is enabled, nobody can.
+- Any write reaching `vizehtable-app`'s Firestore.
+- Any browser rendering at a real viewport (see §2).
+
+### 24.8 A trap the playbook does not warn about: line-wrapped prose
+
+Worth reading before the next fork, because it nearly shipped a competitor's
+channel name into this one's document.
+
+The bulk retarget of §1–§16 used `sed`, which is **line-based**. The handover
+wraps its prose at ~76 columns, and one occurrence of the previous channel name
+happened to straddle a line break:
+
+```
+built to be pitched to the football YouTuber **Football
+Iconic**. A participant signs in with Google, ...
+```
+
+`s/Football Iconic/Vizeh/g` cannot see that, and — this is the dangerous part —
+**neither can the `grep` you then run to confirm the rebrand is clean.** The
+audit reported zero residual references while the old channel name was still
+sitting in the first paragraph of §1.
+
+It was caught only by re-running the scan with the newlines flattened:
+
+```bash
+tr '\n' ' ' < FILE | grep -o "Football *Iconic\|iconic *table"
+```
+
+**Generalises to any multi-word branding string in wrapped text** — Markdown
+prose, JSX copy, long comments. After that discovery the whole tree was
+re-scanned this way, which confirmed `src/`, `index.html`, `public/` and
+`scripts/` were genuinely clean and that the only remaining `Irish Guy`
+strings are in a doc comment and a test fixture in `src/chat/chatMentions*`
+— dev-facing, stripped by minification, and confirmed absent from every file
+in `dist/`. That is the §3.5 category: leave it alone.
+
+The narrower lesson: a line-based tool and a line-based check share the same
+blind spot, so the check cannot catch the tool's mistake. Verify with a method
+that fails differently from the one that did the work.
