@@ -492,24 +492,28 @@ pitch. After every fork:
 
 - **Sign in once, for real.** Walk sign in → quiz → predict → appear in the
   participant list against the new project. Config verified by API proves it is
-  *configured*, not that it *works*. Done for the first time on **vizehtable**
-  (2026-08-10) — sign-in and profile creation are proven against a project
-  provisioned by this playbook, which is good evidence the code path is fine
-  everywhere. Still never done on irishtable, zealandtable or iconictable.
+  *configured*, not that it *works*.
 
-  **Walk it to the end, and check the database, not the screen.** On vizehtable
-  the walkthrough was reported as complete while `predictions` was still empty
-  — signup finishes at the quiz, well before the ranker, so "I signed up and it
-  worked" is easy to say without a prediction ever being written. One `curl`
-  settles it:
+  **Done for the first time on vizehtable (2026-08-10), and it all works** —
+  sign in, quiz, predictions and editing a submitted prediction, against a
+  Firebase project provisioned by this playbook. That is strong evidence the
+  code path is sound for any fork, since nothing about it is fork-specific.
+  Still never done on irishtable, zealandtable or iconictable.
 
-  ```bash
-  curl -s "https://firestore.googleapis.com/v1/projects/$PROJECT/databases/(default)/documents/predictions"
-  ```
+  So the remaining risk on a new fork is **configuration, not code** — which is
+  what the §6 API checks cover. Walk it anyway; it costs ten minutes and it is
+  the only thing that exercises a real Google account against a real project.
 
-  `profiles` and `predictions` are publicly readable, so an empty result is a
-  real absence. `surveyResponses` returns 403 to an anonymous read **by design**
-  — that one is not a bug and cannot be checked this way.
+  > **If you check the database to confirm a walkthrough, check it *after* the
+  > walkthrough.** During the vizehtable fork a REST read of `predictions`
+  > returned `{}` and was briefly written up as a contradiction. It was a
+  > snapshot taken mid-testing — accurate read, wrong inference. An empty
+  > collection proves emptiness at that instant, not a broken write path.
+  > Racing a human who is actively clicking looks exactly like a bug.
+  >
+  > `profiles` and `predictions` are publicly readable, so they *can* be read
+  > this way. `surveyResponses` returns 403 to an anonymous read **by design** —
+  > that one is not a bug and cannot be checked externally at all.
 - **Write and send the email.** The site is not the deliverable.
 - **Reconsider the shared assets.** Every fork currently ships the same
   Premier League lion logo and the same 17 inherited hero portraits (Champions

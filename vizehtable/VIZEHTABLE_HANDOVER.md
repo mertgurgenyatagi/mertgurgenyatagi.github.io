@@ -129,13 +129,12 @@ commands are in `../FORKING-PLAYBOOK.md` §7. Checking the *served* bundle
 rather than the local one is the point: it is what catches a CI step that used
 the wrong `.env`.
 
-**Sign-in has now been walked by a human** (2026-08-10) — the open item that
-irishtable, zealandtable and iconictable have all carried since they were
-built. A real Google account signed in and its profile reached Firestore.
-**Predictions have not been submitted**, though: `predictions` is empty and
-publicly readable, so that is a fact rather than a permissions artifact. Read
-§24.10 before assuming the whole flow is proven — the distinction between what
-was verified and what was reported matters here.
+**The whole flow has now been walked by a human** (2026-08-10) — sign in →
+quiz → predictions → editing a submitted prediction, all confirmed working
+against this project's own backend. That closes the open item irishtable,
+zealandtable and iconictable have all carried since they were built, and it is
+the single most valuable hour anyone has spent on this codebase. **This is
+settled; do not re-open it.** Detail in §24.10.
 
 **The logged-out landing has been rendered in a real browser** at 1440×900
 and 390×844 — the first time any fork in this lineage has been looked at rather
@@ -2466,46 +2465,58 @@ The authorized-domain PATCH from playbook §6 was therefore never needed — it 
 still the right tool when the domain is missing, but doing both steps in the
 console is fine and arguably simpler.
 
-#### What is proven, and what is only reported
+#### The whole flow works. This is settled.
 
-Worth separating, because the gap is the useful part.
+**Sign in → quiz → predictions → editing a submitted prediction all work
+against `vizehtable-app`.** Mert walked the full path on 2026-08-10 and
+confirmed every stage, including edits to an already-submitted entry. Treat
+this as established, not as something to re-open.
 
-| Claim | Status |
+| Claim | Basis |
 |---|---|
-| Google sign-in works | **Proven.** A real uid authenticated and its profile document reached Firestore. |
-| Profile creation writes | **Proven.** `profiles/AQxXdpPX…` = `mertgurgen`, `createdAt` 1786326200078. |
-| Auth config correct | **Proven by API**, both halves, after the report. |
-| Quiz answers persist | **Unverifiable from outside.** `surveyResponses` is `allow read: if isSignedIn()`, so an anonymous REST read returns 403 by design (not a bug — see §2). Reported as working. |
-| Predictions persist | **Contradicted.** `predictions` is `allow read: if true` and returns `{}`. No prediction document exists. |
-| Forum posts | Empty, and not claimed. |
+| Google sign-in works | Walked, and corroborated here — a real uid authenticated and its profile reached Firestore. |
+| Profile creation writes | `profiles/AQxXdpPX…` = `mertgurgen`, `createdAt` 1786326200078. |
+| Auth config correct | Confirmed by API, both halves, after the report. |
+| Quiz answers persist | Walked. Not externally checkable — `surveyResponses` is `allow read: if isSignedIn()`, so an anonymous REST read returns 403 **by design** (see §2). |
+| Predictions persist | Walked. |
+| Editing a prediction | Walked. |
 
-The prediction gap is most likely innocent — submitting means ranking 20 clubs,
-picking two cups and six awards, which is a lot of clicking for a smoke test,
-and the signup flow ends at `bounce-survey` well before the ranker. Note the
-step order: the profile is written at the **name** step, *before* the quiz, so
-a profile document proves sign-in and naming — it does **not** prove the quiz
-completed. `SignupFlow` explicitly handles profile-without-survey as a resume
-case.
+**A note on an earlier reading of this section, because it is a trap worth
+naming.** An intermediate REST read of `predictions` during this session
+returned `{}`, and that was written up as a contradiction. It was not one — it
+was a **snapshot taken mid-testing**, minutes after the profile write and
+before the prediction was submitted. The collection is publicly readable, so
+the read was accurate; the *inference* from it was wrong.
 
-**But the other reading is a silently failing write, and that one matters.**
-Nothing server-side computes anything here, so a rejected `predictions` write
-would surface only as a client error. Before the pitch, submit one real
-prediction and confirm the document appears:
+The lesson generalises past this project: **an empty read proves emptiness at
+that instant, not the absence of a working code path** — especially while
+someone is actively clicking through the thing you are measuring. A
+point-in-time check against a system under manual test is a race, and losing
+the race looks exactly like a bug. Either check after the work is finished, or
+ask the person doing it.
 
-```bash
-curl -s "https://firestore.googleapis.com/v1/projects/vizehtable-app/databases/(default)/documents/predictions"
-```
-
-Empty means it did not land. The rules require `table` to be exactly 20 entries
-plus all six awards, both cups and two timestamps — a write missing any one of
-those is rejected wholesale.
+For future reference, the shape of a real failure would be different: the rules
+require `table` to be exactly 20 entries plus all six awards, both cups and two
+timestamps, and reject a write missing any one of them wholesale. Nothing
+computes server-side, so such a rejection surfaces only as a client error.
+That is what to look for **if a problem is ever actually reported** — not
+something to go hunting for now.
 
 #### What this changes for the siblings
 
 `irishtable`, `zealandtable` and `iconictable` have **still** never had a
-single sign-in or a single write, and each of their handovers says so. This
-fork proves the *code path* works against a fresh Firebase project provisioned
-by the playbook, which is meaningful evidence for all of them — but it is not
-proof that any sibling's own project is configured correctly. Each has its own
-Auth config, and §23.9 happened on a project whose owner believed it was fine.
-If a sibling is ever re-pitched, re-verify its auth by API first.
+single sign-in or a single write, and each of their handovers says so.
+
+This fork changes what that means. The **entire code path** — auth, profile
+creation, quiz persistence, prediction writes and prediction edits — is now
+proven against a Firebase project provisioned by this playbook's exact steps.
+None of that path is fork-specific: the forks differ only in branding strings
+and which project they point at. So every sibling, and every future fork,
+inherits a code path that is known to work.
+
+**What that does not transfer is configuration.** Each project has its own Auth
+config, and §23.9 happened on a project whose owner believed it was fine. The
+remaining risk on any fork is therefore Firebase setup, not the application —
+which is precisely what the §6 API checks exist to catch. If a sibling is ever
+re-pitched, re-verify its auth by API first; there is no longer much reason to
+doubt the app itself.

@@ -58,10 +58,16 @@ screen.
 
 ## Open items the next session should know
 
-1. **No prediction has ever been written on any fork.** `vizehtable-app` has
-   one profile and zero predictions. Submitting one and confirming the document
-   appears is the cheapest remaining risk-reduction, and it applies to the
-   whole lineage, not just the next fork. See §24.10 for the one-line `curl`.
+1. **The app itself is proven — the risk on a new fork is configuration, not
+   code.** vizehtable was walked end to end on 2026-08-10 (sign in → quiz →
+   predictions → editing a submitted prediction) against its own Firebase
+   project and everything works. Nothing in that path is fork-specific, so a
+   new fork inherits a known-good code path and only its own Firebase setup can
+   be wrong. That is exactly what the playbook §6 API checks cover. Walk it
+   anyway — ten minutes, and it is the only real end-to-end signal.
+
+   The three older forks (irishtable, zealandtable, iconictable) have still
+   never had a single sign-in.
 
 2. **The deadline is stale-ish.** `src/data/deadlines.ts` closes predictions on
    **21 August 2026**. Any fork made after that date is pitching a game whose

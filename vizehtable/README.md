@@ -107,13 +107,14 @@ Firestore and one user pool.
 
 ## Known gaps
 
-**Nobody has submitted a prediction.** Sign-in and profile creation are proven
-— one profile (`mertgurgen`, Mert's test account) reached Firestore on
-2026-08-10 — but `predictions` is empty, and it is publicly readable, so that
-is a fact rather than a permissions artifact. Most likely nobody clicked
-through the full ranker; the other reading is a silently failing write, which
-would matter. Submit one real prediction and confirm the document appears
-before pitching. See `VIZEHTABLE_HANDOVER.md` §24.10.
+**The flow is proven end to end.** Sign in → quiz → predictions → editing a
+submitted prediction were all walked against `vizehtable-app` on 2026-08-10 and
+all work. This is the first fork in the lineage where that is true — the three
+siblings have still never had a single sign-in. Settled; see
+`VIZEHTABLE_HANDOVER.md` §24.10.
+
+The only data in the project is Mert's own test account (`mertgurgen`), which
+will appear in the participant list. Delete it if a list of one looks odd.
 
 **Google sign-in has never been enabled — this is the blocker.** The provider
 enable is the one step that cannot be automated (Spark returns
