@@ -1,0 +1,161 @@
+rules_version = '2';
+
+/**
+ * irishtable security rules.
+ *
+ * Posture: this is a public game with an open sign-up, so unlike the parent
+ * project's explicit "trust the friend group" stance, these rules assume a
+ * visitor may be adversarial. Every write is validated for shape and
+ * ownership, and there are deliberately NO temporary holes — the parent
+ * carries two (`results` and `tournamentState` writable by any signed-in
+ * user) as dev-panel scaffolding, and neither collection exists here.
+ *
+ * Nothing server-side computes anything, so no collection is Admin-only.
+ */
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    /** Fields that changed between the stored doc and the incoming write. */
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // --- Profiles ---------------------------------------------------------
+    // Public read: the participant list and every author byline need them,
+    // including for a logged-out visitor on the landing page. There is no
+    // surname here to leak — one display name is the whole identity, which is
+    // why this project needs no public/private profile split at all.
+    match /profiles/{uid} {
+      allow read: if true;
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'photoURL', 'createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 20
+        && request.resource.data.photoURL is string
+        && request.resource.data.createdAt is number;
+
+      allow update: if isOwner(uid)
+        && changed().hasOnly(['displayName', 'photoURL'])
+        && (!('displayName' in request.resource.data)
+            || (request.resource.data.displayName is string
+                && request.resource.data.displayName.size() > 0
+                && request.resource.data.displayName.size() <= 20));
+
+      allow delete: if isOwner(uid);
+    }
+
+    // --- Quiz answers -----------------------------------------------------
+    // Create-only by design: an answer is a one-time record, not something to
+    // revise later. Readable by any signed-in user so aggregate stats stay
+    // possible without a second collection, but never by the public.
+    match /surveyResponses/{uid} {
+      allow read: if isSignedIn();
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(
+             ['age', 'country', 'clubSupported', 'ballKnowledge', 'device', 'submittedAt'])
+        && request.resource.data.age is int
+        && request.resource.data.age >= 10
+        && request.resource.data.age <= 90
+        && request.resource.data.country is string
+        && request.resource.data.clubSupported is string
+        && request.resource.data.ballKnowledge is int
+        && request.resource.data.ballKnowledge >= 1
+        && request.resource.data.ballKnowledge <= 7
+        && request.resource.data.device is string;
+      allow update: if false;
+      allow delete: if isOwner(uid);
+    }
+
+    // --- Predictions ------------------------------------------------------
+    // The table must be exactly 20 entries, mirroring what the client already
+    // enforces — a rejected write here should mean someone bypassed the UI,
+    // not that a legitimate user hit an edge case.
+    match /predictions/{uid} {
+      allow read: if true;
+
+      allow create, update: if isOwner(uid)
+        && request.resource.data.table is list
+        && request.resource.data.table.size() == 20
+        && request.resource.data.faCup is string
+        && request.resource.data.carabao is string
+        && request.resource.data.playerOfSeason is string
+        && request.resource.data.youngPlayerOfSeason is string
+        && request.resource.data.managerOfSeason is string
+        && request.resource.data.goldenBoot is string
+        && request.resource.data.goldenGlove is string
+        && request.resource.data.bestPlaymaker is string
+        && request.resource.data.submittedAt is number
+        && request.resource.data.updatedAt is number;
+
+      allow delete: if isOwner(uid);
+    }
+
+    // --- Forum ------------------------------------------------------------
+    match /forumPosts/{postId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(
+             ['uid', 'text', 'parentId', 'createdAt', 'likedByUids'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 2000
+        && request.resource.data.createdAt is number
+        && request.resource.data.likedByUids.size() == 0;
+
+      // Two distinct updates are allowed, and nothing else: the author editing
+      // their own text, or anyone toggling their own like. The like path
+      // checks that the only uid entering or leaving the array is the
+      // requester's own, so nobody can like on someone else's behalf or wipe
+      // the list.
+      allow update: if isSignedIn() && (
+        (resource.data.uid == request.auth.uid && changed().hasOnly(['text'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000)
+        ||
+        (changed().hasOnly(['likedByUids'])
+          && request.resource.data.likedByUids.hasOnly(
+               resource.data.likedByUids.concat([request.auth.uid]))
+          && resource.data.likedByUids.hasOnly(
+               request.resource.data.likedByUids.concat([request.auth.uid])))
+      );
+
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // --- Chat -------------------------------------------------------------
+    // Signed-in read only: the room is for participants, and a logged-out
+    // landing page has no chat on it.
+    match /messages/{messageId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'text', 'createdAt'])
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 360
+        && request.resource.data.createdAt is number;
+
+      allow update: if false;
+      allow delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Anything not matched above is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
