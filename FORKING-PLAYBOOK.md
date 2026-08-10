@@ -279,7 +279,8 @@ loop over a table — so this is **one line**, not another pair of greps:
 FORKS=(
   "zealandtable|Zealandism\|zealandtable-app"
   "theirishtable|Irish Guy\|irishtable-app"
-  "iconictable|Football Iconic\|iconictable-app"   # <- your line
+  "iconictable|Football Iconic\|iconictable-app"
+  "vizehtable|Vizeh\|vizehtable-app"               # <- your line
 )
 ```
 
@@ -329,7 +330,8 @@ four or five forks, consider a path filter.
 **Step 1 cannot be automated on the free tier.** The Identity Platform admin
 API returns `BILLING_NOT_ENABLED : Identity Platform feature requires billing
 to be enabled` on Spark. Real platform limit — hit on irishtable, re-confirmed
-on zealandtable and again on iconictable. Budget for it; don't hunt for a flag.
+on zealandtable, iconictable and vizehtable. Budget for it; don't hunt for a
+flag.
 
 In the Firebase console for the new project:
 
@@ -398,6 +400,32 @@ nothing else:
 ```bash
 diff -r --strip-trailing-cr $SRC/src $NEW/src
 ```
+
+> ### ⚠️ `grep` and `sed` are line-based. Wrapped prose is not.
+>
+> A two-word channel name that happens to straddle a line break —
+> `**Football\nIconic**` in wrapped Markdown, or a sentence of JSX copy — is
+> invisible to `s/Football Iconic/.../` **and equally invisible to the `grep`
+> you then run to prove the rebrand is clean.** On the vizehtable fork the
+> audit reported zero residual references while the old channel name was still
+> sitting in the first paragraph of the handover's §1.
+>
+> Re-run every residual check with the newlines flattened:
+>
+> ```bash
+> for f in $(find $NEW/src $NEW/index.html $NEW/README.md -type f); do
+>   tr '\n' ' ' < "$f" | grep -oH "Old *Channel\|old *name" && echo "  ^ $f"
+> done
+> ```
+>
+> The general point: **a line-based check cannot catch a line-based tool's
+> mistake** — they share the blind spot. Verify with a method that fails
+> differently from the one that did the work. Full account:
+> `vizehtable/VIZEHTABLE_HANDOVER.md` §24.8.
+>
+> Editing with something that preserves line endings, rather than `sed -i`,
+> avoids the §1 CRLF churn at the same time — then `diff -r` is readable
+> without `--strip-trailing-cr`.
 
 After deploying, verify the **served bundle**, not just your working tree —
 this catches a CI step that silently used the wrong `.env`:

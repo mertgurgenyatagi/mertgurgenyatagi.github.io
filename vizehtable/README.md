@@ -25,8 +25,9 @@ the traps are.
 
 Develop on **localhost** (`npm run dev`). Hosting is automated — see below.
 
-**Will be live at https://mertgurgenyatagi.github.io/vizehtable/** — not yet
-deployed at the time this line was written.
+**Live at https://mertgurgenyatagi.github.io/vizehtable/**
+(deployed and verified 2026-08-10 — but **sign-in does not work yet**, see
+Known gaps.)
 
 ## What this is, relative to the repo it sits in
 
@@ -78,13 +79,13 @@ data. Spark plan, billing off.
 
 | Service | State |
 |---|---|
-| Firestore | **pending** — not yet created |
-| Realtime Database | **pending** — not yet created |
-| Google sign-in | **pending** — provider enable is a manual console step (Spark blocks it by API) |
+| Firestore | **live** — `eur3`, rules deployed 2026-08-10 |
+| Realtime Database | **live** — `europe-west1`, rules deployed 2026-08-10 |
+| Google sign-in | **NOT ENABLED** — nobody can sign in, on localhost or in production |
 | Storage | **not set up** — needs Blaze; photos off |
 
 This table is updated as each piece is genuinely verified, not when it is
-attempted. If a row still says pending, treat it as pending.
+attempted. If a row does not say live, treat it as not done.
 
 Never repoint `.firebaserc` at a sibling project. The two apps would share one
 Firestore and one user pool.
@@ -111,15 +112,21 @@ expected, not a bug. Walking sign in → quiz → predict against *this* project
 backend is the highest-value hour available; see `VIZEHTABLE_HANDOVER.md` §14
 item 2.
 
-**Auth is not set up yet.** When it is, remember that *configured* is not the
-same as *working*, and that it takes two steps on two different console
-screens. On the parent fork the provider came back `enabled: true` while the
-authorized-domain list was still the three defaults — sign-in perfect on
-localhost, `auth/unauthorized-domain` for every real visitor, which would have
-broken the pitch for the channel and its entire audience. See
-`VIZEHTABLE_HANDOVER.md` §23.9. Verify both by API, and specifically verify
-*after* someone tells you the auth is done — that is exactly when the check
-gets skipped.
+**Google sign-in has never been enabled — this is the blocker.** The provider
+enable is the one step that cannot be automated (Spark returns
+`BILLING_NOT_ENABLED` to the admin API, confirmed on four projects), so it has
+to be done in the Firebase console: **Authentication → Sign-in method → Google
+→ Enable**, and set a support email.
+
+Then, and only then, the authorized domains can be set by API — until Auth is
+initialised the config endpoint 404s with `CONFIGURATION_NOT_FOUND`. **These
+are two different console screens and doing the first does not do the second.**
+On the parent fork the provider came back `enabled: true` while the domain list
+was still the three defaults: sign-in perfect on localhost,
+`auth/unauthorized-domain` for every real visitor and their whole audience.
+See `VIZEHTABLE_HANDOVER.md` §23.9 and §24.7. Verify both by API, and
+specifically verify *after* someone tells you the auth is done — that is
+exactly when the check gets skipped and exactly when it pays.
 
 **Profile photos need a paid plan.** Firebase Storage requires Blaze on new
 projects. The photo step is optional and its upload failure is non-fatal, so
