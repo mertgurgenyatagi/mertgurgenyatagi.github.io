@@ -133,14 +133,14 @@ the wrong `.env`.
 predict → appear in the participant list against **vizehtable's own backend**,
 and on this fork nobody *can* until the Google provider is enabled (§24.7).
 This inherits the same open item every sibling still carries, and it is still
-the single most valuable hour anyone could spend here. **No browser has
-rendered this fork at a real viewport either** — branding was verified by
-grepping the bundle, which proves the strings shipped and proves nothing about
-layout. The rebrand only swapped strings inside existing elements and the new
-ones are shorter (`VIZEHTABLE` is 10 characters to `ICONICTABLE`'s 11, bold
-`vizeh` one narrower than bold `iconic`), so nothing is expected to wrap that
-did not wrap before — but the nav wordmark and the `vizeh`/`table` weight
-split in `WelcomeStep` are the two places to glance at first.
+the single most valuable hour anyone could spend here.
+
+**The logged-out landing has now been rendered in a real browser** at 1440×900
+and 390×844 — the first time any fork in this lineage has been looked at rather
+than grepped (§24.9). Both wordmarks and the credit sentence are correct, the
+countdown is live, nothing wraps badly and the console is clean. Everything
+behind the sign-in button is still unrendered and unwalked, because the
+provider is not enabled.
 
 **Real data in production:** none. `vizehtable-app` was created empty on
 2026-08-10 — no profiles, no survey responses, no predictions. It has never had
@@ -2360,7 +2360,9 @@ and already catches `VIZEHTABLE_HANDOVER.md`. Keep it that way.
   visitor.
 - Anyone signing in. Not once — and until the provider is enabled, nobody can.
 - Any write reaching `vizehtable-app`'s Firestore.
-- Any browser rendering at a real viewport (see §2).
+- Anything behind the sign-in button: the quiz, the ranker, the award pickers,
+  chat and forum have never been rendered on this fork. The logged-out landing
+  has (§24.9).
 
 ### 24.8 A trap the playbook does not warn about: line-wrapped prose
 
@@ -2398,3 +2400,37 @@ in `dist/`. That is the §3.5 category: leave it alone.
 The narrower lesson: a line-based tool and a line-based check share the same
 blind spot, so the check cannot catch the tool's mistake. Verify with a method
 that fails differently from the one that did the work.
+
+### 24.9 Someone finally looked at it
+
+Every previous fork closed with the same admission — branding verified by
+grepping the served bundle, "no human or browser has looked at those headings"
+(§21.6, §23.4). That gap is now closed for the logged-out landing, which is the
+only page a pitch recipient sees before deciding whether to sign in, and
+therefore the page the whole exercise depends on.
+
+Loaded `https://mertgurgenyatagi.github.io/vizehtable/` in Chromium at
+**1440×900** and **390×844** — the two sides of the 1024px `useIsMobile` fork,
+so both trees were exercised, not one layout twice.
+
+| Checked | Result |
+|---|---|
+| Desktop nav wordmark | `#VIZEHTABLE` on one line, logo beside it |
+| Mobile nav wordmark | fits between the menu button and Sign in, no truncation |
+| Credit sentence | "Made for the Vizeh YouTube channel." on both trees |
+| Deadline copy | "No edits after 21 August 2026", countdown live at 11 days |
+| Console | **0 errors, 0 warnings** |
+| Hero, crest row, CTA | render and lay out normally at both sizes |
+
+The shorter-is-safer prediction held: `VIZEHTABLE` is one character shorter
+than `ICONICTABLE` and nothing reflowed. But that was a prediction, and
+predictions about layout are exactly what §11 says not to trust — five of the
+seven bugs there were found by clicking and none by a test. It cost two minutes
+to stop predicting.
+
+**Still not looked at:** everything behind the sign-in button. The
+`vizeh`/`table` weight split in `WelcomeStep` is the *signup* screen, not the
+landing, so despite being named in §24.7 as a place to glance it remains
+unrendered — it is unreachable until the provider is enabled. Check it during
+the sign-in walkthrough (§14 item 2), along with the quiz, the ranker, the
+award pickers, chat and forum.
