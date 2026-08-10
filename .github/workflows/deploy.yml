@@ -32,6 +32,7 @@ jobs:
             zealandtable/package-lock.json
             irishtable/package-lock.json
             iconictable/package-lock.json
+            vizehtable/package-lock.json
 
       # Served from /theirishtable/, NOT /irishtable/. The old path is burned:
       # a pitch email to a different channel carries a hyperlink to it, and
@@ -85,6 +86,22 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build vizehtable
+        run: |
+          cd vizehtable
+          cat << 'EOF' > .env
+          VITE_FIREBASE_API_KEY=AIzaSyBvI6Mn8eNIW6d-sy7K0Hmr-EUkIElFb_4
+          VITE_FIREBASE_AUTH_DOMAIN=vizehtable-app.firebaseapp.com
+          VITE_FIREBASE_PROJECT_ID=vizehtable-app
+          VITE_FIREBASE_APP_ID=1:79438281238:web:1fcb1ad06e0666283b1337
+          VITE_FIREBASE_STORAGE_BUCKET=vizehtable-app.firebasestorage.app
+          VITE_FIREBASE_MESSAGING_SENDER_ID=79438281238
+          VITE_PHOTOS_ENABLED=false
+          VITE_FIREBASE_DATABASE_URL=https://vizehtable-app-default-rtdb.europe-west1.firebasedatabase.app
+          EOF
+          npm ci
+          npm run build
+
       # Publish an explicit allowlist into _site, never the repo itself.
       #
       # This step is a security boundary, not a convenience. Uploading the
@@ -122,6 +139,9 @@ jobs:
 
           mkdir -p _site/iconictable
           cp -r iconictable/dist/* _site/iconictable/
+
+          mkdir -p _site/vizehtable
+          cp -r vizehtable/dist/* _site/vizehtable/
 
           # /irishtable/ stays retired forever. A pitch email to Zealandism
           # carries a hyperlink to it, and that email cannot be recalled, so
@@ -175,6 +195,7 @@ jobs:
             "zealandtable|Zealandism\|zealandtable-app"
             "theirishtable|Irish Guy\|irishtable-app"
             "iconictable|Football Iconic\|iconictable-app"
+            "vizehtable|Vizeh\|vizehtable-app"
           )
           for a in "${FORKS[@]}"; do
             DIR_A=${a%%|*}
