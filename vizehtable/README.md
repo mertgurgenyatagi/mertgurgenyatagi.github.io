@@ -26,8 +26,9 @@ the traps are.
 Develop on **localhost** (`npm run dev`). Hosting is automated — see below.
 
 **Live at https://mertgurgenyatagi.github.io/vizehtable/**
-(deployed and verified 2026-08-10 — but **sign-in does not work yet**, see
-Known gaps.)
+(deployed and verified 2026-08-10; Google sign-in enabled, authorized and
+walked by a human the same day — the first fork in the lineage where that is
+true.)
 
 ## What this is, relative to the repo it sits in
 
@@ -81,7 +82,7 @@ data. Spark plan, billing off.
 |---|---|
 | Firestore | **live** — `eur3`, rules deployed 2026-08-10 |
 | Realtime Database | **live** — `europe-west1`, rules deployed 2026-08-10 |
-| Google sign-in | **NOT ENABLED** — nobody can sign in, on localhost or in production |
+| Google sign-in | **working** — provider enabled, production domain authorized, both confirmed by API, and walked by a human |
 | Storage | **not set up** — needs Blaze; photos off |
 
 This table is updated as each piece is genuinely verified, not when it is
@@ -106,11 +107,13 @@ Firestore and one user pool.
 
 ## Known gaps
 
-**Nobody has signed in yet.** `vizehtable-app` holds zero profiles, zero
-survey responses and zero predictions, so an empty participant list is
-expected, not a bug. Walking sign in → quiz → predict against *this* project's
-backend is the highest-value hour available; see `VIZEHTABLE_HANDOVER.md` §14
-item 2.
+**Nobody has submitted a prediction.** Sign-in and profile creation are proven
+— one profile (`mertgurgen`, Mert's test account) reached Firestore on
+2026-08-10 — but `predictions` is empty, and it is publicly readable, so that
+is a fact rather than a permissions artifact. Most likely nobody clicked
+through the full ranker; the other reading is a silently failing write, which
+would matter. Submit one real prediction and confirm the document appears
+before pitching. See `VIZEHTABLE_HANDOVER.md` §24.10.
 
 **Google sign-in has never been enabled — this is the blocker.** The provider
 enable is the one step that cannot be automated (Spark returns

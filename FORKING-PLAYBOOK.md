@@ -363,6 +363,11 @@ field, so omitting the three defaults removes them.
 >
 > Never infer step 2 from step 1. Check it by API, every time, and check it
 > *after* someone tells you the auth is done.
+>
+> **On vizehtable (2026-08-10) the trap did not recur** — both steps were done
+> in the console and the API check confirmed all four domains and
+> `enabled: true`. That is the warning working, not the warning being
+> unnecessary. The check still cost ten seconds; keep running it.
 
 Verify both by API rather than trusting that the clicks landed:
 
@@ -487,7 +492,24 @@ pitch. After every fork:
 
 - **Sign in once, for real.** Walk sign in → quiz → predict → appear in the
   participant list against the new project. Config verified by API proves it is
-  *configured*, not that it *works*. This has never been done on zealandtable.
+  *configured*, not that it *works*. Done for the first time on **vizehtable**
+  (2026-08-10) — sign-in and profile creation are proven against a project
+  provisioned by this playbook, which is good evidence the code path is fine
+  everywhere. Still never done on irishtable, zealandtable or iconictable.
+
+  **Walk it to the end, and check the database, not the screen.** On vizehtable
+  the walkthrough was reported as complete while `predictions` was still empty
+  — signup finishes at the quiz, well before the ranker, so "I signed up and it
+  worked" is easy to say without a prediction ever being written. One `curl`
+  settles it:
+
+  ```bash
+  curl -s "https://firestore.googleapis.com/v1/projects/$PROJECT/databases/(default)/documents/predictions"
+  ```
+
+  `profiles` and `predictions` are publicly readable, so an empty result is a
+  real absence. `surveyResponses` returns 403 to an anonymous read **by design**
+  — that one is not a bug and cannot be checked this way.
 - **Write and send the email.** The site is not the deliverable.
 - **Reconsider the shared assets.** Every fork currently ships the same
   Premier League lion logo and the same 17 inherited hero portraits (Champions

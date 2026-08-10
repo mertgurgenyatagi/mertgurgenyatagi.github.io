@@ -110,7 +110,7 @@ five still exist and four are live.
 | `vite build` | clean |
 | Firebase project | **`vizehtable-app`**, Firestore Native in `eur3` |
 | Billing | **Spark (free tier)** |
-| Google sign-in | **NOT ENABLED** — the provider has never been switched on. Sign-in is broken for everyone, including on localhost. See §24.7; this is the one thing standing between here and a pitchable site. |
+| Google sign-in | **WORKING** — provider `enabled: true` *and* `mertgurgenyatagi.github.io` authorized, both confirmed by API, and a real human has signed in against this project. The first fork in the lineage where that is true (§24.10). |
 | Realtime Database | **live** — `europe-west1`, presence + typing, rules deployed |
 | Storage | **not set up** — needs Blaze; photos are switched off |
 | Hosting | **live** — `https://mertgurgenyatagi.github.io/vizehtable/`, confirmed 200 |
@@ -129,22 +129,26 @@ commands are in `../FORKING-PLAYBOOK.md` §7. Checking the *served* bundle
 rather than the local one is the point: it is what catches a CI step that used
 the wrong `.env`.
 
-**What has *not* been verified end to end:** nobody has walked sign in → quiz →
-predict → appear in the participant list against **vizehtable's own backend**,
-and on this fork nobody *can* until the Google provider is enabled (§24.7).
-This inherits the same open item every sibling still carries, and it is still
-the single most valuable hour anyone could spend here.
+**Sign-in has now been walked by a human** (2026-08-10) — the open item that
+irishtable, zealandtable and iconictable have all carried since they were
+built. A real Google account signed in and its profile reached Firestore.
+**Predictions have not been submitted**, though: `predictions` is empty and
+publicly readable, so that is a fact rather than a permissions artifact. Read
+§24.10 before assuming the whole flow is proven — the distinction between what
+was verified and what was reported matters here.
 
-**The logged-out landing has now been rendered in a real browser** at 1440×900
+**The logged-out landing has been rendered in a real browser** at 1440×900
 and 390×844 — the first time any fork in this lineage has been looked at rather
 than grepped (§24.9). Both wordmarks and the credit sentence are correct, the
-countdown is live, nothing wraps badly and the console is clean. Everything
-behind the sign-in button is still unrendered and unwalked, because the
-provider is not enabled.
+countdown is live, nothing wraps badly and the console is clean.
 
-**Real data in production:** none. `vizehtable-app` was created empty on
-2026-08-10 — no profiles, no survey responses, no predictions. It has never had
-a test write, so an empty participant list is expected, not a bug.
+**Real data in production:** one profile — `mertgurgen`, written 2026-08-10
+01:43:20Z by the sign-in walkthrough. `predictions` and `forumPosts` are still
+empty. This is Mert's own test account, not a participant, and it is the only
+document in the project. **It is also the first real write any fork in this
+lineage has ever received**, so if you are comparing against a sibling's empty
+database, that is the difference. Delete it before the pitch if a participant
+list of one looks odd; the rules allow the owner to delete their own profile.
 
 **A thing that looks like a bug and isn't:** an unauthenticated REST read of
 `surveyResponses` returns `403 PERMISSION_DENIED`. That is the rules working
@@ -2434,3 +2438,74 @@ landing, so despite being named in §24.7 as a place to glance it remains
 unrendered — it is unreachable until the provider is enabled. Check it during
 the sign-in walkthrough (§14 item 2), along with the quiz, the ranker, the
 award pickers, chat and forum.
+
+### 24.10 Auth, walked at last — and the §23.9 trap not recurring
+
+**Date:** 2026-08-10, a few hours after the fork. Mert enabled the Google
+provider **and** added `mertgurgenyatagi.github.io` to the authorized domains,
+then reported that sign-in and the flow worked.
+
+Per §23.9 the report was **re-checked by API rather than believed**, which is
+the whole point of that section — "I've done the auth" is exactly when the
+check gets skipped:
+
+```
+authorizedDomains: ["localhost", "vizehtable-app.firebaseapp.com",
+                    "vizehtable-app.web.app", "mertgurgenyatagi.github.io"]
+google.com: enabled: true
+```
+
+Both correct, and the three defaults were preserved rather than replaced —
+`updateMask` overwrites the field, so a partial list would have silently
+removed localhost. **This is the first fork where the two-screens trap did not
+recur.** It did not recur because the warning was written down in three places
+(README known gaps, §23.9, §24.7) and read before the work, which is the
+argument for keeping this document honest rather than tidy.
+
+The authorized-domain PATCH from playbook §6 was therefore never needed — it is
+still the right tool when the domain is missing, but doing both steps in the
+console is fine and arguably simpler.
+
+#### What is proven, and what is only reported
+
+Worth separating, because the gap is the useful part.
+
+| Claim | Status |
+|---|---|
+| Google sign-in works | **Proven.** A real uid authenticated and its profile document reached Firestore. |
+| Profile creation writes | **Proven.** `profiles/AQxXdpPX…` = `mertgurgen`, `createdAt` 1786326200078. |
+| Auth config correct | **Proven by API**, both halves, after the report. |
+| Quiz answers persist | **Unverifiable from outside.** `surveyResponses` is `allow read: if isSignedIn()`, so an anonymous REST read returns 403 by design (not a bug — see §2). Reported as working. |
+| Predictions persist | **Contradicted.** `predictions` is `allow read: if true` and returns `{}`. No prediction document exists. |
+| Forum posts | Empty, and not claimed. |
+
+The prediction gap is most likely innocent — submitting means ranking 20 clubs,
+picking two cups and six awards, which is a lot of clicking for a smoke test,
+and the signup flow ends at `bounce-survey` well before the ranker. Note the
+step order: the profile is written at the **name** step, *before* the quiz, so
+a profile document proves sign-in and naming — it does **not** prove the quiz
+completed. `SignupFlow` explicitly handles profile-without-survey as a resume
+case.
+
+**But the other reading is a silently failing write, and that one matters.**
+Nothing server-side computes anything here, so a rejected `predictions` write
+would surface only as a client error. Before the pitch, submit one real
+prediction and confirm the document appears:
+
+```bash
+curl -s "https://firestore.googleapis.com/v1/projects/vizehtable-app/databases/(default)/documents/predictions"
+```
+
+Empty means it did not land. The rules require `table` to be exactly 20 entries
+plus all six awards, both cups and two timestamps — a write missing any one of
+those is rejected wholesale.
+
+#### What this changes for the siblings
+
+`irishtable`, `zealandtable` and `iconictable` have **still** never had a
+single sign-in or a single write, and each of their handovers says so. This
+fork proves the *code path* works against a fresh Firebase project provisioned
+by the playbook, which is meaningful evidence for all of them — but it is not
+proof that any sibling's own project is configured correctly. Each has its own
+Auth config, and §23.9 happened on a project whose owner believed it was fine.
+If a sibling is ever re-pitched, re-verify its auth by API first.
