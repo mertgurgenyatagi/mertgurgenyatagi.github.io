@@ -242,14 +242,6 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const taken = useMemo(() => new Set(picks.map((pick) => pick.player.id)), [picks])
   const yourSquad = squads[youSeat] ?? {}
 
-  /* When the last pick lands, hand off to the comparison screen. Keep the
-     draft state alive in this component so the back button can return here
-     later without re-running the whole draft — it is just a conditional render,
-     not a navigation. */
-  if (complete) {
-    return <SquadCompare drafters={drafters} squads={squads} />
-  }
-
   /* ------------------------------------------------------------- picking -- */
 
   /**
@@ -522,6 +514,10 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   const you = drafters[youSeat]
   const lastArrival = picks[picks.length - 1]?.player.id ?? null
+
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   return (
     <div className="draft flex h-full w-full flex-col px-[var(--app-inset-x)] py-[var(--app-inset-y)]">

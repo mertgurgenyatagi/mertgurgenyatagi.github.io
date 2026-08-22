@@ -653,12 +653,6 @@ const you = drafters[youSeat]
 
   const yourSpare = board.spare[youSeat] ?? []
 
-  /* Once the auction is done and the block has been cleared (backfill has run),
-     swap to the comparison screen. */
-  if (finished && !block) {
-    return <SquadCompare drafters={drafters} squads={squads} />
-  }
-
   console.log("AUCTION_DRAFT_RENDER", {
     isMultiplayer,
     isHost,
@@ -675,6 +669,12 @@ const you = drafters[youSeat]
     squads,
     budgets,
   })
+
+  /* Once the auction is done and the block has been cleared (backfill has run),
+     swap to the comparison screen. */
+  if (finished && !block) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   return (
     <div

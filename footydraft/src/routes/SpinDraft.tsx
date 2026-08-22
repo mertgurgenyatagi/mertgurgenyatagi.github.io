@@ -233,10 +233,6 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const yourSquad = squads[youSeat] ?? {}
   const activeSquad = squads[activeSeat >= 0 ? activeSeat : youSeat] ?? {}
 
-  if (complete) {
-    return <SquadCompare drafters={drafters} squads={squads} />
-  }
-
   /* --------------------------------------------------------------- picking -- */
 
   /**
@@ -536,6 +532,10 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
 
   const you = drafters[youSeat]
   const lastArrival = picks[picks.length - 1]?.player.id ?? null
+
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   return (
     <div

@@ -231,10 +231,6 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   const activeSeat = round && !complete && round.step !== 'done' ? activeSeatOf(round) : -1
   const yourTurn = activeSeat === youSeat
 
-  if (complete) {
-    return <SquadCompare drafters={drafters} squads={squads} />
-  }
-
   /* ------------------------------------------------------------ the rounds -- */
 
   const dealRound = useCallback(
@@ -677,6 +673,10 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
   const you = drafters[youSeat]
   const lastArrival = picks[picks.length - 1]?.player.id ?? null
+
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   return (
     <div className="draft dond flex h-full w-full flex-col px-[var(--app-inset-x)] py-[var(--app-inset-y)]">
