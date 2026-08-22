@@ -27,6 +27,9 @@ import {
   seatAt,
   slotFor,
 } from '../lib/draftEngine'
+import { useMultiplayerRoom, useHostBotTakeover, updateSpinState, placeSpinAction, sendChatMessage } from '../lib/multiplayer'
+import { ref, onChildAdded } from 'firebase/database'
+import { database } from '../lib/firebase'
 import { type Player, inScope, loadPool } from '../lib/players'
 import {
   type WheelSlice,
@@ -91,7 +94,25 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
      in lobbyOptions. A spin ends the turn when somebody picks off what it
      landed on, so there was never anything here for a countdown to close. */
 
-  const drafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  const { room, uid } = useMultiplayerRoom(config.roomId)
+  const isMultiplayer = Boolean(config.roomId)
+  const isHost = isMultiplayer ? room?.host === uid : true
+  useHostBotTakeover(config.roomId, isHost, room)
+
+  const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  
+  const drafters = useMemo(() => {
+    if (!isMultiplayer || !room?.drafters) return baseDrafters
+    return baseDrafters.map(d => {
+      const rd = room.drafters[d.id]
+      if (rd) {
+        const kind = d.kind === 'you' ? 'you' : rd.kind
+        return { ...d, kind } as Drafter
+      }
+      return d
+    })
+  }, [baseDrafters, isMultiplayer, room?.drafters])
+
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
   const totalPicks = seatCount * SQUAD_SIZE
@@ -108,11 +129,29 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const [filter, setFilter] = useState<PositionCode | null>(null)
   const [tab, setTab] = useState(youSeat)
   const [pane, setPane] = useState<'wheel' | 'pool' | 'board'>('pool')
-  const [messages, setMessages] = useState<Message[]>([])
+  const [localMessages, setMessages] = useState<Message[]>([])
+  const messages = isMultiplayer && room?.chat ? Object.values(room.chat).sort((a, b) => a.id - b.id) : localMessages
   const [feed, setFeed] = useState<FeedLine[]>([])
 
   const [rotation, setRotation] = useState(-179)
   const [phase, setPhase] = useState<'spinning' | 'landed'>('spinning')
+
+  // Sync state from host to clients
+  useEffect(() => {
+    if (isMultiplayer && !isHost && room?.spinState) {
+      setPicks(room.spinState.picks || [])
+      setFeed(room.spinState.feed || [])
+      setRotation(room.spinState.rotation || 0)
+      setPhase(room.spinState.phase || 'spinning')
+    }
+  }, [isMultiplayer, isHost, room?.spinState])
+
+  // Sync state from host to firebase
+  useEffect(() => {
+    if (isMultiplayer && isHost && config.roomId) {
+      updateSpinState(config.roomId, { picks, feed, rotation, phase })
+    }
+  }, [isMultiplayer, isHost, config.roomId, picks, feed, rotation, phase])
   const [landed, setLanded] = useState<WheelSlice | null>(null)
   /**
    * Which turn the wheel currently on screen was spun for. A pick lands one
@@ -215,15 +254,9 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const lastFace = useRef<WheelSlice[]>([])
   if (slices.length > 0) lastFace.current = slices
   const face = slices.length > 0 ? slices : lastFace.current
-
-  /**
-   * One spin per turn. The dependency list is exactly the three things that
-   * change when a turn does — deliberately not the slices themselves, which
-   * are recomputed on every pick anywhere on the table and would otherwise
-   * restart the spin under whoever is halfway through reading it.
-   */
   useEffect(() => {
     if (!ready || complete) return
+    if (isMultiplayer && !isHost) return
 
     const current = slicesRef.current
     const index = current.length > 0 ? Math.floor(Math.random() * current.length) : -1
@@ -241,7 +274,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     }, SPIN_MS)
 
     return () => window.clearTimeout(timer)
-  }, [ready, complete, overall])
+  }, [ready, complete, overall, isMultiplayer, isHost])
 
   /** True only while the wheel on screen is the one this turn was spun for. */
   const settled = phase === 'landed' && landedTurn === overall
@@ -280,8 +313,11 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (complete || !settled || activeSeat < 0 || activeSeat === youSeat) return
     if (entityPool.length === 0) return
+    if (isMultiplayer && !isHost) return
 
     const drafter = drafters[activeSeat]
+    if (isMultiplayer && drafter.kind !== 'bot') return
+
     const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
     const wait = low + Math.random() * (high - low)
 
@@ -319,16 +355,20 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     if (round === previousRound.current || complete) return
     previousRound.current = round
     report(`Round ${round} — the order reverses.`, 'settled')
-    setMessages((current) => [
-      ...current,
-      {
-        id: messageId.current++,
-        kind: 'system',
-        author: '',
-        body: `Round ${round} — the order reverses`,
-      },
-    ])
-  }, [round, complete, report])
+    if (isMultiplayer && isHost && config.roomId) {
+      sendChatMessage(config.roomId, '', `Round ${round} — the order reverses`)
+    } else if (!isMultiplayer) {
+      setMessages((current) => [
+        ...current,
+        {
+          id: messageId.current++,
+          kind: 'system',
+          author: '',
+          body: `Round ${round} — the order reverses`,
+        },
+      ])
+    }
+  }, [round, complete, report, isMultiplayer, isHost, config.roomId])
 
   // The room talks about what just went. Not every pick, or it is noise.
   const chattered = useRef(-1)
@@ -339,19 +379,24 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     if (Math.random() > 0.34) return
 
     const timer = window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: messageId.current++,
-          kind: 'said',
-          author: drafters[last.seat].name,
-          body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
-        },
-      ])
+      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
+      if (isMultiplayer && isHost && config.roomId) {
+        sendChatMessage(config.roomId, drafters[last.seat].name, text)
+      } else if (!isMultiplayer) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: messageId.current++,
+            kind: 'said',
+            author: drafters[last.seat].name,
+            body: text,
+          },
+        ])
+      }
     }, 900)
 
     return () => window.clearTimeout(timer)
-  }, [picks, youSeat, drafters])
+  }, [picks, youSeat, drafters, isMultiplayer, isHost, config.roomId])
 
   /* --------------------------------------------------------------- the list -- */
 
@@ -398,11 +443,31 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const canDraft = Boolean(yourTurn && settled && selected)
 
   const draftSelected = useCallback(() => {
-    if (!canDraft || !selected) return
+    if (!selected) return
+    if (isMultiplayer && !isHost && config.roomId) {
+      placeSpinAction(config.roomId, youSeat, { type: 'draft', playerId: selected.id })
+      return
+    }
+    if (!canDraft) return
     commit(youSeat, (squad, already) =>
       isEligible(selected, squad, 'none', already) ? selected : null,
     )
-  }, [canDraft, selected, commit, youSeat])
+  }, [canDraft, selected, commit, youSeat, isMultiplayer, isHost, config.roomId])
+
+  useEffect(() => {
+    if (!isMultiplayer || !isHost || !config.roomId) return
+    const actionsRef = ref(database, `rooms/${config.roomId}/spinActions`)
+    return onChildAdded(actionsRef, (snapshot) => {
+      const { seat, action } = snapshot.val()
+      if (action.type === 'draft') {
+        commit(seat, (squad, already) => {
+          const remoteSelected = entityPoolRef.current.find((p) => p.id === action.playerId)
+          if (!remoteSelected) return null
+          return isEligible(remoteSelected, squad, 'none', already) ? remoteSelected : null
+        })
+      }
+    })
+  }, [isMultiplayer, isHost, config.roomId, commit])
 
   const pendingSlot: FormationSlot | null =
     canDraft && selected
@@ -521,12 +586,16 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
               <DraftChat
                 messages={messages}
                 you={you.name}
-                onSend={(body) =>
-                  setMessages((current) => [
-                    ...current,
-                    { id: messageId.current++, kind: 'said', author: you.name, body },
-                  ])
-                }
+                onSend={(body) => {
+                  if (isMultiplayer && config.roomId) {
+                    sendChatMessage(config.roomId, you.name, body)
+                  } else {
+                    setMessages((current) => [
+                      ...current,
+                      { id: messageId.current++, kind: 'said', author: you.name, body },
+                    ])
+                  }
+                }}
               />
             </div>
           </div>

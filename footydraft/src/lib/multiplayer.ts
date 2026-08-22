@@ -22,6 +22,9 @@ export interface RoomState {
   chat: Record<string, Message>
   auctionBlock?: any
   auctionSales?: any
+  dondRound?: any
+  dondPicks?: any
+  spinState?: any
 }
 
 export function useMultiplayerRoom(code: string | undefined) {
@@ -179,5 +182,30 @@ export async function updateAuctionState(code: string, block: any, sales: any) {
 export async function placeAuctionBid(code: string, seat: number, step: number) {
   const bidsRef = ref(database, `rooms/${code}/auctionBids`)
   await push(bidsRef, { seat, step, timestamp: Date.now() })
+}
+
+export async function updateDondState(code: string, round: any, picks: any) {
+  const roomRef = ref(database, `rooms/${code}`)
+  await update(roomRef, {
+    dondRound: round ?? null,
+    dondPicks: picks ?? null
+  })
+}
+
+export async function placeDondAction(code: string, seat: number, action: any) {
+  const actionsRef = ref(database, `rooms/${code}/dondActions`)
+  await push(actionsRef, { seat, action, timestamp: Date.now() })
+}
+
+export async function updateSpinState(code: string, spinState: any) {
+  const roomRef = ref(database, `rooms/${code}`)
+  await update(roomRef, {
+    spinState: spinState ?? null
+  })
+}
+
+export async function placeSpinAction(code: string, seat: number, action: any) {
+  const actionsRef = ref(database, `rooms/${code}/spinActions`)
+  await push(actionsRef, { seat, action, timestamp: Date.now() })
 }
 

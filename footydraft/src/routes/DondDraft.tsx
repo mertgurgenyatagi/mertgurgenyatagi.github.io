@@ -22,6 +22,9 @@ import {
   roundOrder,
   seatOrder,
 } from '../lib/dondEngine'
+import { useMultiplayerRoom, useHostBotTakeover, updateDondState, placeDondAction, sendChatMessage } from '../lib/multiplayer'
+import { ref, onChildAdded } from 'firebase/database'
+import { database } from '../lib/firebase'
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
@@ -102,7 +105,25 @@ export function DondDraft({ config }: { config: DraftConfig }) {
      offer or goes back to the boxes, so there was nothing for a countdown to
      close. The least-committal auto-choices it used to force are gone with it. */
 
-  const drafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  const { room, uid } = useMultiplayerRoom(config.roomId)
+  const isMultiplayer = Boolean(config.roomId)
+  const isHost = isMultiplayer ? room?.host === uid : true
+  useHostBotTakeover(config.roomId, isHost, room)
+
+  const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  
+  const drafters = useMemo(() => {
+    if (!isMultiplayer || !room?.drafters) return baseDrafters
+    return baseDrafters.map(d => {
+      const rd = room.drafters[d.id]
+      if (rd) {
+        const kind = d.kind === 'you' ? 'you' : rd.kind
+        return { ...d, kind } as Drafter
+      }
+      return d
+    })
+  }, [baseDrafters, isMultiplayer, room?.drafters])
+
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
 
@@ -116,8 +137,24 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   const [round, setRound] = useState<RoundState | null>(null)
   const [tab, setTab] = useState(youSeat)
   const [pane, setPane] = useState<'boxes' | 'board'>('boxes')
-  const [messages, setMessages] = useState<Message[]>([])
+  const [localMessages, setMessages] = useState<Message[]>([])
+  const messages = isMultiplayer && room?.chat ? Object.values(room.chat).sort((a, b) => a.id - b.id) : localMessages
   const [flash, setFlash] = useState<{ text: string; tone: NarratorTone } | null>(null)
+
+  // Sync state from host to clients
+  useEffect(() => {
+    if (isMultiplayer && !isHost) {
+      if (room?.dondRound !== undefined) setRound(room.dondRound)
+      if (room?.dondPicks !== undefined) setPicks(room.dondPicks)
+    }
+  }, [isMultiplayer, isHost, room?.dondRound, room?.dondPicks])
+
+  // Sync state from host to firebase
+  useEffect(() => {
+    if (isMultiplayer && isHost && config.roomId) {
+      updateDondState(config.roomId, round, picks)
+    }
+  }, [isMultiplayer, isHost, config.roomId, round, picks])
 
   const messageId = useRef(1)
 
@@ -257,6 +294,10 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   )
 
   const openBox = useCallback((index: number) => {
+    if (isMultiplayer && !isHost && config.roomId) {
+      placeDondAction(config.roomId, youSeat, { type: 'openBox', index })
+      return
+    }
     setRound((previous) => {
       if (!previous || previous.step !== 'choosing') return previous
       if (previous.boxes[index]?.openedBy !== null) return previous
@@ -268,23 +309,42 @@ export function DondDraft({ config }: { config: DraftConfig }) {
         step: 'revealing',
       }
     })
-  }, [])
+  }, [isMultiplayer, isHost, config.roomId, youSeat])
 
   const hearOffer = useCallback(() => {
+    if (isMultiplayer && !isHost && config.roomId) {
+      placeDondAction(config.roomId, youSeat, { type: 'hearOffer' })
+      return
+    }
     setRound((previous) => {
       if (!previous || previous.step !== 'deciding') return previous
       const seat = activeSeatOf(previous)
       return advance({ ...previous, hearing: [...previous.hearing, seat] })
     })
-  }, [advance])
+  }, [advance, isMultiplayer, isHost, config.roomId, youSeat])
 
   const backToBoxes = useCallback(() => {
+    if (isMultiplayer && !isHost && config.roomId) {
+      placeDondAction(config.roomId, youSeat, { type: 'backToBoxes' })
+      return
+    }
     setRound((previous) =>
       previous && previous.step === 'weighing'
         ? { ...previous, step: 'choosing', forced: true }
         : previous,
     )
-  }, [])
+  }, [isMultiplayer, isHost, config.roomId, youSeat])
+
+  useEffect(() => {
+    if (!isMultiplayer || !isHost || !config.roomId) return
+    const actionsRef = ref(database, `rooms/${config.roomId}/dondActions`)
+    return onChildAdded(actionsRef, (snapshot) => {
+      const { action } = snapshot.val()
+      if (action.type === 'openBox') openBox(action.index)
+      else if (action.type === 'hearOffer') hearOffer()
+      else if (action.type === 'backToBoxes') backToBoxes()
+    })
+  }, [isMultiplayer, isHost, config.roomId, openBox, hearOffer, backToBoxes])
 
   /* --------------------------------------------------------- what is on stage -- */
 
@@ -306,8 +366,11 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (!round || complete || activeSeat < 0 || activeSeat === youSeat) return
     if (round.step !== 'choosing' && round.step !== 'deciding' && round.step !== 'weighing') return
+    if (isMultiplayer && !isHost) return
 
     const drafter = drafters[activeSeat]
+    if (isMultiplayer && drafter.kind !== 'bot') return
+
     const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
     const wait = low + Math.random() * (high - low)
 
@@ -350,6 +413,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
   useEffect(() => {
     if (!round || round.step !== 'revealing' || round.openedIndex === null) return
+    if (isMultiplayer && !isHost) return
     const box = round.boxes[round.openedIndex]
     const seat = activeSeatOf(round)
     if (!box || seat < 0) return
@@ -375,6 +439,8 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (!round || complete || round.step !== 'choosing' || activeSeat < 0) return
     if (round.boxes.some((box) => box.openedBy === null)) return
+    if (isMultiplayer && !isHost) return
+
     const position = roundPlan?.position
     const stand = availableRef.current.find((player) => player.position === position)
     if (!stand) return
@@ -386,6 +452,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
   useEffect(() => {
     if (!round || round.step !== 'done' || complete) return
+    if (isMultiplayer && !isHost) return
     const next = round.index + 1
 
     const timer = window.setTimeout(() => {
@@ -424,15 +491,20 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
     const speaker = drafters[(activeSeat + 1) % seatCount]
     const timer = window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: messageId.current++,
-          kind: 'said',
-          author: speaker.name,
-          body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
-        },
-      ])
+      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
+      if (isMultiplayer && isHost && config.roomId) {
+        sendChatMessage(config.roomId, speaker.name, text)
+      } else if (!isMultiplayer) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: messageId.current++,
+            kind: 'said',
+            author: speaker.name,
+            body: text,
+          },
+        ])
+      }
     }, 800)
 
     return () => window.clearTimeout(timer)
@@ -612,12 +684,16 @@ export function DondDraft({ config }: { config: DraftConfig }) {
           <DraftChat
             messages={messages}
             you={you.name}
-            onSend={(body) =>
-              setMessages((current) => [
-                ...current,
-                { id: messageId.current++, kind: 'said', author: you.name, body },
-              ])
-            }
+            onSend={(body) => {
+              if (isMultiplayer && config.roomId) {
+                sendChatMessage(config.roomId, you.name, body)
+              } else {
+                setMessages((current) => [
+                  ...current,
+                  { id: messageId.current++, kind: 'said', author: you.name, body },
+                ])
+              }
+            }}
           />
         </div>
 
