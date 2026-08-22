@@ -17,12 +17,11 @@ import {
   type Sale,
   auctionExhausted,
   buildLotList,
-  ceilingFor,
   cheapestFor,
   landingSlot,
   startingBudget,
-  stepFor,
 } from '../lib/auctionEngine'
+import { evaluateAuctionBot } from '../lib/auctionBot'
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
@@ -77,7 +76,7 @@ const CHATTER = [
 
 type Phase = 'live' | 'sold' | 'unsold'
 
-interface Block {
+export interface Block {
   lot: Lot
   /** The opening price until somebody takes it, then whatever it is held at. */
   price: number
@@ -88,19 +87,6 @@ interface Block {
   phase: Phase
   /** Bumped by every bid, which is what sends the countdown back to full. */
   resets: number
-}
-
-/**
- * A seat's appetite for one lot, fixed for the length of that lot.
- *
- * It has to be stable: the bidding loop re-reads a bot's valuation several
- * times a second, and a valuation that re-rolled each time would keep finding a
- * higher one and bid a footballer to the moon. Deterministic in the lot number
- * and the seat, so a table still disagrees but each seat holds its own line.
- */
-function tasteFor(lot: number, seat: number): number {
-  const spread = Math.sin(lot * 127.1 + seat * 311.7) * 43758.5453
-  return spread - Math.floor(spread)
 }
 
 /**
@@ -211,8 +197,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   }, [sales, drafters, startBudget])
 
   /** The bidding loop reads these several times a second; state would go stale. */
-  const live = useRef({ squads, budgets, block, armed })
-  live.current = { squads, budgets, block, armed }
+  const live = useRef({ squads, budgets, block, armed, sales })
+  live.current = { squads, budgets, block, armed, sales }
 
   const award = useCallback((seat: number, player: Player) => {
     setBoard((previous) => {
@@ -335,23 +321,43 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       const willing: { seat: number; step: number }[] = []
       const spent: number[] = []
 
+      const POS_LIST = ['AMF', 'CB', 'CDM', 'CM', 'GK', 'LB', 'LW', 'RB', 'RW', 'ST']
+      const lotsRevealed = new Array(10).fill(0)
+      const lotsSold = new Array(10).fill(0)
+      
+      for (const sale of live.current.sales) {
+        const pIdx = POS_LIST.indexOf(sale.player.position)
+        if (pIdx >= 0) {
+          lotsRevealed[pIdx]++
+          if (sale.seat !== null) lotsSold[pIdx]++
+        }
+      }
+      const currentPIdx = POS_LIST.indexOf(now.lot.player.position)
+      if (currentPIdx >= 0) lotsRevealed[currentPIdx]++
+      
+      const lotsRemaining = Math.max(0, (15 * seatCount) - now.lot.number)
+      const fractionElapsed = Math.min(1.0, now.lot.number / Math.max(1, 15 * seatCount))
+      const scopedPoolSize = scopedRef.current.length
+
       for (let seat = 0; seat < seatCount; seat += 1) {
         if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
 
-        const ceiling = ceilingFor(
-          now.lot.player,
-          live.current.squads[seat] ?? {},
-          live.current.budgets[seat] ?? 0,
-          tasteFor(now.lot.number, seat),
+        const drafter = drafters[seat]
+        if (drafter.kind !== 'bot') continue
+
+        const step = evaluateAuctionBot(
+          seat,
+          now,
+          live.current.squads,
+          live.current.budgets,
+          seatCount,
+          lotsRevealed,
+          lotsSold,
+          lotsRemaining,
+          fractionElapsed,
+          scopedPoolSize
         )
 
-        if (now.holder === null) {
-          if (now.lot.opening <= ceiling) willing.push({ seat, step: 0 })
-          else spent.push(seat)
-          continue
-        }
-
-        const step = stepFor(now.price, ceiling, Math.random)
         if (step !== null) willing.push({ seat, step })
         else spent.push(seat)
       }
