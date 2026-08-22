@@ -20,6 +20,8 @@ export interface RoomState {
   drafters: Record<string, Drafter & { online: boolean }> // key is uid
   picks: Record<string, Omit<Pick, 'player'> & { playerId: string }>
   chat: Record<string, Message>
+  auctionBlock?: any
+  auctionSales?: any
 }
 
 export function useMultiplayerRoom(code: string | undefined) {
@@ -164,5 +166,18 @@ export async function addBot(code: string, count: number) {
 export async function removeBot(code: string, botId: string) {
   const botRef = ref(database, `rooms/${code}/drafters/${botId}`)
   await set(botRef, null)
+}
+
+export async function updateAuctionState(code: string, block: any, sales: any) {
+  const roomRef = ref(database, `rooms/${code}`)
+  await update(roomRef, {
+    auctionBlock: block ?? null,
+    auctionSales: sales ?? null
+  })
+}
+
+export async function placeAuctionBid(code: string, seat: number, step: number) {
+  const bidsRef = ref(database, `rooms/${code}/auctionBids`)
+  await push(bidsRef, { seat, step, timestamp: Date.now() })
 }
 

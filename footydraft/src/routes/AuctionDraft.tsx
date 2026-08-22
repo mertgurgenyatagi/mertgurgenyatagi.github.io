@@ -22,6 +22,9 @@ import {
   startingBudget,
 } from '../lib/auctionEngine'
 import { evaluateAuctionBot } from '../lib/auctionBot'
+import { useMultiplayerRoom, useHostBotTakeover, updateAuctionState, placeAuctionBid, sendChatMessage } from '../lib/multiplayer'
+import { ref, onChildAdded } from 'firebase/database'
+import { database } from '../lib/firebase'
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
@@ -116,7 +119,25 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const timerSetting = config.timer ?? '15'
   const limit = timerSetting === 'off' ? FALLBACK_TIMER : Number(timerSetting) || FALLBACK_TIMER
 
-  const drafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  const { room, uid } = useMultiplayerRoom(config.roomId)
+  const isMultiplayer = Boolean(config.roomId)
+  const isHost = isMultiplayer ? room?.host === uid : true
+  useHostBotTakeover(config.roomId, isHost, room)
+
+  const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  
+  const drafters = useMemo(() => {
+    if (!isMultiplayer || !room?.drafters) return baseDrafters
+    return baseDrafters.map(d => {
+      const rd = room.drafters[d.id]
+      if (rd) {
+        const kind = d.kind === 'you' ? 'you' : rd.kind
+        return { ...d, kind } as Drafter
+      }
+      return d
+    })
+  }, [baseDrafters, isMultiplayer, room?.drafters])
+
   const seatCount = drafters.length
   const youSeat = Math.max(
     0,
@@ -130,6 +151,21 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const [block, setBlock] = useState<Block | null>(null)
   const [sales, setSales] = useState<Sale[]>([])
   const [finished, setFinished] = useState(false)
+
+  // Sync state from host to clients
+  useEffect(() => {
+    if (isMultiplayer && !isHost) {
+      if (room?.auctionBlock !== undefined) setBlock(room.auctionBlock)
+      if (room?.auctionSales !== undefined) setSales(room.auctionSales)
+    }
+  }, [isMultiplayer, isHost, room?.auctionBlock, room?.auctionSales])
+
+  // Sync state from host to firebase
+  useEffect(() => {
+    if (isMultiplayer && isHost && config.roomId) {
+      updateAuctionState(config.roomId, block, sales)
+    }
+  }, [isMultiplayer, isHost, config.roomId, block, sales])
   /**
    * The countdown, stamped with the lot-and-bid it belongs to.
    *
@@ -144,7 +180,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const [armed, setArmed] = useState(false)
   const [tab, setTab] = useState(youSeat)
   const [pane, setPane] = useState<'block' | 'board'>('block')
-  const [messages, setMessages] = useState<Message[]>([])
+  const [localMessages, setMessages] = useState<Message[]>([])
+  const messages = isMultiplayer && room?.chat ? Object.values(room.chat).sort((a, b) => a.id - b.id) : localMessages
   const [lastArrival, setLastArrival] = useState<string | null>(null)
 
   /* Purchases, and the spares that had nowhere to go. A buy lands straight in
@@ -262,6 +299,10 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   /* ------------------------------------------------------------- the block -- */
 
   const placeBid = useCallback((seat: number, step: number) => {
+    if (isMultiplayer && !isHost && config.roomId) {
+      placeAuctionBid(config.roomId, seat, step)
+      return
+    }
     setBlock((previous) => {
       if (!previous || previous.phase !== 'live') return previous
       if (previous.holder === seat || previous.out.includes(seat)) return previous
@@ -277,7 +318,16 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         resets: previous.resets + 1,
       }
     })
-  }, [])
+  }, [isMultiplayer, isHost, config.roomId])
+
+  useEffect(() => {
+    if (!isMultiplayer || !isHost || !config.roomId) return
+    const bidsRef = ref(database, `rooms/${config.roomId}/auctionBids`)
+    return onChildAdded(bidsRef, (snapshot) => {
+      const bid = snapshot.val()
+      placeBid(bid.seat, bid.step)
+    })
+  }, [isMultiplayer, isHost, config.roomId, placeBid])
 
   /** Open whatever the cursor is pointing at, or stop the auction. */
   useEffect(() => {
@@ -295,6 +345,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       return
     }
 
+    if (!isHost) return
+
     setBlock({
       lot,
       price: lot.opening,
@@ -310,6 +362,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
   useEffect(() => {
     if (!block || block.phase !== 'live') return
+    if (!isHost) return
 
     const tick = window.setInterval(() => {
       const now = live.current.block
@@ -433,6 +486,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (!block || block.phase !== 'live') return
     if (clock.key !== clockKey || clock.left > 0) return
+    if (!isHost) return
 
     const { holder, price, lot } = block
 
@@ -445,18 +499,22 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       ...previous,
       { lot: lot.number, player: lot.player, seat: holder, price: holder === null ? 0 : price },
     ])
-    if (holder !== null) award(holder, lot.player)
-
-    if (holder === youSeat) {
-      setMessages((current) => [
-        ...current,
-        {
-          id: messageId.current++,
-          kind: 'system',
-          author: '',
-          body: `Lot ${lot.number} · ${lot.player.name} · €${price}M`,
-        },
-      ])
+    if (holder !== null) {
+      award(holder, lot.player)
+      if (isMultiplayer && isHost && config.roomId) {
+        const winner = drafters[holder].name
+        sendChatMessage(config.roomId, '', `Lot ${lot.number} - ${lot.player.name} - €${price}M to ${winner}`)
+      } else if (!isMultiplayer && holder === youSeat) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: messageId.current++,
+            kind: 'system',
+            author: '',
+            body: `Lot ${lot.number} - ${lot.player.name} - €${price}M`,
+          },
+        ])
+      }
     }
   }, [clock, clockKey, block, award, youSeat])
 
@@ -513,15 +571,20 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
     const speaker = drafters[(block.holder + 1) % seatCount]
     const timer = window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: messageId.current++,
-          kind: 'said',
-          author: speaker.name,
-          body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
-        },
-      ])
+      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
+      if (isMultiplayer && isHost && config.roomId) {
+        sendChatMessage(config.roomId, speaker.name, text)
+      } else if (!isMultiplayer) {
+        setMessages((current) => [
+          ...current,
+          {
+            id: messageId.current++,
+            kind: 'said',
+            author: speaker.name,
+            body: text,
+          },
+        ])
+      }
     }, 700)
 
     return () => window.clearTimeout(timer)
@@ -603,12 +666,16 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
           <DraftChat
             messages={messages}
             you={you.name}
-            onSend={(body) =>
-              setMessages((current) => [
-                ...current,
-                { id: messageId.current++, kind: 'said', author: you.name, body },
-              ])
-            }
+            onSend={(body) => {
+              if (isMultiplayer && config.roomId) {
+                sendChatMessage(config.roomId, you.name, body)
+              } else {
+                setMessages((current) => [
+                  ...current,
+                  { id: messageId.current++, kind: 'said', author: you.name, body },
+                ])
+              }
+            }}
           />
         </div>
 
