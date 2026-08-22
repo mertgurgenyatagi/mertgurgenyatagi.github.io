@@ -1,0 +1,48 @@
+INTRODUCTION
+
+"#footydraft" is a website where friends can come together and draft football players in various game formats, scopes and constraints. They are also able to add bots to their lobbies, or simply play single player against them. There is no scoring system. Players simply compare their squads, can share them with others, etc. It should be noted that a formation of 4-2-3-1, comprising of GK,CB,CB,LB,RB,CDM,CM,AMF,LW,RW,ST is constant and can never change. There are chat boxes present in lobbies at all times.
+
+There are three configuration mechanics: Format, Scope and Constraints.
+
+
+FORMATS
+
+Three formats exist: Auction, Deal or No Deal, Free Pick and Spin the Wheel.
+
+
+AUCTION
+	
+Assume there are three players in the lobby; John, Paul and Ringo. They each start with a budget, let's say 1 B euros. One footballer comes up (I might switch between footballer and player accidentally throughout the course of this project, please attempt to decipher from the context). Each player bids on the footballer in real time. Now, the auction doesn't start at 0. It starts at some predetermined starting value set for the footballer. If no one bids, the footballer is gone. The person who bid the highest gets that player and can place them wherever in their current 11 that he can play at. The players can also switch up the way their footballers fit in their formation in real time. They also have a "graveyard". Any purchased footballer goes into this graveyard. Players then place them into their formations. A player can end up with footballers in their graveyards, but these are not a part of their final lists. They're not substitutions. This graveyard mechanic allows players to upgrade their players or block other participants from getting certain footballers etc. I have not decided what happens when you run out of money or have very little money, or how to choose the footballers in the pool such that all positions are accounted for, or how to choose the footballers in general. Those are kind of left up to you.
+
+
+DEAL OR NO DEAL
+
+Assume there are three players in the lobby; John, Paul and Ringo. One position is selected at random, say, CDM. There are n*2 boxes, so 6 in this case. All of which contain a player that can play CDM. John opens a box. The player inside is revealed. He chooses whether to stick with it or "hear the offer". Paul opens a box. Same thing. Ringo opens a box. Same thing. Suppose Paul stuck with it, but John and Ringo chose to hear the offer. After that, the AI proposer, based on the quality of the unopened boxes, proposes a player to John (that is not in any of the boxes). John can either take it or "go back to the boxes" for a second time. If he doesn't take it, the same player is offered to Ringo. If he takes it, another player is offered to Ringo. Suppose they both chose to "go back to the boxes". John opens a box, and it's the player he has to take. Then Ringo opens a box, and it's the player he has to take. The round is over. Another position is selected at random, say, CB. This time Paul goes first. And so on and so on. They also have a "graveyard". Any purchased footballer goes into this graveyard. Players then place them into their formations. A player can end up with footballers in their graveyards, but these are not a part of their final lists. They're not substitutions. This graveyard mechanic allows players to upgrade their players or block other participants from getting certain footballers etc. I have not decided what happens when you run out of money or have very little money, or how to choose the footballers in the pool such that all positions are accounted for, or how to choose the footballers in general. Those are kind of left up to you.
+
+
+FREE PICK
+
+Assume there are three players in the lobby; John, Paul and Ringo. John goes first and literally chooses any player in the pool. Then Paul goes and does the same. Then Ringo. Then Ringo again, in a snake draft. 11 picks in total. No graveyard. That's it.
+
+
+SPIN THE WHEEL
+
+I'm not entirely sure how this is going to work. It's something depending on the scope. If you pick "Top 5 Leagues", then you can spin a wheel of clubs, leagues or nationalities and free pick in a snake draft. If you pick a specific league, then you can spin a wheel of clubs or nationalities and free pick in a snake draft. Something like that. Obviously the wheel is spun every pick. 
+
+
+
+SCOPE
+
+Three scopes exist: All players, Top 5 leagues, one specific league or one specific nationality. Pretty self explanatory.
+
+
+
+CONSTRAINTS
+
+Four constraints are possible: 1 per club, 3 per club, 1 per nationality, 3 per nationality. Pretty self explanatory.
+
+
+
+THE AI THING
+
+Before we discuss this, we need to get the rules of the game straight. Please see my text message about questionnaires.

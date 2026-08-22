@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-08-19",
+    "macrostructure": "Index-First, Split Studio, Bento Grid, Map/Diagram, Catalogue, Workbench, Stat-Led, Ecosystem Index, Component Playground, Marquee Hero, Narrative Workflow, Conversational FAQ, Portfolio Grid, Type Specimen, Photographic, Manifesto, Long Document, Specimen, Quote-Led, Letter",
+    "theme": "custom",
+    "theme_axes": "dark paper band / display-condensed roman / warm accent (~40deg)",
+    "vibe": "floodlit, austere, competitive",
+    "enrichment": "E-photographic — stadium.webp, real player photos, full-colour club crests",
+    "brief": "#footydraft FREE PICK DRAFT screen — exhibition at mockups/free-pick.html. 20 of 21 macrostructures, one per frame; Feature Stack excluded (needs scroll). Petrol FIXED, no switcher; type held to Oswald+Inter so all variety is structural and the winner ports without a type swap. NO MOTION — static first-look only, by instruction. One internally consistent draft state across all 20: Free Pick / Top 5 leagues / 1 per club / 4 drafters / round 5 of 11 / pick 18 of 44 / your turn / 9s. Every player, club, crest, nation and age verified against player_data.csv; config verified viable against src/data/draftViability.ts. Design decision: NO ability ratings and NO pool counts on screen (data-model facts, PROJECT.md keeps them off), and Free Pick has no currency — so the only numerals are the clock, the round and the pick number. Unavailable rows dimmed WHOLE so crests are never filtered. RESOLVED — Mert picked off this run."
+  },
+  {
+    "date": "2026-08-17",
+    "macrostructure": "Split Studio",
+    "theme": "custom",
+    "theme_axes": "dark paper band / display-condensed roman / warm accent (~40°)",
+    "vibe": "floodlit, austere, competitive",
+    "enrichment": "E-photographic — stadium.webp cornered into the settings half; full-colour league marks",
+    "brief": "#footydraft multiplayer lobby at /lobby/:code, plus the name gate that both Create and Join pass through. No exhibition — a deliberate re-use of Split Studio from the single-player lobby at different knob values: the room code takes the left half's display slot instead of a heading, a chat fills the dead space under the table, and host/guest are two readings of the same settings panel (interactive vs. static chips). Petrol fixed, Oswald+Inter, crests unfiltered. Project rule changed this session: FAKE THE FUNCTIONALITY — screens simulate the backend they don't have (people arrive on a stagger, chat sends, a handed-over code already has a host behind it) instead of shipping honest dead ends."
+  },
+  {
+    "date": "2026-08-17",
+    "macrostructure": "Long Document, Bento Grid, Map/Diagram, Split Studio, Index-First, Catalogue, Stat-Led, Letter, Marquee Hero, Manifesto, Photographic, Component Playground, Conversational FAQ, Quote-Led, Narrative Workflow",
+    "theme": "custom",
+    "theme_axes": "dark paper band / display-condensed roman / warm accent (~40°)",
+    "vibe": "floodlit, austere, competitive",
+    "enrichment": "E-photographic — stadium.webp, 12 face crops, full-colour club crests and league marks",
+    "brief": "#footydraft single-player lobby — exhibition at mockups/lobby-solo.html. 15 of a planned 20; stopped early because layout 04 'Ready room' (Split Studio) was picked. Palette FIXED to petrol (no switcher, unlike the home exhibition) and type held to Oswald+Inter, so all variety is structural — per-frame voices are case/tracking/weight knobs only. Crests render full colour and unfiltered by explicit instruction. 16-20 (Type Specimen, Ecosystem Index, Portfolio Grid, Workbench, Specimen) never built. RESOLVED → 04 ships."
+  },
+  {
+    "date": "2026-08-17",
+    "macrostructure": "Type Specimen",
+    "theme": "custom",
+    "theme_axes": "dark paper band / display-condensed roman / warm accent (~40°)",
+    "vibe": "floodlit, austere, competitive",
+    "enrichment": "E-photographic — stadium.webp clipped into the wordmark; face-anchored player crops",
+    "brief": "#footydraft home screen, shipped into src/. Layout 04 of the exhibition (\"The wall\") on the petrol palette, picked by Mert. Deliberate re-use of Type Specimen from the exhibition run below at different knob values: real app rather than a frame, motion on (init sequence + ambient plate drift + cycling portrait), formats re-cut as four equal tiles under a titled rule, lobby controls split create-left / join-right. Petrol's four primes are now the app's tokens in src/styles/index.css."
+  },
+  {
+    "date": "2026-08-17",
+    "macrostructure": "Marquee Hero, Index-First, Bento Grid, Type Specimen, Photographic, Long Document, Split Studio, Map/Diagram, Narrative Workflow, Stat-Led, Manifesto, Catalogue, Specimen, Component Playground, Workbench, Conversational FAQ, Letter, Quote-Led, Ecosystem Index, Portfolio Grid",
+    "theme": "custom",
+    "theme_axes": "all three bands / eleven display voices / all four accent-hue families",
+    "vibe": "floodlit terrace, printed programme, chalkboard",
+    "enrichment": "E-photographic — stadium.webp, twenty distinct bleed treatments",
+    "brief": "#footydraft home screen — 20-layout exhibition, mockups/home.html. 20-palette pool (4 primes each), 5 assigned per layout. Only Feature Stack unused (needs scroll; the app never scrolls). Next run: reach for Feature Stack, or re-use a macrostructure only with different knob values."
+  }
+]

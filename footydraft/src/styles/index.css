@@ -1,0 +1,1706 @@
+@import 'tailwindcss';
+
+/* Hallmark · macrostructure: Type Specimen ("The wall", layout 04 of the exhibition)
+ * theme: custom — "ember" · genre: atmospheric · tone: floodlit, austere, competitive
+ * primes: ground #121009 · ink #ededec · accent #fbbf24 · tint #2b241a
+ *         + live #26a37b · link #193cb8
+ * axes: warm near-black band / display-condensed roman / gold accent (~43°)
+ * enrichment: E-photographic — stadium.webp clipped into the wordmark, plus
+ *             face-anchored player crops (scripts/images/make_face_crops.py)
+ * pre-emit critique: P5 H5 E4 S5 R4 V4
+ */
+
+/* `static` so the derived tokens below survive Tailwind's unused-variable pruning —
+   most of them are read by hand-written CSS and inline styles, not by a utility. */
+@theme static {
+  /* ---- The primes. Everything else is mixed from these. ----
+
+     Four of them are the ground/ink/accent/tint set the app has always had.
+     Two more were added 2026-08-22: the palette this now matches carries three
+     saturated colours rather than one, and they are not interchangeable —
+     each names a different kind of thing, which is what keeps three from
+     reading as decoration:
+
+       accent (gold)  — value and ownership. Money, your seat, your rank, the
+                        selected chip, the primary CTA. The loudest thing on
+                        any screen, and still the only colour that means "act".
+       live  (green)  — presence and the present tense. Somebody is here,
+                        somebody is thinking, a clock is running, a person said
+                        this. Never actionable, which is why it can sit beside
+                        gold without competing with it.
+       link  (blue)   — the one action that leaves the app: copying an invite
+                        out to somewhere else. Exactly one control wears it.
+
+     ---- */
+  --color-ground: #121009;
+  --color-ink: #ededec;
+  --color-accent: #fbbf24;
+  --color-tint: #2b241a;
+  --color-live: #26a37b;
+  --color-link: #193cb8;
+
+  /* ---- Derived, once. No other colour is declared anywhere in the app. ----
+
+     The percentages are not eyeballed: they were solved against the reference
+     palette by evaluating `color-mix(in oklab, …)` numerically and picking the
+     mix that lands on each measured value, so a change to a prime moves every
+     step below it and keeps the same relationship. ---- */
+  --color-surface: color-mix(in oklab, var(--color-ground) 97%, var(--color-ink));
+  --color-surface-2: color-mix(in oklab, var(--color-ground) 91%, var(--color-ink));
+  --color-line: color-mix(in oklab, var(--color-ground) 86%, var(--color-ink));
+  --color-line-strong: color-mix(in oklab, var(--color-ground) 73%, var(--color-ink));
+  --color-muted: color-mix(in oklab, var(--color-ink) 60%, var(--color-ground));
+  --color-dim: color-mix(in oklab, var(--color-ink) 41%, var(--color-ground));
+  --color-faint: color-mix(in oklab, var(--color-ink) 22%, var(--color-ground));
+  --color-accent-ink: color-mix(in oklab, var(--color-accent) 3%, var(--color-ground));
+  --color-accent-soft: color-mix(in oklab, var(--color-accent) 16%, var(--color-ground));
+  --color-accent-line: color-mix(in oklab, var(--color-accent) 43%, var(--color-ground));
+  --color-live-soft: color-mix(in oklab, var(--color-live) 15%, var(--color-ground));
+  --color-live-line: color-mix(in oklab, var(--color-live) 42%, var(--color-ground));
+  --color-link-ink: color-mix(in oklab, var(--color-link) 6%, var(--color-ink));
+  --color-link-hover: color-mix(in oklab, var(--color-link) 82%, var(--color-ink));
+  /* The one colour that goes *below* the ground: the band that swallows the
+     "play with friends" title when a format is hovered. */
+  --color-shade: color-mix(in oklab, var(--color-ground) 78%, black);
+
+  /* ---- Corner radius. ----
+     Overrides Tailwind's own `--radius-*` scale, so `rounded-sm|md|lg` are
+     this app's three steps and nothing has to reach for an arbitrary value:
+     `sm` for a chip, a row or a control, `md` for a tile, `lg` for a panel.
+     Squared corners were what the exhibition frames drew; the palette this
+     screen now matches rounds everything, and a hairline-bordered dark panel
+     needs the radius to read as an object rather than as a ruled region. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+
+  /* ---- The wheel's five slices. The second licensed exception. ----
+     Spin the Wheel draws a league's identity as a field of colour rather than
+     as a mark, which is the same claim the crests make and the same answer:
+     a league recoloured into the palette is a league misnamed. They are the
+     only colours in the app outside the primes that are not artwork, and they
+     exist for exactly one element. Every one is mixed 52% into the *ground*
+     rather than into black, so the wheel sits in the page's own warm family
+     rather than on top of it — and the accent rules are untouched, because
+     none of them is an accent: nothing is ever actionable because it is one
+     of these. */
+  --color-league-premier-league: color-mix(in oklab, #3b1858 52%, var(--color-ground));
+  --color-league-la-liga: color-mix(in oklab, #f74942 52%, var(--color-ground));
+  --color-league-serie-a: color-mix(in oklab, #036ef7 52%, var(--color-ground));
+  --color-league-bundesliga: color-mix(in oklab, #ca0213 52%, var(--color-ground));
+  --color-league-ligue-1: color-mix(in oklab, #091b3c 52%, var(--color-ground));
+
+  /* ---- Type. Two families only. The wordmark is the logo, and gets the third. ---- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Oswald', 'Arial Narrow', Impact, sans-serif;
+  --font-wordmark: 'Bebas Neue', 'Oswald', Impact, sans-serif;
+
+  /* ---- Motion. Three curves, no browser default `ease` anywhere. ---- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  html {
+    /* clip, never hidden — `hidden` on the root promotes the element to a
+       scroll container and breaks position: sticky further down the tree. */
+    overflow-x: clip;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* The page never scrolls. */
+    overflow: hidden;
+    overscroll-behavior: none;
+    user-select: none;
+  }
+
+  /* An I-beam appears over editable text and nowhere else. */
+  *,
+  *::before,
+  *::after {
+    cursor: default;
+  }
+
+  /* Descendants are listed explicitly: the `*` rule above matches a span inside
+     a button just as well as the button, so without these the cursor flicks
+     back to an arrow the moment it crosses the label. */
+  a,
+  a *,
+  button,
+  button *,
+  [role='button'],
+  [role='button'] *,
+  label,
+  label *,
+  summary,
+  summary * {
+    cursor: pointer;
+  }
+
+  /* After the rules above, which match these at equal specificity. */
+  input,
+  textarea {
+    cursor: text;
+    user-select: text;
+  }
+
+  button:disabled,
+  button:disabled * {
+    cursor: not-allowed;
+  }
+
+  /* Never animated — a focus ring that fades in is a focus ring you can miss. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  ::placeholder {
+    color: var(--color-dim);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================================
+   THE APP FRAME
+   Two insets, declared once, under every route.
+
+   Every screen in this app is a single non-scrolling viewport that divides its
+   own height up between a header, some rows and a footer. That only works if
+   the height it divides is the height it actually has — and each route used
+   to measure that for itself: Home, both lobbies, the Free Pick screen and the
+   Orbit screen each wrote their own `px-[clamp(...vw...)]` and their own
+   top/bottom padding, at four slightly different numbers, and the bottom
+   figure was inflated well past the others to guard against browser chrome a
+   route can't see coming. The result was four screens that were each
+   internally lopsided and didn't agree with each other either.
+
+   `dvw`/`dvh` remove the reason for the guess: in every evergreen browser they
+   already report the window's actual rendered content box — tab strip,
+   address bar, bookmarks bar and taskbar are already subtracted before the
+   page ever sees a number. So the shell declares exactly two tokens, here, and
+   every route reads both instead of inventing its own:
+
+   **`--app-inset-x`** — left padding and right padding, always the same
+   value. **`--app-inset-y`** — top padding and bottom padding, always the
+   same value. The two don't have to agree with *each other* (one is driven by
+   the window's width, the other by its height, so a wide window naturally
+   gets more breathing room on the sides than top-to-bottom, and vice versa on
+   a tall one) — the guarantee is only ever left-equals-right and
+   top-equals-bottom, in every screen, at once.
+
+   Routes spend both as **padding on their own content**, never on this
+   element — a full-bleed surface (the lobby's left half, the home page's
+   plate) still has to reach every edge of the window; it is only what you
+   read that stops short of it. So the frame stays exactly the size of the
+   viewport, and nothing needs a short-viewport override any more: the clamp's
+   own floor already carries every screen down to the same minimum together.
+
+   **A size container.** Routes are `h-full` inside it and size their vertical
+   rhythm in `cqh` rather than `vh`, which means every screen divides up the
+   box it was actually handed rather than the window. That is the same number
+   as `vh` today and will not be the moment anything is ever nested inside the
+   shell. Component sizes that used to jump between two hand-picked pixel
+   values at one breakpoint (the draft clock, the portrait, the pitch nodes,
+   the wheel's seat discs and report type) are written as a single `clamp()`
+   against `cqh` instead, so they move with the box continuously rather than
+   at one remembered height — the point being that a size chosen anywhere in
+   this app can be dialled up or down later without re-deriving a breakpoint
+   pair to match it.
+   ============================================================================ */
+.app-frame {
+  --app-inset-x: clamp(1.5rem, 4.5dvw, 4rem);
+  --app-inset-y: clamp(1.5rem, 4.5dvh, 4rem);
+  container-type: size;
+  container-name: app;
+}
+
+/* ============================================================================
+   THE STADIUM PLATE
+   One photograph, faded out downward, sitting under everything. The wordmark
+   clips a second copy of it straight into the letterforms, so the same picture
+   reads as both the ground and the fill.
+   ============================================================================ */
+
+/* The backdrop's own root, under every route.
+   `isolation` bounds the `mix-blend-mode: color` tint below to this subtree,
+   so it can never take the app's content as its backdrop; `contain` bounds
+   the reverse, which is the half that costs. A full-viewport blended layer
+   over an image that scales for thirty seconds without stopping is the most
+   expensive thing on any of these screens, and without containment a repaint
+   anywhere in front of it — four hundred pool rows changing colour under a
+   pointer, say — can drag it back through the compositor with them. */
+.backdrop-root {
+  isolation: isolate;
+  contain: layout paint style;
+}
+
+/* Pulled hard over the top third on purpose: that drops the blank sky almost to
+   the ground colour, so the roofline reads as a silhouette rather than a bright
+   slab behind the wordmark. The bottom dissolves rather than stopping on a line. */
+.plate {
+  opacity: 0.3;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.08) 0%,
+    rgb(0 0 0 / 0.34) 16%,
+    #000 36%,
+    #000 52%,
+    rgb(0 0 0 / 0.26) 74%,
+    transparent 90%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.08) 0%,
+    rgb(0 0 0 / 0.34) 16%,
+    #000 36%,
+    #000 52%,
+    rgb(0 0 0 / 0.26) 74%,
+    transparent 90%
+  );
+}
+
+.plate img {
+  filter: grayscale(1) contrast(1.4) brightness(0.2);
+}
+
+/* Takes hue and saturation from the tint and keeps the photo's own luminance, so
+   the plate lands in the palette's colour family instead of sitting on top of it
+   as neutral grey. Held deliberately low — the blend reads saturation as an
+   absolute RGB spread, so it climbs fast. */
+.plate-tint {
+  background: var(--color-tint);
+  mix-blend-mode: color;
+  opacity: 0.62;
+}
+
+/* The lobby's copy of the same photograph: cornered into the bottom-right of
+   the settings half instead of running full bleed, dissolving toward the top
+   left so the chip groups always sit on flat ground. */
+.plate-corner {
+  opacity: 0.36;
+  -webkit-mask-image: radial-gradient(
+    125% 125% at 100% 100%,
+    #000 14%,
+    rgb(0 0 0 / 0.55) 48%,
+    transparent 82%
+  );
+  mask-image: radial-gradient(
+    125% 125% at 100% 100%,
+    #000 14%,
+    rgb(0 0 0 / 0.55) 48%,
+    transparent 82%
+  );
+}
+
+.plate-corner img {
+  filter: grayscale(1) contrast(1.25) brightness(0.32);
+}
+
+/* ============================================================================
+   THE LOBBY'S VERTICAL RHYTHM
+   Four settings groups, a table and a footer all have to land above the fold,
+   and this page doesn't scroll. A `clamp()` can't do it on its own: at 568px
+   tall the middle term is still comfortably inside the range, so the spacing
+   never actually reaches its minimum. Height is the real constraint, so it's
+   a height query — one place that says what "short" means for this screen.
+   Against the frame's box rather than the window: see `.app-frame` above.
+   ============================================================================ */
+.lobby {
+  --lobby-gap: clamp(1rem, 4.6cqh, 2.75rem);
+  --lobby-chip-py: clamp(0.45rem, 1.2cqh, 0.6875rem);
+  --lobby-chip-mt: clamp(0.4rem, 1.25cqh, 0.625rem);
+  --lobby-crest: clamp(2.25rem, 5.4cqh, 3rem);
+}
+
+@container app (max-height: 720px) {
+  .lobby {
+    --lobby-gap: 0.8rem;
+    --lobby-chip-py: 0.35rem;
+    --lobby-chip-mt: 0.3rem;
+    --lobby-crest: 2rem;
+  }
+}
+
+/* The friends lobby's chat sits under the table, in the space the solo lobby
+   leaves empty. It's the first thing to go when the viewport is too short for
+   it to render as more than a sliver — but that point is much lower than the
+   720px the rest of the lobby's spacing collapses at (measured: the seats and
+   four settings groups alone are comfortable well under 600px tall; chat is
+   what needs the room). A first pass reused the 720px spacing breakpoint here
+   too and hid chat on completely ordinary, wide desktop windows that just
+   happened to be under 720px tall — most non-maximized browser windows are.
+   560px is where the chat log itself would drop under ~45px, i.e. useless. */
+.lobby-chat {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .lobby-chat {
+    display: flex;
+  }
+}
+
+@media (min-width: 768px) {
+  @container app (max-height: 560px) {
+    .lobby-chat {
+      display: none;
+    }
+  }
+}
+
+/* Chrome text isn't selectable anywhere in the app; what people actually said
+   to each other is. */
+.lobby-chat li {
+  user-select: text;
+}
+
+/* The one scrolling region in the app — the page itself never scrolls, but a
+   conversation has to go somewhere. The default bar is a bright slab against
+   a near-black ground, so it gets the palette like everything else. */
+.chat-log {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.chat-log::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-log::-webkit-scrollbar-button {
+  display: none;
+}
+
+.chat-log::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-log::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 3px;
+}
+
+/* ============================================================================
+   THE NAME GATE
+   A real <dialog>, so the page behind it goes inert and Escape closes it
+   without any of that being hand-rolled. The scrim is drawn inside the dialog
+   rather than on ::backdrop, so it survives the non-modal fallback.
+   ============================================================================ */
+.gate {
+  border: 0;
+}
+
+.gate::backdrop {
+  background: transparent;
+}
+
+/* Depth is an offset directional shadow. No halo, no coloured blur. */
+.gate-panel {
+  border-radius: var(--radius-lg);
+  box-shadow: 10px 10px 0 0 var(--color-shade);
+}
+
+/* Crests render full colour and unfiltered — a recoloured badge is a falsified
+   badge. This adds an outline *around* the artwork rather than touching it:
+   four 1px offsets, chained so each shadow falls on the last and the corners
+   close up. It exists because two of the five league marks are dark and would
+   otherwise disappear into the ground. A muted line tone, not full ink — the
+   outline only needs to separate the mark from the ground, not frame it.
+
+   **It is opt-in, and deliberately so.** Four chained `drop-shadow()`s is four
+   filter passes over a rasterised SVG, per crest, on every repaint that
+   touches it — which on a four-hundred-row pool meant sixteen hundred of them
+   re-running as rows scrolled in and out of `content-visibility` and as a row
+   changed colour under the pointer. That is where the pool's cost was. The
+   five league marks in the lobby keep it (`Crest stroked`); everything else
+   uses `.crest-plain`, which is the same unfiltered artwork with no outline. */
+.crest {
+  --crest-stroke: color-mix(in oklab, var(--color-ink) 40%, transparent);
+  filter: drop-shadow(0 1px 0 var(--crest-stroke)) drop-shadow(0 -1px 0 var(--crest-stroke))
+    drop-shadow(1px 0 0 var(--crest-stroke)) drop-shadow(-1px 0 0 var(--crest-stroke));
+}
+
+.crest-plain {
+  /* Nothing to declare — it exists so a crest can be addressed without being
+     filtered, and so the two cases read differently in the markup. */
+  object-fit: contain;
+}
+
+/* The stand-in for a club outside the top five, where there is no mark on file
+   and none coming. A ring in the same footprint: same size, same place in the
+   row, nothing recoloured and no broken-image glyph where a badge should be. */
+.crest-ring {
+  border: 1.5px solid color-mix(in oklab, var(--color-ink) 46%, transparent);
+  background: color-mix(in oklab, var(--color-ink) 5%, transparent);
+}
+
+/* A player portrait inside the letterforms, one of several stacked layers
+   cross-fading by opacity. One image per instance, sized to cover the whole
+   two-line box — no tiling. Grayscale because the crops are in colour,
+   unlike stadium.webp which is monochrome at the source.
+
+   **And dotted**, like every other portrait on the site. The same mechanism
+   the draft screens use (`.dotgrid` below): one repeating radial gradient,
+   sized in `%` of its own tile so it punches a circle out of each cell, laid
+   over the picture as a mask. Here it sits on top of `background-clip: text`,
+   so the picture is clipped to the letterforms first and then perforated —
+   the gaps between the dots go fully transparent and the stadium plate reads
+   through them rather than being painted over. The tile is a fixed pitch
+   rather than a measured one: the wordmark is the only frame on the site
+   whose box the layout already pins, so there is nothing here for
+   `Dotgrid.tsx`'s ResizeObserver to work out. */
+.wordmark-fill {
+  --wordmark-cell: clamp(6px, 0.85vw, 12px);
+  background-image: var(--wordmark-image);
+  background-size: cover;
+  background-position: center 30%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: grayscale(1) contrast(1.35) brightness(1.1);
+  -webkit-mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  -webkit-mask-size: var(--wordmark-cell) var(--wordmark-cell);
+  mask-size: var(--wordmark-cell) var(--wordmark-cell);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+
+/* ============================================================================
+   MOTION
+   Compositor-only — transform, opacity and clip-path. Nothing per-frame in JS.
+   The page initialises as one continuous move: plate, then wall, then the
+   controls underneath it.
+   ============================================================================ */
+
+@keyframes fd-plate {
+  from {
+    opacity: 0;
+    transform: scale(1.07);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fd-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes fd-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The quiet register: mostly a fade, with just enough travel to give it a
+   direction. The lobby initialises out of this one rather than the wall's
+   wipe — nothing there needs announcing. */
+@keyframes fd-soft {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 7px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* The wall gets printed left to right. */
+@keyframes fd-wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* A hairline riding the wipe's edge, gone by the time it lands. */
+@keyframes fd-scan {
+  from {
+    opacity: 0;
+    transform: translate3d(-100%, 0, 0);
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Rules draw rather than appear. */
+@keyframes fd-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fd-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Ambient. A slow, almost unnoticeable zoom over 30s, anchored a bit below
+   centre (not straight-on) so it reads as pushing into the stand rather than
+   zooming on a fixed point. Fades out and back in at the loop boundary so the
+   reset to frame one is a crossfade, not a jump. */
+@keyframes fd-plate-drift {
+  0% {
+    transform: scale(1.26);
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
+}
+
+@keyframes fd-face-drift {
+  0%,
+  100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.09);
+  }
+}
+
+/* Runs once per portrait, restarted by React keying on the index. */
+@keyframes fd-tick {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.fx {
+  animation-duration: 620ms;
+  animation-timing-function: var(--ease-out);
+  animation-fill-mode: both;
+}
+
+.fx-plate {
+  animation-name: fd-plate;
+  animation-duration: 1500ms;
+}
+.fx-rise {
+  animation-name: fd-rise;
+}
+.fx-fade {
+  animation-name: fd-fade;
+}
+.fx-soft {
+  animation-name: fd-soft;
+  animation-duration: 780ms;
+}
+.fx-wipe {
+  animation-name: fd-wipe;
+  animation-duration: 860ms;
+}
+.fx-scan {
+  animation-name: fd-scan;
+  animation-duration: 860ms;
+}
+.fx-draw {
+  animation-name: fd-draw;
+  animation-duration: 720ms;
+  transform-origin: left center;
+}
+.fx-pop {
+  animation-name: fd-pop;
+  animation-duration: 540ms;
+}
+.plate-drift {
+  transform-origin: 50% 75%;
+  animation: fd-plate-drift 30s linear infinite;
+  will-change: transform, opacity;
+}
+.face-drift {
+  animation: fd-face-drift 16s var(--ease-in-out) infinite;
+  will-change: transform;
+}
+.fx-tick {
+  animation-name: fd-tick;
+  animation-timing-function: linear;
+  transform-origin: left center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================================
+   THE DRAFT SCREEN
+   Four numbered sections, hairline-ruled, in one frame-height column that never
+   scrolls. The rules below are the ones a utility class cannot state: the
+   column geometry at three widths, and the vertical rhythm at two heights.
+   ============================================================================ */
+
+.draft {
+  /* Every size below is a single `clamp()` against `cqh`, scaled so the
+     preferred term lands on its own max at the 800px-tall container the
+     layout was drawn at (`max / 8`, since 8cqh = 800px = 100%) and floors at
+     the value that was hand-picked for a short viewport — so there's one
+     formula per size instead of a jumped pair, and it moves continuously
+     between them rather than snapping at one remembered height. */
+  --draft-clock: clamp(42px, 7.5cqh, 60px);
+  --draft-portrait: clamp(260px, 40cqh, 320px);
+  /* The narrator is the centre of the top bar on every draft screen and is
+     sized to be read from across a desk, not scanned for. */
+  --draft-narrator: clamp(14px, 2.35cqh, 20px);
+  --draft-node: clamp(60px, 8.5cqh, 68px);
+  --draft-name: 184px;
+  --draft-name-size: 18px;
+}
+
+/* One column, and the two halves of the screen take turns. Below this width
+   there is no honest way to show a pool, a pitch and a rail at once. */
+.draft-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* Explicit, because an `auto` row is sized by its tallest item — so the one
+     column whose content did not want to shrink would silently set the height
+     of all three and push the whole grid past the fold. */
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.draft-rail {
+  display: none;
+  min-height: 0;
+}
+
+/* One phone-width column puts the whole pitch inside 162px, and eleven name
+   plates cannot be laid over that without overlapping each other — which is a
+   worse read than not having them. The crests stay, the shape stays, and the
+   names are a tap away on the pool rows that put them there. */
+@media (max-width: 767px) {
+  .pitch-name {
+    display: none;
+  }
+}
+
+/* On a narrow pitch the three attacking name plates are close enough to touch,
+   so they give up width and point size before they give up being readable. The
+   full name stays on the row in the pool, and on the plate's own title. */
+@media (max-width: 1179px) {
+  .draft {
+    --draft-name: 144px;
+    --draft-name-size: 17px;
+  }
+}
+
+/* Two columns: the board you pick from and the board you are building. The
+   rail's clock moves up into the top bar rather than disappearing. */
+@media (min-width: 768px) {
+  .draft-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(248px, 30vw, 320px);
+  }
+}
+
+/* Three. The rail comes back, narrower than the exhibition drew it — the space
+   it gives up goes to the pitch, which is the half of the screen that had to
+   become readable rather than merely legible. */
+@media (min-width: 1180px) {
+  .draft-grid {
+    grid-template-columns: 270px minmax(0, 1fr) clamp(320px, 27vw, 372px);
+  }
+
+  .draft-rail {
+    display: flex;
+  }
+}
+
+/* Chat is the first thing to go when the rail runs out of height, exactly as
+   it is in the lobby — and for the same reason: below this it renders as a
+   sliver that can hold one line of a conversation. */
+.draft-chat {
+  display: flex;
+}
+
+@container app (max-height: 620px) {
+  .draft-chat {
+    display: none;
+  }
+}
+
+/* What people actually said to each other is selectable. Chrome is not. */
+.draft-chat li {
+  user-select: text;
+}
+
+/* Four hundred ruled rows are in the DOM at once so that a footballer you
+   cannot take is still visible, struck through, where you would expect them.
+   Skipping the work for the ones outside the scroller keeps that honest and
+   cheap; the intrinsic size stops the scrollbar jumping as they resolve.
+
+   `contain: content` on top of that is what keeps a hover cheap: without it a
+   row changing colour can invalidate paint beyond its own box, and there are
+   four hundred of them under the pointer. The hover itself is a straight
+   colour swap with no transition — a 150ms ease meant nine repaints of a row
+   instead of one, every time the pointer crossed it, and this list is
+   something you sweep through rather than dwell on. */
+.pool-row,
+.wheel-row {
+  border-radius: var(--radius-sm);
+  content-visibility: auto;
+  contain: content;
+}
+
+.pool-row {
+  contain-intrinsic-size: auto 79px;
+}
+
+/* The dot-grid portrait (`Dotgrid.tsx`) — see HANDOVER.md Part 2. Every
+   player's `players-cells/{slug}.webp` is the same fixed 80×100 grid of flat,
+   averaged cell colours, cropped from the standardised `players-4x5` face
+   crop. The mask geometry (one radial gradient, sized in `%` of *its own*
+   tile, so it punches a circle out of every cell regardless of that tile's
+   pixel size) is the only part that's a static rule — it's identical for
+   every player and every frame. `background-size`/`position` and
+   `mask-size`/`position` are NOT: an earlier version expressed those as
+   percentages too, assuming one fixed aspect ratio per frame, and it
+   stretched non-uniformly on every container that didn't happen to match
+   that guess (which, at this site's fluid sizing, was most of the time).
+   `Dotgrid.tsx` now measures each instance's actual rendered box via
+   `ResizeObserver` and sets those four in px, from one shared scale factor —
+   so dots stay circular at any container size instead of only at one assumed
+   ratio. */
+.dotgrid {
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  filter: saturate(1.6);
+}
+
+/* The scroll containers: the pool and the chat log. The default bar is a
+   bright slab against a near-black ground, so it gets the palette too. */
+.scroller {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.scroller::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroller::-webkit-scrollbar-button {
+  display: none;
+}
+
+.scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroller::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 3px;
+}
+
+/* The draft's plate: a band down the left edge, dissolving to the right so the
+   first column always sits on flat ground. Fainter than either of the other
+   two placements — this screen is busier than the ones before it. */
+.plate-edge {
+  opacity: 0.26;
+  -webkit-mask-image: linear-gradient(to right, #000 0%, rgb(0 0 0 / 0.4) 46%, transparent 88%);
+  mask-image: linear-gradient(to right, #000 0%, rgb(0 0 0 / 0.4) 46%, transparent 88%);
+}
+
+.plate-edge img {
+  filter: grayscale(1) contrast(1.3) brightness(0.24);
+}
+
+/* Somebody else is thinking. A slow opacity breath on a 7px dot — the quiet
+   register the rest of the app is in, and nothing that moves in the corner of
+   your eye while you are reading four hundred names. */
+@keyframes fd-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
+.narrator-pulse {
+  animation: fd-breathe 1900ms var(--ease-in-out) infinite;
+}
+
+/* ============================================================================
+   THE SPIN THE WHEEL DRAFT SCREEN — "The Orbit"
+   Layout 08 of the exhibition: one sun and four satellites, none of them
+   touching it and none of them close to its size. The rules a utility class
+   cannot state are the orbit's own geometry at three widths, the wheel, and
+   the two controls the Free Pick screen has no equivalent of.
+   ============================================================================ */
+
+.spin {
+  --spin-gap-x: clamp(1.1rem, 3.4vw, 3.4rem);
+  --spin-gap-y: clamp(0.6rem, 1.9cqh, 1.3rem);
+  /* The wheel's own cell is 25% smaller than it used to be on both axes — the
+     width comes off the wheel column below, and the height comes off this row,
+     handed straight to --spin-row-bottom so chat (the wheel's column-mate in
+     the bottom row) is what gets it back, not the shared middle row that pool
+     and pitch also read from. */
+  --spin-row-top: clamp(6rem, 18.75cqh, 10.5rem);
+  --spin-row-bottom: clamp(8.5rem, 24.75cqh, 14.5rem);
+  /* Single `clamp()` per size instead of a jumped pair — see the note on
+     `.draft` above for the `max / 8` reasoning. */
+  --spin-report: clamp(13.5px, 1.875cqh, 15px);
+  --spin-seat: clamp(32px, 5cqh, 40px);
+  /* Read by the shared Narrator, which `.spin` hosts in its own header rather
+     than in `.draft`'s top bar — so this screen needs its own declaration. */
+  --draft-narrator: clamp(14px, 2.35cqh, 20px);
+  /* Read by PitchView, which is shared with the Free Pick screen. The orbit
+     gives the eleven a smaller cell than the Free Pick layout does — the sun
+     takes the room — so the nodes and the name plates come down with it, a
+     little further than the proportions alone would ask for. The two centre
+     backs and the keeper stack up in the same corner of any 4-2-3-1, and the
+     smaller the pitch the sooner their plates start touching. */
+  --draft-node: clamp(44px, 6.25cqh, 50px);
+  --draft-name: 108px;
+  --draft-name-size: 14px;
+  /* Read by PlayerSpotlight's default width, now that the portrait sits
+     inside the pool panel the same way it does on the Free Pick screen —
+     `.draft` declares its own copy of this, `.spin` needs one too. */
+  --draft-portrait: clamp(260px, 40cqh, 320px);
+}
+
+/* Height is what runs out first, exactly as it does on the other three
+   screens, and a clamp() never reaches its minimum at 568px tall on its own.
+   Measured against the frame's box — see `.app-frame` above. The row heights
+   and the name plate are left as a hand-tuned pair rather than folded into
+   the clamp() treatment above: the row heights are deliberately cut harder
+   than a smooth curve would to make room for the grid beside them, and the
+   name plate's width goes up as its type goes down, which a single monotonic
+   formula can't express. */
+@container app (max-height: 780px) {
+  .spin {
+    --spin-gap-y: 0.55rem;
+    --spin-row-top: 5.625rem;
+    --spin-row-bottom: 8.375rem;
+    --draft-name: 112px;
+    --draft-name-size: 13px;
+  }
+}
+
+.spin-grid {
+  display: grid;
+  min-height: 0;
+  column-gap: var(--spin-gap-x);
+  row-gap: var(--spin-gap-y);
+  /* One column. Explicit rows, because an `auto` row is sized by its tallest
+     item — so the one area that did not want to shrink would set the height of
+     everything beside it and push the grid past the fold. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.spin-area {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Below 768px the wheel, the pool and the eleven take turns in the one cell.
+   The three panels that have nowhere to go at that width are simply not drawn:
+   the report collapses into the header line it is a longer version of, the
+   portrait has no room to be a portrait, and chat is the first thing to go
+   when a column runs out — same as it is in both lobbies. */
+.spin-area-wheel,
+.spin-area-mid,
+.spin-area-pitch {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.spin-area-turn {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.spin-area-narr,
+.spin-area-chat {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .spin:not([data-pane="wheel"]) .spin-area-wheel,
+  .spin[data-pane="wheel"] .spin-area-mid {
+    display: none;
+  }
+}
+
+@media (max-width: 1179px) {
+  .spin[data-pane="board"] .spin-area-mid,
+  .spin:not([data-pane="board"]) .spin-area-pitch {
+    display: none;
+  }
+}
+
+/* Two columns: the wheel and the table on the left, and on the right whichever
+   of the pool and the eleven is being looked at. */
+@media (min-width: 768px) {
+  .spin-grid {
+    grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
+    grid-template-areas:
+      "wheel main"
+      "turn  main";
+  }
+
+  .spin-area-wheel {
+    grid-area: wheel;
+  }
+  .spin-area-turn {
+    grid-area: turn;
+  }
+  .spin-area-mid,
+  .spin-area-pitch {
+    grid-area: main;
+  }
+}
+
+/* The orbit itself. The wheel takes two rows of the left column so it can be
+   as large as the page allows; everything else is a satellite around it. */
+@media (min-width: 1180px) {
+  .spin-grid {
+    /* The wheel column gives up 25% of its own width (1.62fr → 1.215fr);
+       the middle column — spot and pool, "the middle section" — is what
+       picks it up (1fr → 1.405fr). Column 3 is untouched. */
+    grid-template-columns: minmax(0, 1.215fr) minmax(0, 1.405fr) minmax(0, 1.1fr);
+    grid-template-rows: var(--spin-row-top) minmax(0, 1fr) var(--spin-row-bottom);
+    /* "mid" spans all three rows of column 2 — the portrait lives inside the
+       pool panel (see WheelPool.tsx), and chat is stacked under the pool
+       inside that same cell at a 60/40 height split, nested in flex rather
+       than read off these grid rows: that keeps the split exact regardless
+       of how wheel/narr/pitch end up sharing this row-track system. Turn
+       swapped into column 1, under the wheel, where chat used to sit. */
+    grid-template-areas:
+      "wheel mid  narr"
+      "wheel mid  pitch"
+      "turn  mid  pitch";
+  }
+
+  .spin-area-wheel {
+    grid-area: wheel;
+  }
+  .spin-area-narr {
+    grid-area: narr;
+    display: flex;
+  }
+  .spin-area-mid {
+    grid-area: mid;
+  }
+  .spin-area-turn {
+    grid-area: turn;
+  }
+  .spin-area-pitch {
+    grid-area: pitch;
+  }
+  .spin-area-chat {
+    display: flex;
+  }
+}
+
+/* Chat goes when the row it lives in would render it as a sliver that holds
+   one line of a conversation. Nested in flex rather than read off the grid's
+   own rows, the pool is the only thing left in "mid" once chat is hidden, so
+   it takes the space back on its own — no grid reassignment needed. */
+@media (min-width: 1180px) {
+  @container app (max-height: 620px) {
+    .spin-area-chat {
+      display: none;
+    }
+  }
+}
+
+/* ---- The surfaces the satellites sit on. ---- */
+
+/* Held just off opaque so the stadium behind the screen reads through them as
+   texture rather than stopping dead at every panel edge. */
+.spin-panel {
+  background: color-mix(in oklab, var(--color-surface) 86%, transparent);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+/* Same trick as the Free Pick pool — declared with it above; only the
+   remembered row height differs, this list being the tighter of the two. */
+.wheel-row {
+  contain-intrinsic-size: auto 43px;
+}
+
+/* ============================================================================
+   THE WHEEL
+   One conic gradient for the face and one transform for the spin — the whole
+   thing is a single composited layer, which is what makes a three-second
+   rotation free while four hundred rows sit next to it.
+   ============================================================================ */
+
+/* A size container, so the wheel can be told to be the largest circle that
+   fits its cell in one expression, without measuring anything in JS. */
+.wheel-stage {
+  container-type: size;
+  display: grid;
+  place-items: center;
+}
+
+.wheel-fit {
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
+}
+
+.wheel-pointer {
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  transform: translateX(-50%);
+  border-left: 11px solid transparent;
+  border-right: 11px solid transparent;
+  border-top: 16px solid var(--color-accent);
+}
+
+/* Decelerating, never overshooting — a wheel that bounced back off its own
+   result would be telling you something that is not true. */
+.wheel-disc {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--color-line-strong);
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.1, 0.78, 0.14, 1);
+  will-change: transform;
+}
+
+.wheel-chip {
+  position: absolute;
+  --r: 33%;
+  width: var(--chip);
+  height: var(--chip);
+  left: calc(50% + var(--r) * sin(var(--a)));
+  top: calc(50% - var(--r) * cos(var(--a)));
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  padding: 5%;
+  border-radius: 50%;
+  background: var(--color-ink);
+  box-shadow: 0 0 0 0 transparent;
+  transition: box-shadow 320ms var(--ease-out);
+}
+
+/* Where it stopped, said twice: the hub names it and its own mark is ringed.
+   A ring rather than a glow, and drawn outside the artwork rather than on it. */
+.wheel-chip-landed {
+  box-shadow: 0 0 0 3px var(--color-accent);
+}
+
+/* Counter-rotated on the same curve and duration as the wheel, so a crest is
+   upright at every frame of the spin rather than only at the end of it. The
+   mark goes unstroked here: the chip is already an off-white disc, so there is
+   nothing for an outline to separate it from. */
+.wheel-chip img,
+.wheel-chip b {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.1, 0.78, 0.14, 1);
+}
+
+.wheel-chip b {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 60%;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-ground);
+}
+
+/* Outside the rotating element rather than inside it counter-rotated: a hub
+   that has to be un-spun is a hub that shimmers for three seconds every turn. */
+.wheel-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 28%;
+  height: 28%;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  padding: 6%;
+  text-align: center;
+  border-radius: 50%;
+  border: 2px solid var(--color-line-strong);
+  background: var(--color-ground);
+  container-type: inline-size;
+}
+
+.wheel-hub b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(8px, 9cqw, 11px);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.wheel-hub em {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-display);
+  font-size: clamp(11px, 13cqw, 19px);
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1.1;
+  color: var(--color-accent);
+}
+
+/* The drain the Auction's countdown rides on. It lived here first, when this
+   screen had a clock of its own — the turn indicator's hairline drain went
+   with the clock itself, since a spin's turn ends when somebody picks. */
+@keyframes fd-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- The position dropdown. ---- */
+
+.select-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 180ms var(--ease-out);
+}
+
+.select-caret-open {
+  transform: rotate(180deg);
+}
+
+/* Opaque, unlike the panels — a list you are reading a name off cannot have a
+   stadium behind it. Depth is an offset directional shadow, never a halo. */
+.select-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  z-index: 40;
+  min-width: 100%;
+  width: max-content;
+  max-width: 15rem;
+  max-height: 16rem;
+  overflow-y: auto;
+  background: var(--color-ground);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 6px 6px 0 0 var(--color-shade);
+}
+
+/* ---- The draft's stadium, for this screen only. ---- */
+
+/* The Free Pick screen puts its plate down the left edge, which is the one
+   part of that layout nothing is drawn on. Here the left edge is the wheel, so
+   the photograph goes behind the whole orbit instead, masked to a soft ellipse
+   a little above centre — the wheel then sits in front of a stand rather than
+   beside one. */
+.plate-orbit {
+  opacity: 0.32;
+  -webkit-mask-image: radial-gradient(62% 68% at 46% 44%, #000 0%, transparent 100%);
+  mask-image: radial-gradient(62% 68% at 46% 44%, #000 0%, transparent 100%);
+}
+
+.plate-orbit img {
+  filter: grayscale(1) contrast(1.3) brightness(0.24);
+}
+
+/* ============================================================================
+   THE DEAL OR NO DEAL DRAFT SCREEN
+   Layout 18 of the exhibition: the Free Pick screen's own three-column shape,
+   so it inherits `.draft`, `.draft-grid` and `.draft-rail` wholesale. Only the
+   things that layout has no equivalent of live here — the box, the stage a box
+   opens onto, and the two sizes that had to be bigger than anything shipped.
+   ============================================================================ */
+
+.dond {
+  --dond-number: clamp(24px, 4.5cqh, 40px);
+  --dond-position: clamp(38px, 7.5cqh, 60px);
+  /* The three below are read inside `.spotlight-frame`, which is itself a size
+     container — so their `cqh` is a percentage of the stage rather than of the
+     app, and they scale with the surface they are actually drawn on. */
+  --dond-name: clamp(28px, 8cqh, 52px);
+  /* Q4: the stick/hear and take/back controls are deliberately the largest
+     controls in the app — this is the decision the whole format is about. */
+  --dond-decision-px: clamp(16px, 6.4cqh, 42px);
+  --dond-decision-py: clamp(10px, 3.2cqh, 21px);
+  --dond-decision-size: clamp(12px, 2.9cqh, 19px);
+}
+
+.dond-number {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--dond-number);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  /* Sat below the lid seam, where a number is stencilled on a real case. */
+  margin-top: 12%;
+}
+
+.dond-position {
+  font-size: var(--dond-position);
+}
+
+.dond-stage-name {
+  font-size: var(--dond-name);
+}
+
+.dond-decision {
+  padding: var(--dond-decision-py) var(--dond-decision-px);
+  font-size: var(--dond-decision-size);
+  letter-spacing: 0.1em;
+}
+
+/* Rows are declared rather than left to `auto`, for the same reason
+   `.draft-grid`'s are: an auto row is sized by its content, the boxes inside
+   ask for `height: 100%` of it, and the pair resolves to nothing. Equal
+   fractions of whatever height the column has left instead. */
+.dond-boxes {
+  grid-auto-rows: minmax(0, 1fr);
+}
+
+/* The box itself, literal and textured: a ribbed diagonal weave, a lid seam
+   across the top third and a clasp centred on it. Nothing about the footballer
+   inside is legible until it opens — which is the entire point of the thing,
+   and the reason it is drawn as an object rather than as a tile. */
+.dond-box {
+  position: relative;
+  overflow: hidden;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: var(--radius-md);
+}
+
+.dond-box-shut {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 5px,
+      color-mix(in oklab, var(--color-ink) 5%, transparent) 5px 6px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--color-ink) 6%, var(--color-surface-2)) 0 34%,
+      var(--color-surface-2) 34%
+    );
+}
+
+.dond-box-shut::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 34%;
+  height: 1px;
+  background: var(--color-line-strong);
+}
+
+.dond-box-shut::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 34%;
+  width: 22%;
+  height: 9px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 2px;
+  background: color-mix(in oklab, var(--color-ink) 8%, var(--color-surface-2));
+}
+
+.dond-box-open {
+  background: var(--color-surface);
+}
+
+/* Opened boxes are a set of photographs read side by side, so they are held to
+   one treatment rather than each bringing its own colour temperature. */
+.dond-box-open img:not(.crest) {
+  filter: grayscale(1) contrast(1.12) brightness(0.86);
+}
+
+/* The stage is lit where the grid is not — this is the one moment in the
+   format and it should not look like the same surface as a tile. */
+.dond-stage-photo {
+  filter: grayscale(1) contrast(1.3) brightness(1.02);
+}
+
+.dond-stage-caption {
+  background: linear-gradient(
+    to top,
+    var(--color-ground) 4%,
+    color-mix(in oklab, var(--color-ground) 62%, transparent) 46%,
+    transparent 82%
+  );
+}
+
+/* Below the three-column layout the boxes get a phone's width, where two rows
+   of five are five 44px lids. The grid gives up its second row before it gives
+   up being touchable. */
+@media (max-width: 767px) {
+  .dond-boxes {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ============================================================================
+   THE AUCTION DRAFT SCREEN — "The block"
+   Layout 01 of the exhibition: the lot is the page, and one unbroken centre
+   column runs the count, the footballer, the countdown and the bidders. It
+   inherits `.draft` for the frame padding and the pitch tokens, and everything
+   below is what that layout has no equivalent of anywhere else in the app.
+
+   Two of the exhibition's twelve non-negotiables live here rather than in a
+   component: the stadium runs LOUD on this route (`.plate-block`, well past the
+   .30–.36 the earlier screens use), and every photograph and crest carries its
+   own colour with no filter over it at all. Nothing on this screen tints, greys
+   or blends artwork — the plate is the only treated image on the page, which is
+   precisely what makes the faces read as the only colour on it.
+   ============================================================================ */
+
+.auction {
+  /* One `clamp()` against `cqh` per size, same as everywhere else — but read
+     which container each one resolves against before touching a number. The
+     three marked *displayer* below are used inside `.spotlight-frame`, which
+     is itself a size container, so their `cqh` is a percentage of the
+     photograph's own box (~420px at 1280x800) rather than of the app frame.
+     The rest sit outside it and are scaled against the frame's 800px, where
+     `max / 8` lands the preferred term exactly on the drawn value. */
+  --auction-name: clamp(26px, 11.8cqh, 50px); /* displayer */
+  --auction-open: clamp(17px, 6.1cqh, 26px); /* displayer */
+  --auction-stamp: clamp(34px, 16cqh, 68px); /* displayer */
+  --auction-clock: clamp(28px, 5.75cqh, 46px);
+  --auction-bid: clamp(19px, 4cqh, 32px);
+  /* The headline across the top of the screen: the footballer on the block,
+     who holds them and at what. It is the present tense of the whole format,
+     so it is set at display weight rather than as a status line. */
+  --auction-head: clamp(15px, 3.25cqh, 26px);
+  /* The three steps. They were the only controls on the screen and the
+     smallest type on it; the figure now reads at a glance and the line
+     underneath says where it lands. */
+  --auction-step: clamp(17px, 3.125cqh, 25px);
+  --auction-step-note: clamp(10px, 1.5cqh, 12px);
+
+  /* The pitch gets a narrower column here than on Free Pick, so the nodes and
+     the plates come down with it. */
+  --draft-node: clamp(32px, 5.25cqh, 42px);
+  --draft-name: 104px;
+  --draft-name-size: 13px;
+}
+
+.auction-name {
+  font-size: var(--auction-name);
+}
+.auction-clock {
+  font-size: var(--auction-clock);
+}
+.auction-bid {
+  font-size: var(--auction-bid);
+}
+.auction-open {
+  font-size: var(--auction-open);
+}
+.auction-stamp {
+  font-size: var(--auction-stamp);
+}
+.auction-head {
+  font-size: var(--auction-head);
+}
+.auction-step-figure {
+  font-size: var(--auction-step);
+}
+.auction-step-note {
+  font-size: var(--auction-step-note);
+}
+
+/* ---- The columns. One, then two, then three — same three shapes as the
+        other draft screens, at this layout's own widths. ---- */
+
+.auction-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* Explicit, because an `auto` row is sized by its tallest item and the one
+     column that would not shrink would set the height of all three. */
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.auction-rail {
+  display: none;
+  min-height: 0;
+}
+
+.auction-centre,
+.auction-board {
+  display: flex;
+  min-height: 0;
+}
+
+/* One phone-width column: the block and the elevens take turns. */
+@media (max-width: 767px) {
+  .auction[data-pane='board'] .auction-centre,
+  .auction[data-pane='block'] .auction-board {
+    display: none;
+  }
+}
+
+/* Two: what is on the block, and what everyone has built. */
+@media (min-width: 768px) {
+  .auction-grid {
+    grid-template-columns: minmax(0, 1fr) clamp(228px, 26vw, 292px);
+  }
+}
+
+/* Three. The rail comes back with the record of what has already gone — the
+   one thing on this screen that is history rather than the present tense. */
+@media (min-width: 1180px) {
+  .auction-grid {
+    grid-template-columns: 236px minmax(0, 1fr) clamp(256px, 22vw, 296px);
+  }
+
+  .auction-rail {
+    display: flex;
+  }
+}
+
+/* ---- Money. One currency, one figure, one suffix, everywhere it appears.
+        Only the pseudo-elements are declared, so nothing here can outrank a
+        utility on the element itself — see the `.plate` gotcha above.
+
+        The euro sign leads at nearly the figure's own size, because it is
+        part of reading the number rather than a footnote to it; the `M` still
+        rides small and raised behind it. Every price in the app carries both:
+        the block, the bids, the budgets, the sold record and the hammer. ---- */
+
+.money::before {
+  content: '€';
+  font-size: 0.66em;
+  margin-right: 0.06em;
+  opacity: 0.72;
+  font-weight: 500;
+}
+
+.money::after {
+  content: 'M';
+  font-size: 0.44em;
+  margin-left: 0.09em;
+  vertical-align: 0.42em;
+  opacity: 0.5;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+/* ---- The sold record: a face strip over the transaction, two across the rail.
+
+   Layout 01 first drew this as ruled rows of 22px discs; it became full square
+   photographs on Mert's instruction, since a lot is a footballer before it is
+   a price. The square then swallowed the card, and what the record is *for* —
+   who bought them, and for how much — was left reading at 12px underneath a
+   picture of somebody already gone. The photograph is a 16:9 strip now: still
+   enough to recognise a face, no longer the whole card. ---- */
+
+.auction-sold {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.auction-sold-face {
+  aspect-ratio: 16 / 9;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+/* Below this the rail is showing one row of cards and a clock's worth of chat;
+   the second row is the first thing to give. */
+@container app (max-height: 700px) {
+  .auction-sold > li:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+/* NON-NEGOTIABLE 9 is untouched — the queue is still sealed, and nothing on
+   this screen previews it. What went is the *tile* that used to say so under
+   the sold record: `24 · ?`, a hatched box drawing attention to the absence of
+   information. The absence needed no monument; the record simply ends. */
+
+/* ---- The bidders, side by side. Five across on a desktop column; on a phone
+        they wrap rather than compress to an unreadable 60px. ---- */
+
+.auction-bids {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+/* ---- The displayer. ---- */
+
+.auction-block-top {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, var(--color-ground) 80%, transparent),
+    transparent
+  );
+}
+
+/* ---- The countdown, drained rather than counted.
+
+   An animation rather than a transition on width: the clock is restarted by
+   any bid from any seat, and a keyed animation restarts cleanly where a
+   transition would ease back from wherever it had got to. Compositor-only,
+   like everything else that moves in this app. ---- */
+
+.auction-drain {
+  transform-origin: left center;
+  animation-name: fd-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+/* ---- One phone-width column has to hold a photograph, a clock, five bidders
+        and three steps without the page ever scrolling. The bidders are where
+        the room comes from: five cards in one row rather than three in two,
+        which costs them their seat disc — the mark is already on the table
+        strip directly above, in the same order — and buys the displayer back
+        about ninety pixels of height. ---- */
+
+@media (max-width: 767px) {
+  .auction-bids {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .auction-bid-card {
+    padding: 6px 6px 6px;
+    gap: 4px;
+  }
+
+  .auction-bid-disc {
+    display: none;
+  }
+
+  /* At this width three steps side by side are three narrow columns; the
+     figure keeps its size and the "to €170M" line under it goes, since the
+     bid it lands on is the number on the button next to the holder anyway. */
+  .auction-step-note {
+    display: none;
+  }
+}
+
+/* ---- The stadium, LOUD.
+
+   Non-negotiable 10 of the exhibition: .72 here against the .30–.36 every
+   earlier screen uses, full bleed and vignetted toward the top rather than
+   pushed into one edge. The plate is what gives the site life, and on this
+   route it is also doing a second job — it stays monochrome and tinted on
+   purpose so that the now-unfiltered photographs and crests read as the only
+   colour on the page. The scrim over it is what keeps the type on top of it
+   readable at that opacity. ---- */
+
+.plate-block {
+  opacity: 0.42;
+  -webkit-mask-image: radial-gradient(125% 105% at 50% 26%, #000 32%, transparent 100%);
+  mask-image: radial-gradient(125% 105% at 50% 26%, #000 32%, transparent 100%);
+}
+
+.plate-block img {
+  filter: grayscale(1) contrast(1.22) brightness(0.4);
+}
+
+.plate-block-scrim {
+  background: color-mix(in oklab, var(--color-ground) 82%, transparent);
+}
