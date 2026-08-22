@@ -270,8 +270,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   }, [sales, drafters, startBudget])
 
   /** The bidding loop reads these several times a second; state would go stale. */
-  const live = useRef({ squads, budgets, block, armed, sales })
-  live.current = { squads, budgets, block, armed, sales }
+  const live = useRef({ squads, budgets, block, armed, sales, drafters })
+  live.current = { squads, budgets, block, armed, sales, drafters }
 
   const award = useCallback((seat: number, player: Player) => {
     setBoard((previous) => {
@@ -425,7 +425,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     for (let seat = 0; seat < seatCount; seat += 1) {
       if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
 
-      const drafter = drafters[seat]
+      const drafter = live.current.drafters[seat]
       if (drafter.kind !== 'bot') continue
 
       const step = evaluateAuctionBot(
@@ -476,7 +476,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     return () => {
       timers.forEach(t => window.clearTimeout(t))
     }
-  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, placeBid, isHost, drafters])
+  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, placeBid, isHost])
 
   /* -------------------------------------------------------------- the clock -- */
 
@@ -605,7 +605,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     spoke.current = block.resets
     if (Math.random() > 0.16) return
 
-    const speaker = drafters[(block.holder + 1) % seatCount]
+    const speaker = live.current.drafters[(block.holder + 1) % seatCount]
     const timer = window.setTimeout(() => {
       const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
       if (isMultiplayer && isHost && config.roomId) {
@@ -624,7 +624,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     }, 700)
 
     return () => window.clearTimeout(timer)
-  }, [block?.resets, block?.holder, drafters, seatCount, youSeat, block])
+  }, [block?.resets, block?.holder, seatCount, youSeat, block, isMultiplayer, isHost, config.roomId])
 
   /* --------------------------------------------------------------- render --- */
 
