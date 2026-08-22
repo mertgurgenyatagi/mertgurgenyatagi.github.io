@@ -3,6 +3,7 @@ import type { Lot } from '../../lib/auctionEngine'
 import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { Dotgrid } from './Dotgrid'
+import { useI18n } from '../../lib/i18n'
 
 export interface BlockResult {
   /** Null when the lot drew no bid at all and went to the unsold pile. */
@@ -32,6 +33,8 @@ interface AuctionBlockProps {
  * Nothing here is a sentence. Every string is a label or a value.
  */
 export function AuctionBlock({ lot, left, total, result }: AuctionBlockProps) {
+  const { t } = useI18n();
+
   return (
     <div className="spotlight-frame relative min-h-0 flex-1 overflow-hidden rounded-lg border border-line-strong bg-surface-2">
       <BlockPhoto player={lot.player} />
@@ -72,9 +75,7 @@ export function AuctionBlock({ lot, left, total, result }: AuctionBlockProps) {
         </span>
 
         <span className="flex shrink-0 flex-col items-end gap-[5px]">
-          <span className="font-display text-[8.5px] font-medium uppercase tracking-[0.22em] text-dim">
-            Open
-          </span>
+          <span className="font-display text-[8.5px] font-medium uppercase tracking-[0.22em] text-dim">{t("Open")}</span>
           <span className="money tabular auction-open font-display font-semibold leading-[0.85] text-muted">
             {lot.opening}
           </span>
@@ -92,6 +93,7 @@ export function AuctionBlock({ lot, left, total, result }: AuctionBlockProps) {
  * to do here.
  */
 function BlockPhoto({ player }: { player: Player }) {
+
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [player.id])
 
@@ -122,6 +124,7 @@ function BlockPhoto({ player }: { player: Player }) {
  * photograph at display size and holds there while the room reads it.
  */
 function Stamp({ result }: { result: BlockResult }) {
+
   return (
     <div className="fx fx-fade absolute inset-0 z-40 grid place-items-center bg-ground/78">
       <div className="flex flex-col items-center gap-[clamp(8px,3.8cqh,16px)]">

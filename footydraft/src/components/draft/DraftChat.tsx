@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { SectionLabel } from '../ui/SectionLabel'
 import type { Message } from '../lobby/LobbyChat'
+import { useI18n } from '../../lib/i18n'
 
 interface DraftChatProps {
   messages: Message[]
@@ -21,6 +22,8 @@ const MESSAGE_MAX = 140
  * gets busy. It is also the only region on the page that scrolls.
  */
 export function DraftChat({ messages, onSend, you }: DraftChatProps) {
+  const { t } = useI18n();
+
   const [draft, setDraft] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
 
@@ -30,8 +33,8 @@ export function DraftChat({ messages, onSend, you }: DraftChatProps) {
   }, [messages])
 
   return (
-    <section aria-label="Draft chat" className="draft-chat min-h-0 flex-1 flex-col justify-end">
-      <SectionLabel className="shrink-0">Chat</SectionLabel>
+    <section aria-label={t("Draft chat")} className="draft-chat min-h-0 flex-1 flex-col justify-end">
+      <SectionLabel className="shrink-0">{t("Chat")}</SectionLabel>
 
       <div
         ref={logRef}
@@ -39,7 +42,7 @@ export function DraftChat({ messages, onSend, you }: DraftChatProps) {
         className="scroller mt-[8px] min-h-0 flex-1 overflow-y-auto border-t border-line pt-[9px]"
       >
         {messages.length === 0 ? (
-          <p className="text-[11px] leading-[1.5] text-faint">Nobody has said anything yet.</p>
+          <p className="text-[11px] leading-[1.5] text-faint">{t("Nobody has said anything yet.")}</p>
         ) : (
           <ul className="flex flex-col justify-end gap-[5px]">
             {messages.map((message) => (
@@ -77,14 +80,12 @@ export function DraftChat({ messages, onSend, you }: DraftChatProps) {
         }}
         className="mt-[8px] shrink-0"
       >
-        <label className="sr-only" htmlFor="draft-chat-field">
-          Message the room
-        </label>
+        <label className="sr-only" htmlFor="draft-chat-field">{t("Message the room")}</label>
         <input
           id="draft-chat-field"
           value={draft}
           onChange={(event) => setDraft(event.target.value.slice(0, MESSAGE_MAX))}
-          placeholder="Message the room"
+          placeholder={t("Message the room")}
           autoComplete="off"
           className="w-full rounded-sm border border-line bg-ground/60 px-[10px] py-[7px] font-sans text-[11.5px] text-ink transition-colors duration-100 ease-out hover:border-line-strong focus:border-accent-line focus:outline-none"
         />

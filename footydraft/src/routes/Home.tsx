@@ -7,6 +7,7 @@ import { Wordmark } from '../components/home/Wordmark'
 import { NameGate } from '../components/lobby/NameGate'
 import { LanguageSwitch } from '../components/ui/LanguageSwitch'
 import { makeRoomCode, normaliseRoomCode } from '../lib/roomCode'
+import { useI18n } from '../lib/i18n'
 
 /**
  * The front door. One viewport, no scroll: a wall of type with the stadium
@@ -26,6 +27,8 @@ import { makeRoomCode, normaliseRoomCode } from '../lib/roomCode'
  * already doing the work.
  */
 export function Home() {
+  const { t } = useI18n();
+
   const navigate = useNavigate()
 
   /** Which room the gate is about to open, and whether we're opening it. */
@@ -38,9 +41,7 @@ export function Home() {
         className="fx fx-rise relative z-10 flex items-center justify-between gap-6"
         style={{ animationDelay: '80ms' }}
       >
-        <p className="font-display text-[10px] font-medium uppercase tracking-[0.2em] text-muted">
-          A drafting game for people who argue about squads
-        </p>
+        <p className="font-display text-[10px] font-medium uppercase tracking-[0.2em] text-muted">{t("A drafting game for people who argue about squads")}</p>
         <LanguageSwitch />
       </header>
 
@@ -54,13 +55,9 @@ export function Home() {
             className="fx fx-rise hidden max-w-[19rem] flex-col gap-2 pt-[clamp(0.25rem,1vh,0.75rem)] sm:flex"
             style={{ animationDelay: '260ms' }}
           >
-            <p className="font-display text-[11px] font-medium uppercase tracking-[0.22em] text-accent">
-              Draft. Argue. Repeat.
-            </p>
+            <p className="font-display text-[11px] font-medium uppercase tracking-[0.22em] text-accent">{t("Draft. Argue. Repeat.")}</p>
             <p className="font-sans text-sm leading-relaxed text-muted">
-              Build a 4-2-3-1 out of real footballers, four different ways — auction,
-              snake draft, deal-or-no-deal, spin the wheel. Then hold it up next to your
-              mates' squads. No stats, no leaderboard, just bragging rights.
+              {t("Build a 4-2-3-1 out of real footballers, four different ways — auction, snake draft, deal-or-no-deal, spin the wheel. Then hold it up next to your mates' squads. No stats, no leaderboard, just bragging rights.")}
             </p>
           </div>
         </div>

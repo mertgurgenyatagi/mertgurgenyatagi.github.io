@@ -9,6 +9,7 @@ import { BackHome } from '../components/ui/BackHome'
 import { Button } from '../components/ui/Button'
 import { formats } from '../data/formats'
 import { MAX_SEATS, constraints, scopes, timers } from '../data/lobbyOptions'
+import { useI18n } from '../lib/i18n'
 import {
   effectiveSize,
   hasDimmedOptions,
@@ -39,6 +40,7 @@ const GROUP_GAP = 'pt-[var(--lobby-gap)]'
  * state, so the draft starts on the configuration in front of you.
  */
 export function SoloLobby() {
+
   const { formatId } = useParams()
 
   // Keyed on the format so arriving at a *different* one — a second tile, a
@@ -48,6 +50,8 @@ export function SoloLobby() {
 }
 
 function ReadyRoom({ formatId }: { formatId?: string }) {
+  const { t } = useI18n();
+
   const navigate = useNavigate()
   const [format, setFormat] = useState<string | null>(() =>
     formats.some((entry) => entry.id === formatId) ? (formatId as string) : null,
@@ -124,9 +128,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
           id="table-heading"
           className="fx fx-soft mt-[clamp(0.4rem,1.6vh,1rem)] hidden font-display text-[clamp(1.6rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-[0.02em] md:block"
           style={{ animationDelay: '140ms' }}
-        >
-          Your table
-        </h1>
+        >{t("Your table")}</h1>
       }
       seatList={
         <SeatList
@@ -234,9 +236,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
               },
             })
           }}
-        >
-          Kick off →
-        </Button>
+        >{t("Kick off →")}</Button>
       }
     />
   )

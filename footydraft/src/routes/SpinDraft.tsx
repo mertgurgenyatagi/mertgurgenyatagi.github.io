@@ -36,6 +36,7 @@ import {
   wheelSlices,
 } from '../lib/wheelEngine'
 import type { DraftConfig } from './Draft'
+import { useI18n } from '../lib/i18n'
 
 /**
  * The table you get by opening the route cold, matching the Free Pick screen's
@@ -80,6 +81,8 @@ const CHATTER = [
  * take, spun, and whatever it stops on is the whole board for that turn.
  */
 export function SpinDraft({ config }: { config: DraftConfig }) {
+  const { t } = useI18n();
+
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
 
@@ -555,15 +558,9 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
 
       {/* ---- Narrower than the orbit: the satellites take turns. ---- */}
       <nav className="mt-[var(--spin-gap-y)] flex shrink-0 items-center gap-[2px] border-t border-line pt-[9px] min-[1180px]:hidden">
-        <PaneTab active={pane === 'wheel'} onClick={() => setPane('wheel')} className="md:hidden">
-          The wheel
-        </PaneTab>
-        <PaneTab active={pane === 'pool'} onClick={() => setPane('pool')}>
-          Who is left
-        </PaneTab>
-        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>
-          The elevens
-        </PaneTab>
+        <PaneTab active={pane === 'wheel'} onClick={() => setPane('wheel')} className="md:hidden">{t("The wheel")}</PaneTab>
+        <PaneTab active={pane === 'pool'} onClick={() => setPane('pool')}>{t("Who is left")}</PaneTab>
+        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t("The elevens")}</PaneTab>
       </nav>
     </div>
   )

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { LanguageSwitch } from '../ui/LanguageSwitch'
 import { StatusLine } from '../ui/StatusLine'
+import { useI18n } from '../../lib/i18n'
 
 interface LobbyLayoutProps {
   /** Accessible ID for the left column heading */
@@ -10,7 +11,7 @@ interface LobbyLayoutProps {
   seatCountLabel: string
   /** Key to re-trigger seat count animation when changed */
   seatCountKey?: number | string
-  /** Content rendered above the seat list (e.g. <h1>Your table</h1> or <RoomCode />) */
+  /** Content rendered above the seat list (e.g. <h1>{t("Your table")}</h1>{t("or")}<RoomCode />) */
   leftHeaderContent: ReactNode
   /** The SeatList component */
   seatList: ReactNode
@@ -56,6 +57,8 @@ export function LobbyLayout({
   backControl,
   actionControl,
 }: LobbyLayoutProps) {
+  const { t } = useI18n();
+
   return (
     <div className="lobby relative flex h-full flex-col overflow-hidden md:flex-row">
       {/* ══ Left Canvas: Who is playing ══ */}
@@ -91,7 +94,7 @@ export function LobbyLayout({
 
       {/* ══ Right Canvas: the configuration ══ */}
       <section
-        aria-label="Draft settings"
+        aria-label={t("Draft settings")}
         className="relative flex min-h-0 flex-1 flex-col px-[var(--app-inset-x)] py-[var(--app-inset-y)] md:h-full md:w-1/2 md:flex-none"
       >
         <div
@@ -104,8 +107,7 @@ export function LobbyLayout({
             aria-label="#footydraft — back to the home page"
             className="shrink-0 font-wordmark text-[19px] uppercase leading-none tracking-[0.06em] text-ink transition-opacity duration-150 ease-out hover:opacity-70"
           >
-            <span className="text-accent">#</span>footydraft
-          </Link>
+            <span className="text-accent">#</span>{t("footydraft")}</Link>
         </div>
 
         {/* Set at the same weight and on the same line as `Your table` opposite:
@@ -113,9 +115,7 @@ export function LobbyLayout({
             screen and says so. */}
         <h2 className="fx fx-soft relative z-10 mt-[clamp(0.4rem,1.6vh,1rem)] hidden font-display text-[clamp(1.6rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-[0.02em] md:block"
           style={{ animationDelay: '160ms' }}
-        >
-          Configuration
-        </h2>
+        >{t("Configuration")}</h2>
 
         {/* Settings chip groups container */}
         <div className="relative z-10 mt-[var(--lobby-gap)] flex flex-col">

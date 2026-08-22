@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useRef } from 'react'
 import { type PositionCode, positionCodes, positionNames } from '../../data/formation'
 import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
+import { useI18n } from '../../lib/i18n'
 
 export interface PoolRow {
   player: Player
@@ -57,6 +58,8 @@ export function PlayerPool({
   actionLabel,
   portrait,
 }: PlayerPoolProps) {
+  const { t } = useI18n();
+
   const searchRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -86,15 +89,13 @@ export function PlayerPool({
           <span aria-hidden="true" className="text-[12px] leading-none text-accent">
             &#8981;
           </span>
-          <label className="sr-only" htmlFor="pool-search">
-            Search the board
-          </label>
+          <label className="sr-only" htmlFor="pool-search">{t("Search the board")}</label>
           <input
             ref={searchRef}
             id="pool-search"
             value={query}
             onChange={(event) => onQuery(event.target.value)}
-            placeholder="Name, club or nation"
+            placeholder={t("Name, club or nation")}
             autoComplete="off"
             className="min-w-0 flex-1 bg-transparent text-[12px] text-ink outline-none"
           />
@@ -107,9 +108,7 @@ export function PlayerPool({
         </div>
 
         <div className="flex min-w-0 flex-1 basis-[75%] flex-wrap items-center gap-x-[14.9px] gap-y-[7.4px]">
-          <FilterChip active={filter === null} onClick={() => onFilter(null)}>
-            All
-          </FilterChip>
+          <FilterChip active={filter === null} onClick={() => onFilter(null)}>{t("All")}</FilterChip>
           {positionCodes.map((code) => (
             <FilterChip
               key={code}
@@ -129,7 +128,7 @@ export function PlayerPool({
         className="scroller min-h-0 min-w-0 flex-1 overflow-y-auto border-t border-line"
       >
         {rows.length === 0 ? (
-          <p className="pt-[14px] text-[11.5px] text-faint">Nobody on the board matches that.</p>
+          <p className="pt-[14px] text-[11.5px] text-faint">{t("Nobody on the board matches that.")}</p>
         ) : (
           <ul>
             {rows.map(({ player, blocked }) => {

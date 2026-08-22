@@ -4,6 +4,7 @@ import type { Drafter } from '../../lib/draftEngine'
 import type { Player } from '../../lib/players'
 import { Dotgrid } from './Dotgrid'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 interface SoldRecordProps {
   sales: Sale[]
@@ -30,19 +31,21 @@ interface SoldRecordProps {
  * would quietly rewrite what happened. It is dimmed whole.
  */
 export function SoldRecord({ sales, drafters, youSeat, show = 4 }: SoldRecordProps) {
+  const { t } = useI18n();
+
   const recent = sales.slice(-show).reverse()
 
   return (
     <section className="flex shrink-0 flex-col gap-[10px]">
       <div className="flex items-baseline justify-between gap-3">
-        <SectionLabel>Sold</SectionLabel>
+        <SectionLabel>{t("Sold")}</SectionLabel>
         <span className="tabular font-display text-[9.5px] font-medium uppercase tracking-[0.16em] text-dim">
           {sales.length}
         </span>
       </div>
 
       {recent.length === 0 ? (
-        <p className="text-[11px] leading-[1.4] text-faint">Nothing has gone yet.</p>
+        <p className="text-[11px] leading-[1.4] text-faint">{t("Nothing has gone yet.")}</p>
       ) : (
         <ul className="auction-sold">
           {recent.map((sale) => {
@@ -94,6 +97,7 @@ export function SoldRecord({ sales, drafters, youSeat, show = 4 }: SoldRecordPro
 /** Same silent-hide-on-failure the card used with a bare `<img>` — the card's
  * own surname beneath it is label enough without this photo. */
 function SoldFace({ player }: { player: Player }) {
+
   const [failed, setFailed] = useState(false)
 
   if (failed) return null

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { useI18n } from '../../lib/i18n'
 
 interface ActionBarProps {
   onCreate: () => void
@@ -13,6 +14,8 @@ const CODE_PATTERN = /[^A-HJ-NP-Z2-9-]/g
  * existing one is a field and a quieter button, pushed to the right.
  */
 export function ActionBar({ onCreate, onJoin }: ActionBarProps) {
+  const { t } = useI18n();
+
   const [code, setCode] = useState('')
   const codeId = useId()
 
@@ -35,19 +38,15 @@ export function ActionBar({ onCreate, onJoin }: ActionBarProps) {
           type="button"
           onClick={onCreate}
           className="shrink-0 rounded-sm border border-accent bg-accent px-6 py-[11px] sm:py-[13px] font-display text-[12px] font-medium uppercase tracking-[0.09em] text-accent-ink transition-[transform,background-color,border-color] duration-100 ease-out hover:bg-transparent hover:text-accent active:translate-y-px sm:px-8"
-        >
-          Create a lobby
-        </button>
+        >{t("Create a lobby")}</button>
 
         <div className="flex items-stretch gap-2 sm:gap-3">
-          <label htmlFor={codeId} className="sr-only">
-            Room code
-          </label>
+          <label htmlFor={codeId} className="sr-only">{t("Room code")}</label>
           <input
             id={codeId}
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase().replace(CODE_PATTERN, '').slice(0, 8))}
-            placeholder="Enter room code"
+            placeholder={t("Enter room code")}
             autoComplete="off"
             spellCheck={false}
             className="tabular w-full min-w-0 rounded-sm border border-line-strong bg-ground/60 px-4 py-[11px] sm:py-[13px] font-display text-[12px] uppercase tracking-[0.14em] text-ink transition-colors duration-100 ease-out placeholder:tracking-[0.09em] hover:border-line focus:border-accent-line focus:outline-none sm:w-[16rem]"
@@ -56,9 +55,7 @@ export function ActionBar({ onCreate, onJoin }: ActionBarProps) {
             type="submit"
             disabled={!canJoin}
             className="shrink-0 rounded-sm border border-line-strong px-5 py-[11px] sm:py-[13px] font-display text-[12px] font-medium uppercase tracking-[0.09em] text-ink transition-[transform,border-color,color,opacity] duration-100 ease-out hover:border-ink active:translate-y-px disabled:border-line disabled:text-dim disabled:hover:border-line sm:px-7"
-          >
-            Join lobby
-          </button>
+          >{t("Join lobby")}</button>
         </div>
       </form>
     </div>

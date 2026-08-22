@@ -26,6 +26,7 @@ import { type Player, inScope, loadPool } from '../lib/players'
 import { AuctionDraft } from './AuctionDraft'
 import { DondDraft } from './DondDraft'
 import { SpinDraft } from './SpinDraft'
+import { useI18n } from '../lib/i18n'
 
 /** What the lobby hands over. Every field falls back to the same defaults. */
 export interface DraftConfig {
@@ -80,6 +81,7 @@ const CHATTER = [
 ]
 
 export function Draft() {
+
   const { formatId } = useParams()
   const location = useLocation()
   const config = (location.state ?? {}) as DraftConfig
@@ -102,6 +104,8 @@ export function Draft() {
 }
 
 export function DraftRoom({ config }: { config: DraftConfig }) {
+  const { t } = useI18n();
+
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
   const constraint = config.constraint ?? 'club-1'
@@ -504,12 +508,8 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
       {/* ---- One viewport, one column: the two halves take turns. ---- */}
       <div className="mt-[12px] flex shrink-0 items-center gap-[2px] border-t border-line pt-[10px] md:hidden">
-        <PaneTab active={pane === 'pool'} onClick={() => setPane('pool')}>
-          Who is left
-        </PaneTab>
-        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>
-          The elevens
-        </PaneTab>
+        <PaneTab active={pane === 'pool'} onClick={() => setPane('pool')}>{t("Who is left")}</PaneTab>
+        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t("The elevens")}</PaneTab>
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { wallFaces } from '../../data/wallFaces'
+import { useI18n } from '../../lib/i18n'
 
 /** Long enough to read a face, short enough that the letters never look parked. */
 const HOLD_MS = 3800
@@ -14,6 +15,8 @@ const HOLD_MS = 3800
  * Oswald or Inter.
  */
 export function Wordmark() {
+  const { t } = useI18n();
+
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
@@ -29,8 +32,8 @@ export function Wordmark() {
         aria-label="#footydraft"
         className="select-none font-wordmark text-[min(17.5vw,24vh,13rem)] uppercase leading-[0.8] tracking-[0.005em] text-transparent"
       >
-        <span className="block">Footy</span>
-        <span className="block">Draft</span>
+        <span className="block">{t("Footy")}</span>
+        <span className="block">{t("Draft")}</span>
       </h1>
 
       {wallFaces.map((face, position) => (
@@ -44,8 +47,8 @@ export function Wordmark() {
             ['--wordmark-image' as string]: `url(${import.meta.env.BASE_URL}faces/${face.slug}.webp)`,
           }}
         >
-          <span className="block">Footy</span>
-          <span className="block">Draft</span>
+          <span className="block">{t("Footy")}</span>
+          <span className="block">{t("Draft")}</span>
         </div>
       ))}
 

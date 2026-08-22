@@ -4,6 +4,7 @@ import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { SectionLabel } from '../ui/SectionLabel'
 import { PositionSelect } from './PositionSelect'
+import { useI18n } from '../../lib/i18n'
 
 interface WheelPoolProps {
   /** `Serie A · open slots`, or whose open slots it is when it is not yours. */
@@ -59,6 +60,8 @@ export function WheelPool({
   spinning,
   portrait,
 }: WheelPoolProps) {
+  const { t } = useI18n();
+
   const searchRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -97,15 +100,13 @@ export function WheelPool({
           <span aria-hidden="true" className="text-[11px] leading-none text-accent">
             &#8981;
           </span>
-          <label className="sr-only" htmlFor="wheel-search">
-            Search this category
-          </label>
+          <label className="sr-only" htmlFor="wheel-search">{t("Search this category")}</label>
           <input
             ref={searchRef}
             id="wheel-search"
             value={query}
             onChange={(event) => onQuery(event.target.value)}
-            placeholder="Name, club or nation"
+            placeholder={t("Name, club or nation")}
             autoComplete="off"
             disabled={spinning}
             className="min-w-0 flex-1 bg-transparent text-[11.5px] text-ink outline-none"
@@ -132,9 +133,9 @@ export function WheelPool({
           className="scroller min-h-0 min-w-0 flex-1 overflow-y-auto border-t border-line lg:flex-[65]"
         >
           {spinning ? (
-            <p className="pt-[13px] text-[11.5px] text-faint">The wheel is still turning.</p>
+            <p className="pt-[13px] text-[11.5px] text-faint">{t("The wheel is still turning.")}</p>
           ) : rows.length === 0 ? (
-            <p className="pt-[13px] text-[11.5px] text-faint">Nobody here matches that.</p>
+            <p className="pt-[13px] text-[11.5px] text-faint">{t("Nobody here matches that.")}</p>
           ) : (
             <ul key={title} className="fx fx-soft">
               {rows.map((player) => {

@@ -1,4 +1,5 @@
 import { MAX_SEATS, MIN_SEATS } from '../../data/lobbyOptions'
+import { useI18n } from '../../lib/i18n'
 
 export interface Seat {
   id: string
@@ -39,6 +40,8 @@ const DISC = 'grid place-items-center rounded-full font-display font-medium'
  * hold the settings half.
  */
 export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatListProps) {
+  const { t } = useI18n();
+
   const canAdd = Boolean(onAdd) && seats.length < MAX_SEATS
   const removable = seats.filter((seat) => seat.kind === 'bot')
   const canRemove = Boolean(onRemove) && removable.length > 0 && seats.length > minSeats
@@ -71,7 +74,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
             type="button"
             onClick={onAdd}
             disabled={!canAdd}
-            aria-label="Add a bot"
+            aria-label={t("Add a bot")}
             className={`${DISC} h-8 w-8 shrink-0 border border-dashed border-line-strong text-[14px] text-dim transition-colors duration-150 ease-out hover:border-accent-line hover:text-accent disabled:border-line disabled:text-faint disabled:hover:border-line disabled:hover:text-faint`}
           >
             +
@@ -83,7 +86,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
             type="button"
             onClick={() => onRemove(removable[removable.length - 1].id)}
             disabled={!canRemove}
-            aria-label="Remove a bot"
+            aria-label={t("Remove a bot")}
             className={`${DISC} h-8 w-8 shrink-0 border border-line-strong text-[14px] text-dim transition-colors duration-150 ease-out hover:border-ink hover:text-ink disabled:border-line disabled:text-faint disabled:hover:border-line disabled:hover:text-faint`}
           >
             −
@@ -121,9 +124,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
                 onClick={() => onRemove(seat.id)}
                 disabled={!canRemove}
                 className="shrink-0 font-display text-[10px] font-medium uppercase tracking-[0.2em] text-muted transition-colors duration-150 ease-out hover:text-ink disabled:text-faint disabled:hover:text-faint"
-              >
-                Remove
-              </button>
+              >{t("Remove")}</button>
             ) : seat.tag ? (
               <span
                 className={[
@@ -152,9 +153,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
                 +
               </span>
               <span className="flex flex-col gap-[3px]">
-                <span className="font-display text-[17px] font-bold uppercase leading-none tracking-[0.02em] text-dim transition-colors duration-150 ease-out group-hover/seat:text-ink">
-                  Add a bot
-                </span>
+                <span className="font-display text-[17px] font-bold uppercase leading-none tracking-[0.02em] text-dim transition-colors duration-150 ease-out group-hover/seat:text-ink">{t("Add a bot")}</span>
                 <span className="text-[11px] text-faint">
                   {MAX_SEATS - seats.length === 1
                     ? 'One seat left'

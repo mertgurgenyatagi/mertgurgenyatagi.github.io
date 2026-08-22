@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useI18n } from '../../lib/i18n'
 
 const LANGUAGES = [
   { id: 'en', label: 'EN' },
@@ -14,7 +14,7 @@ const LANGUAGES = [
  * later.
  */
 export function LanguageSwitch({ className = '' }: { className?: string }) {
-  const [language, setLanguage] = useState<string>('en')
+  const { language, setLanguage } = useI18n()
 
   return (
     <div
@@ -27,7 +27,7 @@ export function LanguageSwitch({ className = '' }: { className?: string }) {
           key={entry.id}
           type="button"
           aria-pressed={language === entry.id}
-          onClick={() => setLanguage(entry.id)}
+          onClick={() => setLanguage(entry.id as 'en' | 'tr')}
           className={[
             'px-[9px] py-[4px] font-display text-[10px] font-medium uppercase leading-none tracking-[0.14em] transition-colors duration-150 ease-out',
             language === entry.id

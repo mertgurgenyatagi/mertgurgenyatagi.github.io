@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from './Button'
 import { SectionLabel } from './SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 interface BackHomeProps {
   /** What the control says. `Back to home` everywhere but the friends lobby. */
@@ -26,6 +27,7 @@ export function BackHome({
   confirm = false,
   confirmNote = 'The draft ends here. Nothing about it is saved.',
 }: BackHomeProps) {
+
   const navigate = useNavigate()
   const [asking, setAsking] = useState(false)
 
@@ -68,6 +70,7 @@ function LeaveGate({
   onCancel: () => void
   onLeave: () => void
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -88,7 +91,7 @@ function LeaveGate({
   return (
     <dialog
       ref={ref}
-      aria-label="Leave the draft"
+      aria-label={t("Leave →")}
       onCancel={(event) => {
         event.preventDefault()
         onCancel()
@@ -99,21 +102,15 @@ function LeaveGate({
 
       <div className="relative grid h-full place-items-center p-[clamp(1rem,4vw,2rem)]">
         <div className="fx fx-soft gate-panel w-full max-w-[24rem] border border-line-strong bg-surface px-[clamp(1.25rem,4vw,2rem)] py-[clamp(1.25rem,4vw,1.875rem)]">
-          <SectionLabel>Leaving</SectionLabel>
+          <SectionLabel>{t("Leaving")}</SectionLabel>
 
-          <h2 className="mt-[clamp(0.5rem,2vh,0.875rem)] font-display text-[clamp(1.375rem,3.6vw,1.875rem)] font-bold uppercase leading-[0.95] tracking-[0.02em]">
-            Back to home?
-          </h2>
+          <h2 className="mt-[clamp(0.5rem,2vh,0.875rem)] font-display text-[clamp(1.375rem,3.6vw,1.875rem)] font-bold uppercase leading-[0.95] tracking-[0.02em]">{t("Back to home?")}</h2>
 
           <p className="mt-[7px] text-[11.5px] leading-[1.5] text-dim">{note}</p>
 
           <div className="mt-[clamp(0.875rem,3vh,1.375rem)] flex items-center justify-between gap-4">
-            <Button type="button" variant="ghost" onClick={onCancel} autoFocus>
-              Stay
-            </Button>
-            <Button type="button" variant="accent" size="lg" onClick={onLeave}>
-              Leave →
-            </Button>
+            <Button type="button" variant="ghost" onClick={onCancel} autoFocus>{t("Stay")}</Button>
+            <Button type="button" variant="accent" size="lg" onClick={onLeave}>{t("Leave →")}</Button>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { formats } from '../../data/formats'
+import { useI18n } from '../../lib/i18n'
 
 interface FormatWallProps {
   onPick: (formatId: string) => void
@@ -10,15 +11,15 @@ interface FormatWallProps {
  * so rather than pretending.
  */
 export function FormatWall({ onPick }: FormatWallProps) {
+  const { t } = useI18n();
+
   return (
     <section aria-labelledby="single-player-heading">
       <h2
         id="single-player-heading"
         className="fx fx-rise font-display text-[11px] font-medium uppercase tracking-[0.22em] text-accent"
         style={{ animationDelay: '840ms' }}
-      >
-        Single player
-      </h2>
+      >{t("Single player")}</h2>
 
       <div
         className="fx fx-draw mt-[7px] h-px w-full bg-line-strong"

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 export interface Message {
   id: number
@@ -28,6 +29,8 @@ const MESSAGE_MAX = 140
  * seats and the settings need every pixel.
  */
 export function LobbyChat({ messages, onSend, you }: LobbyChatProps) {
+  const { t } = useI18n();
+
   const [draft, setDraft] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
 
@@ -38,11 +41,11 @@ export function LobbyChat({ messages, onSend, you }: LobbyChatProps) {
 
   return (
     <section
-      aria-label="Lobby chat"
+      aria-label={t("Lobby chat")}
       className="lobby-chat fx fx-soft mt-[var(--lobby-gap)] min-h-0 flex-1 flex-col"
       style={{ animationDelay: '620ms' }}
     >
-      <SectionLabel className="shrink-0">Chat</SectionLabel>
+      <SectionLabel className="shrink-0">{t("Chat")}</SectionLabel>
 
       <div
         ref={logRef}
@@ -50,7 +53,7 @@ export function LobbyChat({ messages, onSend, you }: LobbyChatProps) {
         className="chat-log mt-[clamp(0.35rem,1.2vh,0.625rem)] min-h-0 flex-1 overflow-y-auto border-t border-line pt-[clamp(0.4rem,1.4vh,0.75rem)]"
       >
         {messages.length === 0 ? (
-          <p className="text-[11.5px] leading-[1.5] text-faint">Nobody has said anything yet.</p>
+          <p className="text-[11.5px] leading-[1.5] text-faint">{t("Nobody has said anything yet.")}</p>
         ) : (
           <ul className="flex flex-col gap-[clamp(0.25rem,0.9vh,0.5rem)]">
             {messages.map((message) => (
@@ -88,14 +91,12 @@ export function LobbyChat({ messages, onSend, you }: LobbyChatProps) {
         }}
         className="mt-[clamp(0.35rem,1.2vh,0.625rem)] flex shrink-0 items-stretch gap-2"
       >
-        <label className="sr-only" htmlFor="lobby-chat-field">
-          Message the lobby
-        </label>
+        <label className="sr-only" htmlFor="lobby-chat-field">{t("Message the lobby")}</label>
         <input
           id="lobby-chat-field"
           value={draft}
           onChange={(event) => setDraft(event.target.value.slice(0, MESSAGE_MAX))}
-          placeholder="Message the lobby"
+          placeholder={t("Message the lobby")}
           autoComplete="off"
           className="min-w-0 flex-1 rounded-sm border border-line bg-ground/60 px-3 py-[9px] font-sans text-[12px] text-ink transition-colors duration-100 ease-out hover:border-line-strong focus:border-accent-line focus:outline-none"
         />
@@ -103,9 +104,7 @@ export function LobbyChat({ messages, onSend, you }: LobbyChatProps) {
           type="submit"
           disabled={draft.trim().length === 0}
           className="shrink-0 rounded-sm border border-line-strong px-4 font-display text-[10px] font-medium uppercase tracking-[0.16em] text-muted transition-colors duration-150 ease-out hover:border-ink hover:text-ink disabled:border-line disabled:text-faint disabled:hover:border-line disabled:hover:text-faint"
-        >
-          Send
-        </button>
+        >{t("Send")}</button>
       </form>
     </section>
   )

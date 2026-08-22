@@ -26,6 +26,7 @@ import {
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
+import { useI18n } from '../lib/i18n'
 
 /** The table you get cold, matching the other three screens. */
 const DEFAULT_DRAFTERS: Drafter[] = [
@@ -121,6 +122,8 @@ function tasteFor(lot: number, seat: number): number {
  * sentence.
  */
 export function AuctionDraft({ config }: { config: DraftConfig }) {
+  const { t } = useI18n();
+
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
   const timerSetting = config.timer ?? '15'
@@ -652,8 +655,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
           </div>
 
           <div className="mt-[12px] flex shrink-0 items-baseline justify-between gap-4 border-t border-line pt-[10px]">
-            <SectionLabel>
-              Filled <span className="tabular text-[11px] text-accent">{shownFilled}</span>{' '}
+            <SectionLabel>{t("Filled")}<span className="tabular text-[11px] text-accent">{shownFilled}</span>{' '}
               <span className="text-faint">/ {SQUAD_SIZE}</span>
             </SectionLabel>
             <SectionLabel>
@@ -669,7 +671,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
               drafts never reach is furniture. */}
           {tab === youSeat && yourSpare.length > 0 ? (
             <div className="fx fx-soft mt-[10px] flex shrink-0 flex-col gap-[8px] border-t border-line pt-[10px]">
-              <SectionLabel>Unplaced</SectionLabel>
+              <SectionLabel>{t("Unplaced")}</SectionLabel>
               <ul className="flex flex-wrap items-center gap-[8px]">
                 {yourSpare.map((player) => (
                   <li key={player.id}>
@@ -691,12 +693,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
       {/* ---- One viewport, one column: the two halves take turns. ---- */}
       <div className="mt-[12px] flex shrink-0 items-center gap-[2px] border-t border-line pt-[10px] md:hidden">
-        <PaneTab active={pane === 'block'} onClick={() => setPane('block')}>
-          The block
-        </PaneTab>
-        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>
-          The elevens
-        </PaneTab>
+        <PaneTab active={pane === 'block'} onClick={() => setPane('block')}>{t("The block")}</PaneTab>
+        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t("The elevens")}</PaneTab>
       </div>
     </div>
   )
@@ -718,6 +716,8 @@ function Headline({
   yours: boolean
   price: number
 }) {
+  const { t } = useI18n();
+
   return (
     <p
       aria-live="polite"
@@ -731,17 +731,13 @@ function Headline({
 
       {holder === null ? (
         <>
-          <span className="shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim">
-            Opening
-          </span>
+          <span className="shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim">{t("Opening")}</span>
           <Dot />
           <span className="money tabular shrink-0 text-muted">{price}</span>
         </>
       ) : (
         <>
-          <span className="hidden shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim lg:inline">
-            Highest bidder:
-          </span>
+          <span className="hidden shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim lg:inline">{t("Highest bidder:")}</span>
           <span className="max-w-[8ch] shrink truncate text-ink">{holder}</span>
           <Dot />
           <span
@@ -757,6 +753,7 @@ function Headline({
 }
 
 function Dot() {
+
   return (
     <span aria-hidden="true" className="shrink-0 self-center text-[0.4em] text-accent">
       ●
@@ -765,6 +762,7 @@ function Dot() {
 }
 
 function SpareFace({ player }: { player: Player }) {
+
   const [failed, setFailed] = useState(false)
 
   if (failed) {

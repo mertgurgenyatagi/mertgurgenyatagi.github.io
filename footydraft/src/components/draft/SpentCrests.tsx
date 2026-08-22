@@ -2,6 +2,7 @@ import { clubLeagues } from '../../data/clubs'
 import { crestUrl } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 interface SpentCrestsProps {
   constraint: string
@@ -19,11 +20,13 @@ interface SpentCrestsProps {
  * badge is a falsified badge.
  */
 export function SpentCrests({ constraint, clubs, clubNames, nations }: SpentCrestsProps) {
+  const { t } = useI18n();
+
   const byClub = constraint.startsWith('club')
 
   return (
     <section className="flex shrink-0 flex-col gap-[10px]">
-      <SectionLabel>Used</SectionLabel>
+      <SectionLabel>{t("Used")}</SectionLabel>
 
       {byClub ? (
         <ul className="flex flex-wrap items-center gap-[10px]">

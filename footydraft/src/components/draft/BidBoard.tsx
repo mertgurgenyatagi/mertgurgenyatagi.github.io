@@ -1,5 +1,6 @@
 import { BID_STEPS } from '../../lib/auctionEngine'
 import type { Drafter } from '../../lib/draftEngine'
+import { useI18n } from '../../lib/i18n'
 
 interface BidBoardProps {
   drafters: Drafter[]
@@ -60,6 +61,8 @@ export function BidBoard({
   armed,
   onBid,
 }: BidBoardProps) {
+  const { t } = useI18n();
+
   const held = holder !== null
   const youHold = holder === youSeat
   const yourBudget = budgets[youSeat] ?? 0
@@ -172,7 +175,7 @@ export function BidBoard({
                   enabled ? 'text-accent-ink/70' : 'text-faint',
                 ].join(' ')}
               >
-                {held ? <>to <span className="money tabular">{offer.lands}</span></> : 'Open the bidding'}
+                {held ? <>{t("to")}<span className="money tabular">{offer.lands}</span></> : 'Open the bidding'}
               </span>
             </button>
           )
@@ -199,6 +202,7 @@ const LOCKOUT = 3
 
 /** The seat disc. Bots keep their dashed outline; a bot never gets a face. */
 function Disc({ drafter, tone }: { drafter: Drafter; tone: 'lead' | 'you' | 'plain' }) {
+
   return (
     <span
       className={[

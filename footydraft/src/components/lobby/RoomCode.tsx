@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 interface RoomCodeProps {
   code: string
@@ -15,6 +16,8 @@ interface RoomCodeProps {
  * server. The label reports back rather than a toast appearing somewhere else.
  */
 export function RoomCode({ code }: RoomCodeProps) {
+  const { t } = useI18n();
+
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -43,7 +46,7 @@ export function RoomCode({ code }: RoomCodeProps) {
       {/* Below `md` the label goes and the code shrinks onto one row with the
           copy — the seats and four settings groups have to land above the fold
           on a 568px-tall screen, and this block is where the room comes from. */}
-      <SectionLabel className="hidden md:block">Room code</SectionLabel>
+      <SectionLabel className="hidden md:block">{t("Room code")}</SectionLabel>
 
       <div className="flex items-center justify-between gap-4 md:mt-[clamp(0.2rem,0.8vh,0.5rem)]">
         <span className="tabular truncate font-display text-[19px] font-bold uppercase leading-[1.2] tracking-[0.18em] text-ink md:text-[clamp(1.75rem,4.4vw,3rem)] md:leading-[1]">
@@ -69,9 +72,7 @@ export function RoomCode({ code }: RoomCodeProps) {
         </button>
       </div>
 
-      <p className="mt-[6px] hidden text-[10.5px] leading-[1.4] text-dim md:block">
-        Anyone with the code can take a seat.
-      </p>
+      <p className="mt-[6px] hidden text-[10.5px] leading-[1.4] text-dim md:block">{t("Anyone with the code can take a seat.")}</p>
     </div>
   )
 }

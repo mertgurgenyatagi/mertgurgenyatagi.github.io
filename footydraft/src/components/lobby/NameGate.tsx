@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { readName } from '../../lib/lobbySession'
 import { Button } from '../ui/Button'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 export const NAME_MAX = 14
 const NAME_MIN = 2
@@ -23,6 +24,8 @@ interface NameGateProps {
  * person opening a second lobby, not a new one.
  */
 export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
+  const { t } = useI18n();
+
   const ref = useRef<HTMLDialogElement>(null)
   const fieldId = useId()
   const [name, setName] = useState(readName)
@@ -79,23 +82,17 @@ export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
           <h2
             aria-hidden="true"
             className="mt-[clamp(0.5rem,2vh,0.875rem)] font-display text-[clamp(1.5rem,4vw,2rem)] font-bold uppercase leading-[0.95] tracking-[0.02em]"
-          >
-            Your name
-          </h2>
+          >{t("Your name")}</h2>
 
-          <p className="mt-[6px] text-[11.5px] leading-[1.5] text-dim">
-            Everyone at the table sees it. It isn't saved anywhere else.
-          </p>
+          <p className="mt-[6px] text-[11.5px] leading-[1.5] text-dim">{t("Everyone at the table sees it. It isn't saved anywhere else.")}</p>
 
-          <label className="sr-only" htmlFor={fieldId}>
-            Your name
-          </label>
+          <label className="sr-only" htmlFor={fieldId}>{t("Your name")}</label>
           <input
             id={fieldId}
             autoFocus
             value={name}
             onChange={(event) => setName(event.target.value.slice(0, NAME_MAX))}
-            placeholder="e.g. Alex"
+            placeholder={t("e.g. Alex")}
             autoComplete="given-name"
             spellCheck={false}
             className="mt-[clamp(0.75rem,2.5vh,1.125rem)] w-full rounded-sm border border-line-strong bg-ground px-4 py-[13px] font-sans text-[14px] text-ink transition-colors duration-100 ease-out hover:border-line focus:border-accent-line focus:outline-none"
@@ -106,9 +103,7 @@ export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
               type="button"
               variant="ghost"
               onClick={onCancel}
-            >
-              Cancel
-            </Button>
+            >{t("Cancel")}</Button>
 
             <Button
               type="submit"

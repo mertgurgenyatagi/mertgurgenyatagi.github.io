@@ -1,5 +1,6 @@
 import type { NarratorTone } from './Narrator'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 export interface FeedLine {
   id: number
@@ -26,11 +27,13 @@ interface NarratorFeedProps {
  * clock is on you and breathing while somebody else thinks.
  */
 export function NarratorFeed({ lines }: NarratorFeedProps) {
+  const { t } = useI18n();
+
   const [latest, ...older] = lines
 
   return (
-    <section aria-label="Draft report" className="spin-panel flex min-h-0 flex-1 flex-col p-[14px]">
-      <SectionLabel className="shrink-0">Report</SectionLabel>
+    <section aria-label={t("Draft report")} className="spin-panel flex min-h-0 flex-1 flex-col p-[14px]">
+      <SectionLabel className="shrink-0">{t("Report")}</SectionLabel>
 
       <p aria-live="polite" className="mt-[12px] flex shrink-0 items-start gap-[11px]">
         <span

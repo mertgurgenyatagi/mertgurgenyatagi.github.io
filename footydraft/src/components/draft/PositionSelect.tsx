@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { type PositionCode, positionNames } from '../../data/formation'
+import { useI18n } from '../../lib/i18n'
 
 interface PositionSelectProps {
   value: PositionCode | null
@@ -31,6 +32,8 @@ export function PositionSelect({
   options,
   disabled = false,
 }: PositionSelectProps) {
+  const { t } = useI18n();
+
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -109,7 +112,7 @@ export function PositionSelect({
         <ul
           id={listId}
           role="listbox"
-          aria-label="Filter by position"
+          aria-label={t("Filter by position")}
           className="select-list fx fx-soft scroller"
         >
           {choices.map((choice, index) => (

@@ -25,6 +25,7 @@ import {
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
+import { useI18n } from '../lib/i18n'
 
 /** The table you get cold, matching the other three screens. */
 const DEFAULT_DRAFTERS: Drafter[] = [
@@ -90,6 +91,8 @@ function activeSeatOf(state: RoundState): number {
  * eleven slots fill for everyone at the table at the same time.
  */
 export function DondDraft({ config }: { config: DraftConfig }) {
+  const { t } = useI18n();
+
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
 
@@ -595,7 +598,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
           <DraftClock round={Math.min(round?.index ?? 1, SQUAD_SIZE)} rounds={SQUAD_SIZE} />
 
           <section className="flex shrink-0 flex-col gap-[10px]">
-            <SectionLabel>This round fills</SectionLabel>
+            <SectionLabel>{t("This round fills")}</SectionLabel>
             <span className="dond-position font-display font-medium uppercase leading-[0.82] text-accent">
               {roundPlan?.position ?? '—'}
             </span>
@@ -621,7 +624,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
           style={{ animationDelay: '150ms' }}
         >
           <div className="flex shrink-0 items-baseline justify-between gap-4">
-            <SectionLabel>The boxes</SectionLabel>
+            <SectionLabel>{t("The boxes")}</SectionLabel>
             <span className="tabular font-display text-[10px] font-medium uppercase tracking-[0.16em] text-dim">
               {shut} still shut
             </span>
@@ -677,12 +680,8 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
       {/* ---- One viewport, one column: the two halves take turns. ---- */}
       <div className="mt-[12px] flex shrink-0 items-center gap-[2px] border-t border-line pt-[10px] md:hidden">
-        <PaneTab active={pane === 'boxes'} onClick={() => setPane('boxes')}>
-          The boxes
-        </PaneTab>
-        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>
-          The elevens
-        </PaneTab>
+        <PaneTab active={pane === 'boxes'} onClick={() => setPane('boxes')}>{t("The boxes")}</PaneTab>
+        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t("The elevens")}</PaneTab>
       </div>
     </div>
   )

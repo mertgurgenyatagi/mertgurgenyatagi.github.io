@@ -4,6 +4,7 @@ import type { Drafter, Squad } from '../../lib/draftEngine'
 import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { Dotgrid } from './Dotgrid'
+import { useI18n } from '../../lib/i18n'
 
 interface PitchViewProps {
   drafters: Drafter[]
@@ -41,11 +42,13 @@ export function PitchView({
   preview,
   lastArrival,
 }: PitchViewProps) {
+  const { t } = useI18n();
+
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <div
         role="tablist"
-        aria-label="Whose eleven to show"
+        aria-label={t("Whose eleven to show")}
         className="flex shrink-0 items-center gap-[2px] border-b border-line"
       >
         {drafters.map((drafter, seat) => (
@@ -101,6 +104,7 @@ export function PitchView({
  * turf dropped into it would be the one lit object on a dark page.
  */
 function Markings() {
+
   return (
     <svg
       aria-hidden="true"
@@ -144,6 +148,7 @@ function Node({
   preview: Player | null
   arrived: boolean
 }) {
+
   const shown = player ?? preview
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [player?.id])

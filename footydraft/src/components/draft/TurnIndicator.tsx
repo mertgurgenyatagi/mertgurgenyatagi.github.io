@@ -1,5 +1,6 @@
 import type { Drafter } from '../../lib/draftEngine'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 interface TurnIndicatorProps {
   drafters: Drafter[]
@@ -32,13 +33,15 @@ export function TurnIndicator({
   turn,
   yourTurn,
 }: TurnIndicatorProps) {
+  const { t } = useI18n();
+
   return (
     <section
       key={turn}
       className="spin-panel relative flex min-h-0 flex-1 flex-col overflow-hidden p-[14px]"
     >
       <div className="flex shrink-0 items-baseline justify-between gap-3">
-        <SectionLabel>Table</SectionLabel>
+        <SectionLabel>{t("Table")}</SectionLabel>
         <span
           className={[
             'truncate font-display text-[10.5px] font-medium uppercase tracking-[0.14em]',
