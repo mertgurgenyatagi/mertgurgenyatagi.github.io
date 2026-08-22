@@ -49,14 +49,6 @@ const ROUND_HOLD = 1400
 const BOT_PAUSE = [1100, 2600]
 const HUMAN_PAUSE = [1800, 3800]
 
-const CHATTER = [
-  'take the deal',
-  'no chance, stick',
-  'that box was mine',
-  'the banker is robbing you',
-  'i would have opened four',
-  'good box',
-]
 
 type Step = 'choosing' | 'revealing' | 'deciding' | 'weighing' | 'done'
 
@@ -171,7 +163,13 @@ export function DondDraft({ config }: { config: DraftConfig }) {
     if (isMultiplayer && !isHost) {
       if (room?.dondRound !== undefined) {
         const r = room.dondRound
-        setRound(r ? { ...r, boxes: r.boxes || [], order: r.order || [], hearing: r.hearing || [], offers: r.offers || {} } : null)
+        setRound(r ? {
+          ...r,
+          boxes: (r.boxes || []).map((box: any) => ({ ...box, openedBy: box.openedBy ?? null })),
+          order: r.order || [],
+          hearing: r.hearing || [],
+          offers: r.offers || {}
+        } : null)
       }
       if (room?.dondPicks !== undefined) {
         setPicks(room.dondPicks || [])
@@ -507,35 +505,6 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   }, [complete])
 
   /* ------------------------------------------------------------- the room --- */
-
-  const chattered = useRef('')
-  useEffect(() => {
-    if (!round || round.step !== 'deciding' || activeSeat === youSeat) return
-    if (chattered.current === beatKey) return
-    chattered.current = beatKey
-    if (Math.random() > 0.3) return
-
-    const speaker = drafters[(activeSeat + 1) % seatCount]
-    const timer = window.setTimeout(() => {
-      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
-      if (isMultiplayer && isHost && config.roomId) {
-        sendChatMessage(config.roomId, speaker.name, text)
-      } else if (!isMultiplayer) {
-        setMessages((current) => [
-          ...current,
-          {
-            id: messageId.current++,
-            kind: 'said',
-            author: speaker.name,
-            body: text,
-          },
-        ])
-      }
-    }, 800)
-
-    return () => window.clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beatKey, activeSeat, youSeat])
 
   useEffect(() => {
     if (yourTurn) setTab(youSeat)

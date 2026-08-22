@@ -74,14 +74,6 @@ const HUMAN_PAUSE = [2400, 5200]
 /** How long the room reads "X took Y" before the narrator moves on. */
 const REPORT_HOLD = 1500
 
-const CHATTER = [
-  'needed that one',
-  'was hoping he would drop',
-  'good pick',
-  'there goes my keeper',
-  'right, plan b',
-  'cannot argue with that',
-]
 
 export function Draft() {
 
@@ -379,36 +371,6 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
       ])
     }
   }, [round, complete, isMultiplayer, isHost, config.roomId])
-
-  // The room talks about what just went. Not every pick, or it is noise.
-  const chattered = useRef(-1)
-  useEffect(() => {
-    const last = picks[picks.length - 1]
-    if (!last || last.seat === youSeat || last.overall === chattered.current) return
-    chattered.current = last.overall
-    if (Math.random() > 0.34) return
-
-    const timer = window.setTimeout(() => {
-      if (isMultiplayer && isHost && config.roomId) {
-        // We only want the host to simulate bots talking in multiplayer
-        if (drafters[last.seat].kind === 'bot') {
-           remoteSendChatMessage(config.roomId, drafters[last.seat].name, CHATTER[Math.floor(Math.random() * CHATTER.length)])
-        }
-      } else if (!isMultiplayer) {
-        setLocalMessages((current) => [
-          ...current,
-          {
-            id: messageId.current++,
-            kind: 'said',
-            author: drafters[last.seat].name,
-            body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
-          },
-        ])
-      }
-    }, 900)
-
-    return () => window.clearTimeout(timer)
-  }, [picks, youSeat, drafters, isMultiplayer, isHost, config.roomId])
 
   /* ------------------------------------------------------------- the pool -- */
 

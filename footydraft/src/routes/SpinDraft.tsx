@@ -64,15 +64,6 @@ const SPIN_MS = 5600
 const BOT_PAUSE = [1500, 3400]
 const HUMAN_PAUSE = [2400, 5000]
 
-const CHATTER = [
-  'needed that one',
-  'was hoping he would drop',
-  'good pick',
-  'there goes my keeper',
-  'right, plan b',
-  'cannot argue with that',
-  'the wheel owes me',
-]
 
 /**
  * Spin the Wheel, drawn as layout 08 of the exhibition — the wheel is the sun
@@ -395,33 +386,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     }
   }, [round, complete, report, isMultiplayer, isHost, config.roomId])
 
-  // The room talks about what just went. Not every pick, or it is noise.
-  const chattered = useRef(-1)
-  useEffect(() => {
-    const last = picks[picks.length - 1]
-    if (!last || last.seat === youSeat || last.overall === chattered.current) return
-    chattered.current = last.overall
-    if (Math.random() > 0.34) return
 
-    const timer = window.setTimeout(() => {
-      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
-      if (isMultiplayer && isHost && config.roomId) {
-        sendChatMessage(config.roomId, drafters[last.seat].name, text)
-      } else if (!isMultiplayer) {
-        setMessages((current) => [
-          ...current,
-          {
-            id: messageId.current++,
-            kind: 'said',
-            author: drafters[last.seat].name,
-            body: text,
-          },
-        ])
-      }
-    }, 900)
-
-    return () => window.clearTimeout(timer)
-  }, [picks, youSeat, drafters, isMultiplayer, isHost, config.roomId])
 
   /* --------------------------------------------------------------- the list -- */
 

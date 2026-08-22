@@ -65,16 +65,6 @@ const RESULT_HOLD = 1900
  */
 const LOCKOUT_MS = 3000
 
-const CHATTER = [
-  'too rich for me',
-  'go on then',
-  'not selling',
-  'he is worth double',
-  'let it go',
-  'keep going',
-  'that is a steal',
-  'i needed that one',
-]
 
 type Phase = 'live' | 'sold' | 'unsold'
 
@@ -273,26 +263,42 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const live = useRef({ squads, budgets, block, armed, sales, drafters })
   live.current = { squads, budgets, block, armed, sales, drafters }
 
-  const award = useCallback((seat: number, player: Player) => {
-    setBoard((previous) => {
-      const squad: Squad = {}
-      for (const pick of previous.picks) if (pick.seat === seat) squad[pick.slot] = pick.player
+  const award = useCallback(
+    (seat: number, player: Player) => {
+      setBoard((previous) => {
+        const squad: Squad = {}
+        for (const pick of previous.picks) if (pick.seat === seat) squad[pick.slot] = pick.player
 
-      const slot = landingSlot(player, squad)
-      if (slot) {
+        const slot = landingSlot(player, squad)
+        if (slot) {
+          return {
+            ...previous,
+            picks: [...previous.picks, { overall: previous.picks.length, seat, slot, player }],
+          }
+        }
+
         return {
           ...previous,
-          picks: [...previous.picks, { overall: previous.picks.length, seat, slot, player }],
+          spare: previous.spare.map((list, at) => (at === seat ? [...list, player] : list)),
+        }
+      })
+      setLastArrival(player.id)
+    },
+    [],
+  )
+
+  const salesProcessed = useRef(0)
+  useEffect(() => {
+    if (sales.length > salesProcessed.current) {
+      for (let i = salesProcessed.current; i < sales.length; i++) {
+        const sale = sales[i]
+        if (sale.seat !== null) {
+          award(sale.seat, sale.player)
         }
       }
-
-      return {
-        ...previous,
-        spare: previous.spare.map((list, at) => (at === seat ? [...list, player] : list)),
-      }
-    })
-    setLastArrival(player.id)
-  }, [])
+      salesProcessed.current = sales.length
+    }
+  }, [sales, award])
 
   /**
    * The graveyard swap: a spare goes into its slot and whoever was holding it
@@ -536,7 +542,6 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       { lot: lot.number, player: lot.player, seat: holder, price: holder === null ? 0 : price },
     ])
     if (holder !== null) {
-      award(holder, lot.player)
       if (isMultiplayer && isHost && config.roomId) {
         const winner = drafters[holder].name
         sendChatMessage(config.roomId, '', `Lot ${lot.number} - ${lot.player.name} - €${price}M to ${winner}`)
@@ -598,33 +603,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
   /* ------------------------------------------------------------- the room --- */
 
-  const spoke = useRef(-1)
-  useEffect(() => {
-    if (!block || block.holder === null || block.holder === youSeat) return
-    if (spoke.current === block.resets) return
-    spoke.current = block.resets
-    if (Math.random() > 0.16) return
 
-    const speaker = live.current.drafters[(block.holder + 1) % seatCount]
-    const timer = window.setTimeout(() => {
-      const text = CHATTER[Math.floor(Math.random() * CHATTER.length)]
-      if (isMultiplayer && isHost && config.roomId) {
-        sendChatMessage(config.roomId, speaker.name, text)
-      } else if (!isMultiplayer) {
-        setMessages((current) => [
-          ...current,
-          {
-            id: messageId.current++,
-            kind: 'said',
-            author: speaker.name,
-            body: text,
-          },
-        ])
-      }
-    }, 700)
-
-    return () => window.clearTimeout(timer)
-  }, [block?.resets, block?.holder, seatCount, youSeat, block, isMultiplayer, isHost, config.roomId])
 
   /* --------------------------------------------------------------- render --- */
 
