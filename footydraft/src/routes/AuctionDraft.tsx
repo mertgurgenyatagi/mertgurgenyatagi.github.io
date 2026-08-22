@@ -50,8 +50,7 @@ const FALLBACK_TIMER = 15
 /** How long the hammer holds on screen before the next lot comes up. */
 const RESULT_HOLD = 1900
 
-/** How often the room considers raising. Bids land on some of these, not all. */
-const BID_TICK = 480
+
 
 /**
  * **Nobody may bid for the first three seconds of a countdown** — and the
@@ -401,83 +400,83 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     if (!block || block.phase !== 'live') return
     if (!isHost) return
 
-    const tick = window.setInterval(() => {
-      const now = live.current.block
-      if (!now || now.phase !== 'live') return
-      // The lockout is the room's too — see LOCKOUT_MS. Held before the
-      // valuations are read at all, so a locked tick costs nothing.
-      if (!live.current.armed) return
+    const now = block
+    const spent: number[] = []
+    const timers: number[] = []
 
-      const willing: { seat: number; step: number }[] = []
-      const spent: number[] = []
-
-      const POS_LIST = ['AMF', 'CB', 'CDM', 'CM', 'GK', 'LB', 'LW', 'RB', 'RW', 'ST']
-      const lotsRevealed = new Array(10).fill(0)
-      const lotsSold = new Array(10).fill(0)
-      
-      for (const sale of live.current.sales) {
-        const pIdx = POS_LIST.indexOf(sale.player.position)
-        if (pIdx >= 0) {
-          lotsRevealed[pIdx]++
-          if (sale.seat !== null) lotsSold[pIdx]++
-        }
+    const POS_LIST = ['AMF', 'CB', 'CDM', 'CM', 'GK', 'LB', 'LW', 'RB', 'RW', 'ST']
+    const lotsRevealed = new Array(10).fill(0)
+    const lotsSold = new Array(10).fill(0)
+    
+    for (const sale of live.current.sales) {
+      const pIdx = POS_LIST.indexOf(sale.player.position)
+      if (pIdx >= 0) {
+        lotsRevealed[pIdx]++
+        if (sale.seat !== null) lotsSold[pIdx]++
       }
-      const currentPIdx = POS_LIST.indexOf(now.lot.player.position)
-      if (currentPIdx >= 0) lotsRevealed[currentPIdx]++
-      
-      const lotsRemaining = Math.max(0, (15 * seatCount) - now.lot.number)
-      const fractionElapsed = Math.min(1.0, now.lot.number / Math.max(1, 15 * seatCount))
-      const scopedPoolSize = scopedRef.current.length
+    }
+    const currentPIdx = POS_LIST.indexOf(now.lot.player.position)
+    if (currentPIdx >= 0) lotsRevealed[currentPIdx]++
+    
+    const lotsRemaining = Math.max(0, (15 * seatCount) - now.lot.number)
+    const fractionElapsed = Math.min(1.0, now.lot.number / Math.max(1, 15 * seatCount))
+    const scopedPoolSize = scopedRef.current.length
 
-      for (let seat = 0; seat < seatCount; seat += 1) {
-        if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
+    for (let seat = 0; seat < seatCount; seat += 1) {
+      if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
 
-        const drafter = drafters[seat]
-        if (drafter.kind !== 'bot') continue
+      const drafter = drafters[seat]
+      if (drafter.kind !== 'bot') continue
 
-        const step = evaluateAuctionBot(
-          seat,
-          now,
-          live.current.squads,
-          live.current.budgets,
-          seatCount,
-          lotsRevealed,
-          lotsSold,
-          lotsRemaining,
-          fractionElapsed,
-          scopedPoolSize
-        )
+      const step = evaluateAuctionBot(
+        seat,
+        now,
+        live.current.squads,
+        live.current.budgets,
+        seatCount,
+        lotsRevealed,
+        lotsSold,
+        lotsRemaining,
+        fractionElapsed,
+        scopedPoolSize
+      )
 
-        if (step !== null) willing.push({ seat, step })
-        else spent.push(seat)
+      if (step !== null) {
+        // The bot has decided to bid. It waits 5, 6, 6, 7, or 8 seconds randomly before placing it.
+        const delays = [5000, 6000, 6000, 7000, 8000]
+        const delay = delays[Math.floor(Math.random() * delays.length)]
+        const timer = window.setTimeout(() => {
+          // Double check it hasn't been locked out by the room in the meantime,
+          // though this delay is usually well beyond LOCKOUT_MS.
+          if (live.current.armed && live.current.block?.phase === 'live') {
+            placeBid(seat, step)
+          }
+        }, delay)
+        timers.push(timer)
+      } else {
+        spent.push(seat)
       }
+    }
 
-      /* A seat whose line the price has already crossed is out of this lot for
-         good — its valuation is fixed for the lot's length and its budget only
-         ever falls, so it can never come back in. Saying so is what draws the
-         four dimmed cards next to the one holding it. */
-      if (spent.length > 0) {
-        setBlock((previous) =>
-          previous && previous.phase === 'live'
-            ? {
-                ...previous,
-                out: [...previous.out, ...spent.filter((seat) => !previous.out.includes(seat))],
-              }
-            : previous,
-        )
-      }
+    /* A seat whose line the price has already crossed is out of this lot for
+       good — its valuation is fixed for the lot's length and its budget only
+       ever falls, so it can never come back in. Saying so is what draws the
+       four dimmed cards next to the one holding it. */
+    if (spent.length > 0) {
+      setBlock((previous) =>
+        previous && previous.phase === 'live'
+          ? {
+              ...previous,
+              out: [...previous.out, ...spent.filter((seat) => !previous.out.includes(seat))],
+            }
+          : previous,
+      )
+    }
 
-      if (willing.length === 0) return
-      // A raise is a decision, not a reflex: at most one per tick, and not
-      // every tick, so the clock actually gets to run down between them.
-      if (Math.random() > 0.52) return
-
-      const raise = willing[Math.floor(Math.random() * willing.length)]
-      placeBid(raise.seat, raise.step)
-    }, BID_TICK)
-
-    return () => window.clearInterval(tick)
-  }, [block?.lot.number, block?.phase, seatCount, youSeat, placeBid, isHost])
+    return () => {
+      timers.forEach(t => window.clearTimeout(t))
+    }
+  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, placeBid, isHost, drafters])
 
   /* -------------------------------------------------------------- the clock -- */
 
