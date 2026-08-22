@@ -4,9 +4,9 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
-  // Relative base so the build works from a GitHub Pages project subpath
-  // without hardcoding the repo name.
-  base: './',
+  // Absolute base so the build works from a GitHub Pages project subpath
+  // without breaking when the URL lacks a trailing slash.
+  base: '/footydraft/',
   plugins: [
     react(),
     tailwindcss(),
