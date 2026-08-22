@@ -26,6 +26,7 @@ import {
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
+import { SquadCompare } from './SquadCompare'
 import { useI18n } from '../lib/i18n'
 
 /** The table you get cold, matching the other three screens. */
@@ -545,6 +546,12 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       : null
 
   const yourSpare = board.spare[youSeat] ?? []
+
+  /* Once the auction is done and the block has been cleared (backfill has run),
+     swap to the comparison screen. */
+  if (finished && !block) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   return (
     <div

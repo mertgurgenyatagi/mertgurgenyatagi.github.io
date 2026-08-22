@@ -26,6 +26,7 @@ import { type Player, inScope, loadPool } from '../lib/players'
 import { AuctionDraft } from './AuctionDraft'
 import { DondDraft } from './DondDraft'
 import { SpinDraft } from './SpinDraft'
+import { SquadCompare } from './SquadCompare'
 import { useI18n } from '../lib/i18n'
 
 /** What the lobby hands over. Every field falls back to the same defaults. */
@@ -169,6 +170,14 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   const taken = useMemo(() => new Set(picks.map((pick) => pick.player.id)), [picks])
   const yourSquad = squads[youSeat] ?? {}
+
+  /* When the last pick lands, hand off to the comparison screen. Keep the
+     draft state alive in this component so the back button can return here
+     later without re-running the whole draft — it is just a conditional render,
+     not a navigation. */
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   /* ------------------------------------------------------------- picking -- */
 

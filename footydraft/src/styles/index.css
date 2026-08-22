@@ -698,6 +698,42 @@
 }
 
 /* ============================================================================
+   THE SQUAD COMPARISON SCREEN
+   All drafters' pitches side by side, equal width, shrunk to fill the
+   available height without scrolling. The --drafter-count custom property is
+   set inline from JS and drives the grid column count.
+   ============================================================================ */
+
+.squad-compare {
+  container-type: size;
+}
+
+.squad-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--drafter-count, 2), minmax(0, 1fr));
+  gap: clamp(8px, 1.5cqw, 20px);
+  align-items: start;
+  container-type: size;
+}
+
+.squad-pitch {
+  /* Each pitch column is its own size container so node sizes can use cqh
+     relative to the column's own height rather than the whole viewport. */
+  container-type: size;
+  min-height: 0;
+  /* The pitch box inside is aspect-ratio-constrained, so height drives
+     everything — give the column all it can take. */
+  height: 100%;
+}
+
+.squad-compare {
+  --compare-node: clamp(18px, 3.8cqh, 34px);
+  --compare-name: clamp(40px, 9cqw, 100px);
+  --compare-name-size: clamp(6px, 1.1cqh, 10px);
+  --compare-pos-size: clamp(5px, 0.9cqh, 8px);
+}
+
+/* ============================================================================
    THE DRAFT SCREEN
    Four numbered sections, hairline-ruled, in one frame-height column that never
    scrolls. The rules below are the ones a utility class cannot state: the

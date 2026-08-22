@@ -25,6 +25,7 @@ import {
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
+import { SquadCompare } from './SquadCompare'
 import { useI18n } from '../lib/i18n'
 
 /** The table you get cold, matching the other three screens. */
@@ -162,6 +163,10 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   const roundPlan = round && !complete ? plan[round.index - 1] : null
   const activeSeat = round && !complete && round.step !== 'done' ? activeSeatOf(round) : -1
   const yourTurn = activeSeat === youSeat
+
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   /* ------------------------------------------------------------ the rounds -- */
 

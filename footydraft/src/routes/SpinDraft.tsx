@@ -36,6 +36,7 @@ import {
   wheelSlices,
 } from '../lib/wheelEngine'
 import type { DraftConfig } from './Draft'
+import { SquadCompare } from './SquadCompare'
 import { useI18n } from '../lib/i18n'
 
 /**
@@ -163,6 +164,10 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const taken = useMemo(() => new Set(picks.map((pick) => pick.player.id)), [picks])
   const yourSquad = squads[youSeat] ?? {}
   const activeSquad = squads[activeSeat >= 0 ? activeSeat : youSeat] ?? {}
+
+  if (complete) {
+    return <SquadCompare drafters={drafters} squads={squads} />
+  }
 
   /* --------------------------------------------------------------- picking -- */
 
