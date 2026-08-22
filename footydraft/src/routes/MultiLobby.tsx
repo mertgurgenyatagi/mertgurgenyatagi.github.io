@@ -102,13 +102,48 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
   }, [uid, code, session])
 
   useEffect(() => {
-    if (room?.status === 'drafting' && room.config) {
+    if (room?.status === 'drafting' && room.config && room.drafters) {
+      // Build seats array to pass as the initial config.drafters
+      const computedSeats: Seat[] = []
+      const drafterEntries = Object.entries(room.drafters)
+      const hostEntry = drafterEntries.find(([id]) => id === room.host)
+      if (hostEntry) {
+        computedSeats.push({
+          id: hostEntry[0],
+          kind: hostEntry[1].kind as any,
+          name: hostEntry[1].name,
+          mark: hostEntry[1].mark,
+          note: ''
+        })
+      }
+      for (const [id, drafter] of drafterEntries) {
+        if (id === room.host || drafter.kind === 'bot') continue
+        computedSeats.push({
+          id,
+          kind: drafter.kind as any,
+          name: drafter.name,
+          mark: drafter.mark,
+          note: ''
+        })
+      }
+      for (const [id, drafter] of drafterEntries) {
+        if (drafter.kind === 'bot') {
+          computedSeats.push({
+            id,
+            kind: 'bot',
+            name: drafter.name,
+            mark: drafter.mark,
+            note: ''
+          })
+        }
+      }
+
       navigate(`/draft/${room.config.format || 'free-pick'}`, {
-        state: { ...room.config, roomId: code },
+        state: { ...room.config, drafters: computedSeats, roomId: code },
         replace: true
       })
     }
-  }, [room?.status, room?.config, navigate, code])
+  }, [room?.status, room?.config, room?.drafters, room?.host, uid, navigate, code])
 
   // Derive UI state from room
   const config = room?.config || {}

@@ -39,7 +39,47 @@ export function useMultiplayerRoom(code: string | undefined) {
     return () => unsub()
   }, [code])
 
+  // Maintain presence if we are in the room
+  useEffect(() => {
+    if (!code || !uid || !room?.drafters?.[uid]) return
+    const meRef = ref(database, `rooms/${code}/drafters/${uid}`)
+    
+    // Set online and switch kind back to human in case bot had taken over
+    update(meRef, { online: true, kind: 'human' })
+    
+    const dcon = onDisconnect(meRef)
+    dcon.update({ online: false })
+    
+    return () => {
+      dcon.cancel()
+    }
+  }, [code, uid, uid ? room?.drafters?.[uid] != null : false])
+
   return { room, uid }
+}
+
+export function useHostBotTakeover(code: string | undefined, isHost: boolean, room: RoomState | null) {
+  useEffect(() => {
+    if (!code || !isHost || !room || room.status !== 'drafting') return
+    
+    const timers: Record<string, number> = {}
+    
+    for (const [id, drafter] of Object.entries(room.drafters || {})) {
+      if (drafter.kind === 'human' && drafter.online === false) {
+        timers[id] = window.setTimeout(() => {
+          const dRef = ref(database, `rooms/${code}/drafters/${id}`)
+          update(dRef, { kind: 'bot' })
+          sendChatMessage(code, '', `${drafter.name} disconnected. A bot has taken over.`)
+        }, 45000)
+      }
+    }
+    
+    return () => {
+      for (const t of Object.values(timers)) {
+        window.clearTimeout(t)
+      }
+    }
+  }, [code, isHost, room?.drafters, room?.status])
 }
 
 export async function joinRoom(

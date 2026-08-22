@@ -23,7 +23,7 @@ import {
   slotFor,
 } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
-import { useMultiplayerRoom, makePick as remoteMakePick, sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
+import { useMultiplayerRoom, useHostBotTakeover, makePick as remoteMakePick, sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
 import { AuctionDraft } from './AuctionDraft'
 import { DondDraft } from './DondDraft'
 import { SpinDraft } from './SpinDraft'
@@ -119,7 +119,26 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
      countdown to end. The state, the tick, the mobile seconds badge and the
      cheapest-eligible auto-pick that fired on zero are all gone with it. */
 
-  const drafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  const { room, uid } = useMultiplayerRoom(config.roomId)
+  const isMultiplayer = Boolean(config.roomId)
+  const isHost = isMultiplayer ? room?.host === uid : true
+  useHostBotTakeover(config.roomId, isHost, room)
+
+  const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
+  
+  const drafters = useMemo(() => {
+    if (!isMultiplayer || !room?.drafters) return baseDrafters
+    return baseDrafters.map(d => {
+      const rd = room.drafters[d.id]
+      if (rd) {
+        // If it's your seat, keep it 'you' locally so the UI knows it's you, otherwise take remote kind
+        const kind = d.kind === 'you' ? 'you' : rd.kind
+        return { ...d, kind } as Drafter
+      }
+      return d
+    })
+  }, [baseDrafters, isMultiplayer, room?.drafters])
+
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
   const totalPicks = seatCount * SQUAD_SIZE
@@ -141,10 +160,6 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const [localMessages, setLocalMessages] = useState<Message[]>([])
 
   const messageId = useRef(1)
-
-  const { room, uid } = useMultiplayerRoom(config.roomId)
-  const isMultiplayer = Boolean(config.roomId)
-  const isHost = isMultiplayer ? room?.host === uid : true
 
   // Derive picks from room if multiplayer, else local
   const picks = useMemo(() => {
