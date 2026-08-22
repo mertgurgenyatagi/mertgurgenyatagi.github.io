@@ -385,6 +385,14 @@ expensive** below for what it actually was.
 the dotted wordmark, the Auction's rebuilt top bar at narrow widths, and the solo lobby's chat
 fitting above the fold are the three worth looking at first.
 
+The **`footydraft-integration-v2`** branch, cut from `main` on 2026-08-22, took on the first three implementation tasks from the `FOOTYDRAFT_HANDOVER.md` list in a Tachyon-mode pass:
+
+- **Turkish Translation:** The `LanguageSwitch` component now actually toggles language. A new `useI18n()` context provides a `t()` function that swaps the entire app's text between English and a flat dictionary of Turkish translations (`src/lib/translations.ts`). Every hardcoded UI string was patched to route through it.
+- **Squad Comparison Screen:** A new `SquadCompare.tsx` component replaces the draft UI when a draft ends. All completed squads are shown side-by-side simultaneously. It obeys the non-negotiables: no scrolling, no numbers, no leaderboard — it just shrinks everyone's pitch down to fit the available space using CSS container query heights (`cqh`). It is wired into all four draft formats automatically.
+- **Firebase Provisioning:** The backend was stood up. A new Firebase project was provisioned with Firestore (`eur3`), Realtime Database (`europe-west1`), and Anonymous Auth. The configuration was written to `.env.local` for local development and injected as a heredoc into `.github/workflows/deploy.yml` for CI builds. (The app does not yet read or write to it).
+
+Both `npm run build` and `npm test` pass.
+
 ## Tachyon Mode
 
 A workflow keyword Mert invokes during build sessions — not a game rule, a process one.
