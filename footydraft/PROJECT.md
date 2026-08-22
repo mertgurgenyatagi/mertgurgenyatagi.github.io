@@ -389,9 +389,10 @@ The **`footydraft-integration-v2`** branch, cut from `main` on 2026-08-22, took 
 
 - **Turkish Translation:** The `LanguageSwitch` component now actually toggles language. A new `useI18n()` context provides a `t()` function that swaps the entire app's text between English and a flat dictionary of Turkish translations (`src/lib/translations.ts`). Every hardcoded UI string was patched to route through it.
 - **Squad Comparison Screen:** A new `SquadCompare.tsx` component replaces the draft UI when a draft ends. All completed squads are shown side-by-side simultaneously. It obeys the non-negotiables: no scrolling, no numbers, no leaderboard — it just shrinks everyone's pitch down to fit the available space using CSS container query heights (`cqh`). It is wired into all four draft formats automatically.
-- **Firebase Provisioning:** The backend was stood up. A new Firebase project was provisioned with Firestore (`eur3`), Realtime Database (`europe-west1`), and Anonymous Auth. The configuration was written to `.env.local` for local development and injected as a heredoc into `.github/workflows/deploy.yml` for CI builds. (The app does not yet read or write to it).
+- **Firebase Provisioning:** The backend was stood up. A new Firebase project was provisioned with Firestore (`eur3`), Realtime Database (`europe-west1`), and Anonymous Auth. The configuration was written to `.env.local` for local development and injected as a heredoc into `.github/workflows/deploy.yml` for CI builds.
+- **Free Pick Multiplayer Wiring:** The Realtime Database was wired into the app for the Free Pick draft. `MultiLobby` was refactored to sync the draft config, drafter presence (via `onDisconnect`), and lobby chat in real-time. `DraftRoom` detects multiplayer sessions and fetches/pushes picks directly to the RTDB. To prevent race conditions from duplicated bot actions, only the room's host executes and pushes simulated bot turns.
 
-Both `npm run build` and `npm test` pass.
+`npm run build` passes, though the RTDB integration caused network-related test failures since the test suite wasn't updated with Firebase mocks (following the "no tests" Tachyon directive).
 
 ## Tachyon Mode
 
