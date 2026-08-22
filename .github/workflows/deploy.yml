@@ -33,12 +33,31 @@ jobs:
             irishtable/package-lock.json
             iconictable/package-lock.json
             vizehtable/package-lock.json
+            footydraft/package-lock.json
+
+      # Every project below is cached on the hash of its own source tree,
+      # computed right after checkout -- before any build step exists, so
+      # dist/ and node_modules/ (both gitignored) can't leak into the hash.
+      # A project whose files didn't change gets its dist/ restored instead
+      # of rebuilt. This is what keeps one project's commit from spending CI
+      # time rebuilding every *other* project too -- each key depends only on
+      # that project's own tree, so it's unaffected by anything outside it.
+      # A cache miss just means a normal full rebuild; nothing here can
+      # publish something stale, only skip redundant work.
 
       # Served from /theirishtable/, NOT /irishtable/. The old path is burned:
       # a pitch email to a different channel carries a hyperlink to it, and
       # emails do not expire (see ZEALANDTABLE_HANDOVER.md 22). The source
       # folder keeps its original name; only the published path differs.
+      - name: Cache irishtable build
+        id: cache-irishtable
+        uses: actions/cache@v4
+        with:
+          path: irishtable/dist
+          key: irishtable-dist-${{ hashFiles('irishtable/**') }}
+
       - name: Build irishtable
+        if: steps.cache-irishtable.outputs.cache-hit != 'true'
         run: |
           cd irishtable
           cat << 'EOF' > .env
@@ -54,7 +73,15 @@ jobs:
           npm ci
           npm run build
 
+      - name: Cache zealandtable build
+        id: cache-zealandtable
+        uses: actions/cache@v4
+        with:
+          path: zealandtable/dist
+          key: zealandtable-dist-${{ hashFiles('zealandtable/**') }}
+
       - name: Build zealandtable
+        if: steps.cache-zealandtable.outputs.cache-hit != 'true'
         run: |
           cd zealandtable
           cat << 'EOF' > .env
@@ -70,7 +97,15 @@ jobs:
           npm ci
           npm run build
 
+      - name: Cache iconictable build
+        id: cache-iconictable
+        uses: actions/cache@v4
+        with:
+          path: iconictable/dist
+          key: iconictable-dist-${{ hashFiles('iconictable/**') }}
+
       - name: Build iconictable
+        if: steps.cache-iconictable.outputs.cache-hit != 'true'
         run: |
           cd iconictable
           cat << 'EOF' > .env
@@ -86,7 +121,15 @@ jobs:
           npm ci
           npm run build
 
+      - name: Cache vizehtable build
+        id: cache-vizehtable
+        uses: actions/cache@v4
+        with:
+          path: vizehtable/dist
+          key: vizehtable-dist-${{ hashFiles('vizehtable/**') }}
+
       - name: Build vizehtable
+        if: steps.cache-vizehtable.outputs.cache-hit != 'true'
         run: |
           cd vizehtable
           cat << 'EOF' > .env
@@ -99,6 +142,23 @@ jobs:
           VITE_PHOTOS_ENABLED=false
           VITE_FIREBASE_DATABASE_URL=https://vizehtable-app-default-rtdb.europe-west1.firebasedatabase.app
           EOF
+          npm ci
+          npm run build
+
+      # No .env yet -- footydraft has no backend wired in yet, so there's
+      # nothing to inject. Add the same heredoc pattern as the other four
+      # once Firebase is actually wired into src/.
+      - name: Cache footydraft build
+        id: cache-footydraft
+        uses: actions/cache@v4
+        with:
+          path: footydraft/dist
+          key: footydraft-dist-${{ hashFiles('footydraft/**') }}
+
+      - name: Build footydraft
+        if: steps.cache-footydraft.outputs.cache-hit != 'true'
+        run: |
+          cd footydraft
           npm ci
           npm run build
 
@@ -142,6 +202,9 @@ jobs:
 
           mkdir -p _site/vizehtable
           cp -r vizehtable/dist/* _site/vizehtable/
+
+          mkdir -p _site/footydraft
+          cp -r footydraft/dist/* _site/footydraft/
 
           # /irishtable/ stays retired forever. A pitch email to Zealandism
           # carries a hyperlink to it, and that email cannot be recalled, so
