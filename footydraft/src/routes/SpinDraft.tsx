@@ -103,15 +103,40 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   
   const drafters = useMemo(() => {
     if (!isMultiplayer || !room?.drafters) return baseDrafters
-    return baseDrafters.map(d => {
-      const rd = room.drafters[d.id]
-      if (rd) {
-        const kind = d.kind === 'you' ? 'you' : rd.kind
-        return { ...d, kind } as Drafter
-      }
-      return d
-    })
-  }, [baseDrafters, isMultiplayer, room?.drafters])
+    
+    const computedSeats: Drafter[] = []
+    const drafterEntries = Object.entries(room.drafters)
+    const hostEntry = drafterEntries.find(([id]) => id === room.host)
+    if (hostEntry) {
+      computedSeats.push({
+        id: hostEntry[0],
+        kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
+        name: hostEntry[1].name,
+        mark: hostEntry[1].mark,
+      })
+    }
+    
+    const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of humanEntries) {
+      computedSeats.push({
+        id,
+        kind: id === uid ? 'you' : drafter.kind as any,
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    
+    const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of botEntries) {
+      computedSeats.push({
+        id,
+        kind: 'bot',
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    return computedSeats
+  }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
 
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
@@ -136,6 +161,9 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const [rotation, setRotation] = useState(-179)
   const [phase, setPhase] = useState<'spinning' | 'landed'>('spinning')
 
+  const [landed, setLanded] = useState<WheelSlice | null>(null)
+  const [landedTurn, setLandedTurn] = useState(-1)
+  
   // Sync state from host to clients
   useEffect(() => {
     if (isMultiplayer && !isHost && room?.spinState) {
@@ -143,16 +171,18 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
       setFeed(room.spinState.feed || [])
       setRotation(room.spinState.rotation || 0)
       setPhase(room.spinState.phase || 'spinning')
+      setLanded(room.spinState.landed || null)
+      setLandedTurn(room.spinState.landedTurn ?? -1)
     }
   }, [isMultiplayer, isHost, room?.spinState])
 
   // Sync state from host to firebase
   useEffect(() => {
     if (isMultiplayer && isHost && config.roomId) {
-      updateSpinState(config.roomId, { picks, feed, rotation, phase })
+      updateSpinState(config.roomId, { picks, feed, rotation, phase, landed, landedTurn })
     }
-  }, [isMultiplayer, isHost, config.roomId, picks, feed, rotation, phase])
-  const [landed, setLanded] = useState<WheelSlice | null>(null)
+  }, [isMultiplayer, isHost, config.roomId, picks, feed, rotation, phase, landed, landedTurn])
+
   /**
    * Which turn the wheel currently on screen was spun for. A pick lands one
    * commit before the effect that starts the next spin runs, so for exactly
@@ -162,7 +192,6 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
    * old category against the new drafter. Stamping the landing with its own
    * turn is what makes that window unrepresentable rather than merely rare.
    */
-  const [landedTurn, setLandedTurn] = useState(-1)
 
   const messageId = useRef(1)
   const lineId = useRef(1)
@@ -328,7 +357,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     }, wait)
 
     return () => window.clearTimeout(timer)
-  }, [settled, activeSeat, complete, youSeat, drafters, commit, round, entityPool.length])
+  }, [settled, activeSeat, complete, youSeat, drafters, commit, round, entityPool.length, isMultiplayer, isHost])
 
   /* ---------------------------------------------------------- the reporting -- */
 

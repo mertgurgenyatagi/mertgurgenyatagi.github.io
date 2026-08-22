@@ -110,7 +110,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
       if (hostEntry) {
         computedSeats.push({
           id: hostEntry[0],
-          kind: hostEntry[1].kind as any,
+          kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
           name: hostEntry[1].name,
           mark: hostEntry[1].mark,
           note: ''
@@ -120,7 +120,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
         if (id === room.host || drafter.kind === 'bot') continue
         computedSeats.push({
           id,
-          kind: drafter.kind as any,
+          kind: id === uid ? 'you' : drafter.kind as any,
           name: drafter.name,
           mark: drafter.mark,
           note: ''

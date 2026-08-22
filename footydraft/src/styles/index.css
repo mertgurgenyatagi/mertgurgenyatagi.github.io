@@ -475,8 +475,17 @@
    rather than a measured one: the wordmark is the only frame on the site
    whose box the layout already pins, so there is nothing here for
    `Dotgrid.tsx`'s ResizeObserver to work out. */
-.wordmark-fill {
+.wordmark-mask {
   --wordmark-cell: clamp(6px, 0.85vw, 12px);
+  -webkit-mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
+  -webkit-mask-size: var(--wordmark-cell) var(--wordmark-cell);
+  mask-size: var(--wordmark-cell) var(--wordmark-cell);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+
+.wordmark-fill {
   background-image: var(--wordmark-image);
   background-size: cover;
   background-position: center 30%;
@@ -485,12 +494,6 @@
   background-clip: text;
   color: transparent;
   filter: grayscale(1) contrast(1.35) brightness(1.1);
-  -webkit-mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
-  mask-image: radial-gradient(circle at center, #000 50%, transparent 50%);
-  -webkit-mask-size: var(--wordmark-cell) var(--wordmark-cell);
-  mask-size: var(--wordmark-cell) var(--wordmark-cell);
-  -webkit-mask-repeat: repeat;
-  mask-repeat: repeat;
 }
 
 /* ============================================================================

@@ -114,15 +114,40 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   
   const drafters = useMemo(() => {
     if (!isMultiplayer || !room?.drafters) return baseDrafters
-    return baseDrafters.map(d => {
-      const rd = room.drafters[d.id]
-      if (rd) {
-        const kind = d.kind === 'you' ? 'you' : rd.kind
-        return { ...d, kind } as Drafter
-      }
-      return d
-    })
-  }, [baseDrafters, isMultiplayer, room?.drafters])
+    
+    const computedSeats: Drafter[] = []
+    const drafterEntries = Object.entries(room.drafters)
+    const hostEntry = drafterEntries.find(([id]) => id === room.host)
+    if (hostEntry) {
+      computedSeats.push({
+        id: hostEntry[0],
+        kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
+        name: hostEntry[1].name,
+        mark: hostEntry[1].mark,
+      })
+    }
+    
+    const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of humanEntries) {
+      computedSeats.push({
+        id,
+        kind: id === uid ? 'you' : drafter.kind as any,
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    
+    const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of botEntries) {
+      computedSeats.push({
+        id,
+        kind: 'bot',
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    return computedSeats
+  }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
 
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
@@ -144,8 +169,13 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   // Sync state from host to clients
   useEffect(() => {
     if (isMultiplayer && !isHost) {
-      if (room?.dondRound !== undefined) setRound(room.dondRound)
-      if (room?.dondPicks !== undefined) setPicks(room.dondPicks)
+      if (room?.dondRound !== undefined) {
+        const r = room.dondRound
+        setRound(r ? { ...r, boxes: r.boxes || [], order: r.order || [], hearing: r.hearing || [], offers: r.offers || {} } : null)
+      }
+      if (room?.dondPicks !== undefined) {
+        setPicks(room.dondPicks || [])
+      }
     }
   }, [isMultiplayer, isHost, room?.dondRound, room?.dondPicks])
 
@@ -407,7 +437,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
     return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beatKey, complete, activeSeat, youSeat])
+  }, [beatKey, complete, activeSeat, youSeat, isHost, isMultiplayer])
 
   /* -------------------------------------------- a box on stage, then a choice -- */
 
@@ -431,7 +461,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
 
     return () => window.clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beatKey, round?.openedIndex])
+  }, [beatKey, round?.openedIndex, isHost, isMultiplayer])
 
   /* ---- Nothing left to open. Should not happen against the real pool, but a
           round that stalls is worse than a round that hands out the best left. -- */
@@ -446,7 +476,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
     if (!stand) return
     settle(activeSeat, stand, `${drafters[activeSeat].name} takes ${stand.surname}.`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beatKey, complete, activeSeat])
+  }, [beatKey, complete, activeSeat, isHost, isMultiplayer])
 
   /* ------------------------------------------------------- the round turning -- */
 

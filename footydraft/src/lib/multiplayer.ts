@@ -46,11 +46,18 @@ export function useMultiplayerRoom(code: string | undefined) {
 
   // Maintain presence if we are in the room
   useEffect(() => {
-    if (!code || !uid || !room?.drafters?.[uid]) return
+    if (!code || !uid) return
+    
+    // We only want to set this up when we actually exist in the room
+    const isMe = room?.drafters?.[uid]
+    if (!isMe) return
+
     const meRef = ref(database, `rooms/${code}/drafters/${uid}`)
     
     // Set online and switch kind back to human in case bot had taken over
-    update(meRef, { online: true, kind: 'human' })
+    if (isMe.kind !== 'human' || !isMe.online) {
+      update(meRef, { online: true, kind: 'human' })
+    }
     
     const dcon = onDisconnect(meRef)
     dcon.update({ online: false })
@@ -58,7 +65,7 @@ export function useMultiplayerRoom(code: string | undefined) {
     return () => {
       dcon.cancel()
     }
-  }, [code, uid, uid ? room?.drafters?.[uid] != null : false])
+  }, [code, uid, uid ? room?.drafters?.[uid]?.kind : undefined, uid ? room?.drafters?.[uid]?.online : undefined])
 
   return { room, uid }
 }
@@ -93,34 +100,35 @@ export async function joinRoom(
   isHost: boolean,
   config?: DraftConfig
 ) {
-  const uid = await getAnonymousUid()
-  const roomRef = ref(database, `rooms/${code}`)
-  
-  // If host, we might be creating the room
-  if (isHost && config) {
-    // We only want to set this if it doesn't exist, but for now we just set it
-    // because the host creates it. In a real app we'd use a transaction.
-    // For Tachyon, simple set/update is fine.
-    await update(roomRef, {
-      host: uid,
-      status: 'lobby',
-      config,
+  try {
+    const uid = await getAnonymousUid()
+    const roomRef = ref(database, `rooms/${code}`)
+    
+    // If host, we might be creating the room
+    if (isHost && config) {
+      await update(roomRef, {
+        host: uid,
+        status: 'lobby',
+        config,
+      })
+    }
+
+    // Set presence
+    const meRef = ref(database, `rooms/${code}/drafters/${uid}`)
+    await set(meRef, { ...drafter, online: true })
+    onDisconnect(meRef).update({ online: false })
+
+    // Send a join message
+    const chatRef = ref(database, `rooms/${code}/chat`)
+    await push(chatRef, {
+      kind: 'system',
+      author: '',
+      body: `${drafter.name} joined.`,
+      timestamp: serverTimestamp()
     })
+  } catch (error) {
+    console.error('Failed to join room:', error)
   }
-
-  // Set presence
-  const meRef = ref(database, `rooms/${code}/drafters/${uid}`)
-  await set(meRef, { ...drafter, online: true })
-  onDisconnect(meRef).update({ online: false })
-
-  // Send a join message
-  const chatRef = ref(database, `rooms/${code}/chat`)
-  await push(chatRef, {
-    kind: 'system',
-    author: '',
-    body: `${drafter.name} joined.`,
-    timestamp: serverTimestamp()
-  })
 }
 
 export async function setRoomStatus(code: string, status: 'drafting' | 'complete') {

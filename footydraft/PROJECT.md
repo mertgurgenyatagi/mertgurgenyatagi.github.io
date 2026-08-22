@@ -3166,3 +3166,15 @@ git push origin main
 git checkout -b free-pick-ui-static
 git push -u origin free-pick-ui-static
 ```
+
+
+## 2026-08-22 Multiplayer Parity and Bugfixes
+
+Multiplayer functionality was stabilized for all draft formats:
+1. **Auction Fixes:** Addressed Chromium rendering bugs with the \Wordmark\ logo. Prevented the non-host from controlling the host's bid by correctly resolving the local \youSeat\. Fixed the \stuck at OPENING\ deadlock by ensuring simulated bots are driven exclusively by the host client.
+2. **Drafter Initialization Race Condition:** Fixed a critical bug across all four draft formats (\Auction\, \Dond\, \Spin\, \Free Pick\) where a non-host would crash (\Cannot read properties of undefined\) if they loaded the draft screen before \oom.drafters\ received late-added bot seats. The frontend now dynamically reconstructs \drafters\ strictly from Firebase state, ignoring outdated local configs.
+3. **Empty Collection Syncing:** Handled Firebase Realtime Database's behavior of omitting empty arrays (\[]\) and objects (\{}\). Implemented defaults when syncing arrays (like \ids\, \offers\, \oxes\) to ensure client states don't throw TypeErrors.
+4. **Spin Draft:** Ensured the non-host could execute a draft pick by adding \landed\ and \landedTurn\ to the Firebase \spinState\ payload.
+
+With these fixes, all draft formats support stable, synchronized real-time multiplayer across desktop and mobile.
+

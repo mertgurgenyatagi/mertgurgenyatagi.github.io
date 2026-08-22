@@ -21,6 +21,18 @@ let signinPromise: Promise<string> | null = null
 export function getAnonymousUid(): Promise<string> {
   if (signinPromise) return signinPromise
 
-  signinPromise = signInAnonymously(auth).then((cred) => cred.user.uid)
+  signinPromise = signInAnonymously(auth)
+    .then((cred) => cred.user.uid)
+    .catch((error) => {
+      console.warn('Anonymous auth failed, falling back to local ID:', error)
+      const LOCAL_KEY = 'fd.fallback.uid'
+      let fallbackId = localStorage.getItem(LOCAL_KEY)
+      if (!fallbackId) {
+        fallbackId = 'local-' + Math.random().toString(36).slice(2)
+        localStorage.setItem(LOCAL_KEY, fallbackId)
+      }
+      return fallbackId
+    })
+    
   return signinPromise
 }

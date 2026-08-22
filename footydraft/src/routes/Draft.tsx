@@ -125,19 +125,42 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
-  
   const drafters = useMemo(() => {
     if (!isMultiplayer || !room?.drafters) return baseDrafters
-    return baseDrafters.map(d => {
-      const rd = room.drafters[d.id]
-      if (rd) {
-        // If it's your seat, keep it 'you' locally so the UI knows it's you, otherwise take remote kind
-        const kind = d.kind === 'you' ? 'you' : rd.kind
-        return { ...d, kind } as Drafter
-      }
-      return d
-    })
-  }, [baseDrafters, isMultiplayer, room?.drafters])
+    
+    const computedSeats: Drafter[] = []
+    const drafterEntries = Object.entries(room.drafters)
+    const hostEntry = drafterEntries.find(([id]) => id === room.host)
+    if (hostEntry) {
+      computedSeats.push({
+        id: hostEntry[0],
+        kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
+        name: hostEntry[1].name,
+        mark: hostEntry[1].mark,
+      })
+    }
+    
+    const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of humanEntries) {
+      computedSeats.push({
+        id,
+        kind: id === uid ? 'you' : drafter.kind as any,
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    
+    const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
+    for (const [id, drafter] of botEntries) {
+      computedSeats.push({
+        id,
+        kind: 'bot',
+        name: drafter.name,
+        mark: drafter.mark,
+      })
+    }
+    return computedSeats
+  }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
 
   const seatCount = drafters.length
   const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
