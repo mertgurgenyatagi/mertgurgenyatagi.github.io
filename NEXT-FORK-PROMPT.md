@@ -3,6 +3,12 @@
 Copy everything inside the fenced block, fill in the two placeholders on the
 first lines, and send it as the opening message.
 
+**Status as of 2026-08-22: no prediction-game forks currently exist.** The
+four that were pitched (irishtable, zealandtable, iconictable, vizehtable)
+were all removed — none had been accepted by a channel, and their Firebase
+projects have been deleted. Forking again means picking a new source with
+step 0 below; there is no default "most current fork" anymore.
+
 ---
 
 ```text
@@ -14,12 +20,6 @@ New site name: <lowercase, no spaces, e.g. foobartable>
 Read these first, in this order:
 
 - FORKING-PLAYBOOK.md — the step-by-step procedure. Follow it top to bottom.
-  It is authoritative and it is current: it was updated after the last fork.
-- vizehtable/VIZEHTABLE_HANDOVER.md — §24 is how the last fork went. Read
-  §24.8 (a real hole in the audit method) and §24.10 (what "it works" did and
-  did not prove) before you touch anything. Skim §1–§2 for what the app is.
-  §21–§23 are older forks' history — read §22 if you touch the deploy,
-  otherwise reference.
 - PUBLIC-REPO-RISK.md — a known, accepted risk. Don't re-litigate it, but
   check whether its fix trigger has been hit.
 
@@ -29,8 +29,6 @@ Key things the playbook will tell you, so you don't undo them:
 - The deploy publishes an allowlist into `_site/`. Never `path: '.'`.
 - Each fork gets its own Firebase project.
 - Don't edit any existing fork to serve the new one.
-- Fork from vizehtable/ — it is the most current, and the only one whose auth
-  is confirmed working.
 
 Start by reading the playbook, then tell me your plan before writing code.
 ```
@@ -39,64 +37,46 @@ Start by reading the playbook, then tell me your plan before writing code.
 
 ## Why the prompt says what it says
 
-**Fork from `vizehtable/`.** Playbook §1 says take the most current fork, and
-as of 2026-08-10 that is vizehtable: it is the newest, it already has the
-`GlitchSeason` in-joke cut, and it is the only one whose Google sign-in has
-been verified end to end. Confirm it is still the most current before copying —
-`git log --oneline -3 -- <fork>/` for each — because that changes as soon as
-anyone works on a different folder.
+**No default source fork anymore.** Playbook §1 says take the most current
+fork, but as of 2026-08-22 there is no living fork to copy from — pick a base
+deliberately (an existing sibling project if one is close enough in shape, or
+build the first tree from scratch) and record the decision in the new fork's
+handover doc so the next person isn't guessing.
 
-**§24.8 before touching anything.** `sed` and `grep` are both line-based, so a
-two-word channel name wrapped across a line break survives the substitution
-*and* the check meant to catch it. That happened last time and the audit
-reported clean while the old channel name was still in the document. Re-scan
-with newlines flattened.
+**Re-verify residual references before shipping.** `sed` and `grep` are both
+line-based, so a two-word channel name wrapped across a line break can survive
+a substitution *and* the check meant to catch it. This has happened before —
+an audit reported clean while the old channel name was still sitting in the
+handover doc. Re-scan with newlines flattened (playbook §7 has the snippet).
 
-**§24.10 before trusting "it works".** Last fork, sign-in was reported working
-and it genuinely was — but `predictions` was empty. Check the database, not the
-screen.
+**Verify "it works" against the database, not the screen.** A prediction
+flow reported as fully working once turned out to have been checked against
+an empty collection mid-test — an accurate read, but the wrong inference.
+Check the database *after* a full walkthrough, not mid-walkthrough.
 
 ## Open items the next session should know
 
-1. **The app itself is proven — the risk on a new fork is configuration, not
-   code.** vizehtable was walked end to end on 2026-08-10 (sign in → quiz →
-   predictions → editing a submitted prediction) against its own Firebase
-   project and everything works. Nothing in that path is fork-specific, so a
-   new fork inherits a known-good code path and only its own Firebase setup can
-   be wrong. That is exactly what the playbook §6 API checks cover. Walk it
-   anyway — ten minutes, and it is the only real end-to-end signal.
+1. **There is no proven-working fork to inherit from right now.** Whichever
+   fork was most recently walked end-to-end (sign in → quiz → predictions →
+   editing a submission) is now gone along with its Firebase project. A new
+   fork should get the same full walkthrough against its own project before
+   being trusted — see playbook §8.
 
-   The three older forks (irishtable, zealandtable, iconictable) have still
-   never had a single sign-in.
+2. **Any deadline data (`src/data/deadlines.ts`) in a copied source tree will
+   be stale.** Move the date before the copy makes sense.
 
-2. **The deadline is stale-ish.** `src/data/deadlines.ts` closes predictions on
-   **21 August 2026**. Any fork made after that date is pitching a game whose
-   entry window has shut, and the date needs moving before the copy makes
-   sense.
+3. **A genuinely distinct logo is the one branding change the playbook cannot
+   automate.** Every past fork shipped the same inherited hero portraits.
+   Fine for a pitch, wrong for a launch.
 
-3. **Every fork ships the same logo and the same 17 inherited hero portraits**
-   (Champions League players in the wrong kits). Fine for a pitch, wrong for a
-   launch. A genuinely distinct logo is the one branding change the playbook
-   cannot automate.
-
-4. **CI rebuilds every fork on every push to `main`.** With five forks this is
-   already the slowest part of the loop, and one broken build fails the deploy
-   for all of them. Playbook §5 suggests a path filter at four or five — that
-   threshold has now been reached, so consider it before adding a sixth.
-
-5. **`PUBLIC-REPO-RISK.md` is still unfixed by choice.** Trigger is the first
+4. **`PUBLIC-REPO-RISK.md` is still unfixed by choice.** Trigger is the first
    channel that says yes, *before* they announce. Budget half an hour for the
    repo split; don't leave it until the hour you are replying to an interested
    channel.
 
-## The forks that exist, as of 2026-08-10
+## `/irishtable/` stays retired permanently
 
-| Folder | Published at | Channel | Firebase | Auth walked |
-|---|---|---|---|---|
-| `irishtable/` | `/theirishtable/` | The Irish Guy | `irishtable-app` | no |
-| `zealandtable/` | `/zealandtable/` | Zealandism | `zealandtable-app` | no |
-| `iconictable/` | `/iconictable/` | Football Iconic | `iconictable-app` | no |
-| `vizehtable/` | `/vizehtable/` | Vizeh | `vizehtable-app` | **yes** |
-
-`/irishtable/` is **burned permanently** and serves a redirect to `/not-found/`
-— a sent email points at it. Never serve an app there again (§22.5).
+`/irishtable/` serves a redirect to `/not-found/` and always will, even with
+the irishtable project itself gone — a past pitch email points at that URL
+and email cannot be recalled. Never serve an app at that path again. See
+`.github/workflows/deploy.yml` and `FORKING-PLAYBOOK.md` §5.

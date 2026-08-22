@@ -1,7 +1,11 @@
 # Forking the prediction game for another YouTuber
 
-**Written:** 2026-08-09, immediately after doing it for the first time
-(`irishtable` → `zealandtable`).
+**Written:** 2026-08-09, immediately after doing it for the first time.
+**Updated:** 2026-08-22 — every fork built from this playbook so far
+(irishtable, zealandtable, iconictable, vizehtable) has been removed: none
+was ever accepted by a channel, and their Firebase projects are gone. The
+procedure below is unchanged and still current; only the worked examples
+that used to name those forks have been genericized.
 **Audience:** whoever runs the next fork, including me with no memory of it.
 
 This is the repeatable procedure for standing up the same Premier League
@@ -17,29 +21,36 @@ need a human in a browser and cannot be automated — §6.
 
 ## 0. The strategy this serves
 
-Mert builds the site *first*, then cold-emails the channel. Nobody has replied
-yet, so the working assumption is that most won't. That makes two properties
-matter more than anything else:
+Mert builds the site *first*, then cold-emails the channel. Most emails don't
+get a reply. That makes two properties matter more than anything else:
 
-1. **Every fork stays alive.** A channel that ignores the email this year might
-   look next year. Never edit an existing fork to serve a new one — copy it.
+1. **Every fork stays alive** while there is still a chance the channel
+   replies. Never edit an existing fork to serve a new one — copy it. (A
+   fork only gets removed once it is clearly dead — see the note at the top
+   of this file for what happened to the first four.)
 2. **The recipient must not be able to tell it was built for someone else
    first.** This is why the checklist below goes past the visible wordmark into
    the page title, the logo *filename*, and the localStorage key.
 
-If those two hold, forks are cheap and independent, and pitching six channels
-costs about as much as pitching one.
+If those two hold, forks are cheap and independent, and pitching several
+channels costs about as much as pitching one.
 
 ---
 
 ## 1. Pick the source fork
 
-Fork from whichever existing fork is **most current**, not necessarily the
-first one. Check before copying:
+**As of 2026-08-22 there is no existing fork to copy from** — the previous
+four were all removed. If that is still true when you read this, you are
+building the first tree from scratch rather than copying one; skip to §3 for
+the checklist of things a fresh tree still needs to get right (branding keys,
+storage prefix, etc.), then come back to §4.
+
+Once a fork exists again, fork from whichever one is **most current**, not
+necessarily the first one. Check before copying:
 
 ```bash
-git log --oneline -3 -- irishtable/
-git log --oneline -3 -- zealandtable/
+git log --oneline -3 -- <fork-a>/
+git log --oneline -3 -- <fork-b>/
 ```
 
 Fixes tend to land in whichever fork was being worked on, and they do **not**
@@ -47,7 +58,7 @@ propagate — there is no shared code. If the forks have diverged in behaviour
 (not just branding), diff them and decide deliberately which base you want:
 
 ```bash
-diff -r irishtable/src zealandtable/src
+diff -r <fork-a>/src <fork-b>/src
 ```
 
 A clean fork should show *only* the branding differences listed in §3. Anything
@@ -72,10 +83,10 @@ re-doing the deletion across every call site.
 Set your names once:
 
 ```bash
-SRC=irishtable                  # the fork you're copying
-NEW=welshtable                  # new folder / site name, lowercase
-CHANNEL="The Welsh Guy"         # exact channel name, as it should appear
-PROJECT=welshtable-app          # Firebase project id, globally unique
+SRC=oldfork                     # the fork you're copying
+NEW=newfork                     # new folder / site name, lowercase
+CHANNEL="The New Channel"       # exact channel name, as it should appear
+PROJECT=newfork-app              # Firebase project id, globally unique
 ```
 
 Copy **from git, not from the filesystem**:
@@ -104,7 +115,7 @@ git status --porcelain $SRC/       # must print nothing
 ## 3. The rebrand checklist
 
 This is the complete list, derived by grepping rather than by memory. The
-original plan for zealandtable listed four items and **missed four more**, each
+first pass at this checklist listed four items and **missed four more**, each
 of which would have shipped — so work the list, don't improvise.
 
 ### 3.1 Copy and wordmarks
@@ -159,22 +170,16 @@ is what makes subfolder hosting work for any fork without a build edit.
 
 ### 3.4 Inside jokes and per-fork content
 
-The `season → susan` glitch (`src/components/ui/GlitchSeason.tsx`) was an
-irishtable in-joke and was **cut entirely** for zealandtable — component
-deleted, all five call sites replaced with plain text. Check whether the source
-fork carries anything similar before copying it into a pitch for someone who
-won't get the joke.
-
-If it is present, the call sites are `HomeLandingLoggedOut`,
-`MobileHomeLoggedOut`, `AboutPage` (×2) and `AwardPickerStage`. In
-`AwardPickerStage` the whole `label.includes("Season")` ternary collapses to
-`{award.label}` — output is identical because `.type-display` is
-`text-transform: uppercase`.
+Earlier forks carried at least one channel-specific in-joke in the UI, cut
+entirely for later forks once it was clear the joke didn't travel: component
+deleted, all call sites replaced with plain text. Check whether the source
+fork you're copying carries anything similar before copying it into a pitch
+for someone who won't get the joke — grep the source tree for anything that
+reads like a bit rather than a feature.
 
 ### 3.5 What to leave alone
 
-Internal code comments and test fixtures naming earlier forks
-(`kupatakipucl`, `irishtable`, `"The Irish Guy"` as a display-name fixture).
+Internal code comments and test fixtures naming earlier forks or channels.
 They are dev-facing, unreachable from the deployed site, and rewriting them is
 churn that risks breaking tests for zero pitch benefit.
 
@@ -256,7 +261,8 @@ VITE_FIREBASE_DATABASE_URL=https://$PROJECT-default-rtdb.europe-west1.firebaseda
 Two edits to `.github/workflows/deploy.yml`:
 
 1. A **build step** — `cd $NEW`, write `.env` via heredoc, `npm ci`,
-   `npm run build`. Copy the existing one.
+   `npm run build`. Copy the existing footydraft step as a template and add
+   the Firebase env heredoc.
 2. A line in the **assemble step**:
 
    ```bash
@@ -265,28 +271,29 @@ Two edits to `.github/workflows/deploy.yml`:
 
 Also add the new lockfile to `cache-dependency-path`.
 
-**Folder name and published path need not match.** `irishtable/` publishes to
-`/theirishtable/`, because a pitch email sent to a *different* channel contains
-a hyperlink to `/irishtable/` and email cannot be recalled — that path is burned
-forever and serves a neutral 404. If you ever send a wrong link, the fix is a
-new path, never reusing the old one. See `ZEALANDTABLE_HANDOVER.md` §22.
+**Folder name and published path need not match.** If a fork's folder name
+ever needs to stop matching its published path — e.g. a pitch email went out
+linking to a URL that turned out wrong — the fix is to publish the new,
+correct content under a *new* path and turn the burned one into a permanent
+redirect stub, never to reuse the old path for anything else. `/irishtable/`
+is the standing example of this: it now serves `.github/pages/retired-
+redirect.html` forever, because a past pitch email's hyperlink cannot be
+recalled.
 
 **Update the publish guard** when you add a fork. It asserts that no fork's
-bundle contains another's branding, and as of the third fork it is a pairwise
-loop over a table — so this is **one line**, not another pair of greps:
+bundle contains another's branding, and it is a pairwise loop over a table —
+so adding a fork is **one line**, not another pair of greps:
 
 ```bash
 FORKS=(
-  "zealandtable|Zealandism\|zealandtable-app"
-  "theirishtable|Irish Guy\|irishtable-app"
-  "iconictable|Football Iconic\|iconictable-app"
-  "vizehtable|Vizeh\|vizehtable-app"               # <- your line
+  "newfork|New Channel\|newfork-app"          # <- your line
 )
 ```
 
-Match on the **channel name and the Firebase project, never the site name**.
-`src/data/countries.ts` contains "New Zealand" as real country data, and a
-guard keyed on the site name would fail the build on it.
+Match on the **channel name and the Firebase project, never the site name** —
+something like a country or club name can appear as real data elsewhere in
+the app (e.g. in a countries/clubs dataset) and a guard keyed on the site name
+would false-positive on it.
 
 The guard also fails if `_site/<fork>` is missing, and that check matters more
 than it looks: **`grep -r` over a directory that does not exist finds nothing
@@ -304,9 +311,8 @@ fork's handover without being told its name. Keep it that way.
 > The workflow assembles an explicit allowlist into `_site/` and uploads only
 > that. **It must stay that way.** It previously used
 > `upload-pages-artifact` with `path: '.'`, which served every tracked file
-> publicly — both handovers, this playbook, all application source, and
+> publicly — handovers, this playbook, all application source, and
 > participants' real names and predictions. That went unnoticed for months.
-> The full account is in `zealandtable/ZEALANDTABLE_HANDOVER.md` §22.
 >
 > Copy **`dist/` only**, never the project folder. If you ever find yourself
 > writing `path: '.'` or `cp -r $NEW _site/`, stop.
@@ -329,9 +335,8 @@ four or five forks, consider a path filter.
 
 **Step 1 cannot be automated on the free tier.** The Identity Platform admin
 API returns `BILLING_NOT_ENABLED : Identity Platform feature requires billing
-to be enabled` on Spark. Real platform limit — hit on irishtable, re-confirmed
-on zealandtable, iconictable and vizehtable. Budget for it; don't hunt for a
-flag.
+to be enabled` on Spark. Real platform limit, confirmed on every fork built so
+far. Budget for it; don't hunt for a flag.
 
 In the Firebase console for the new project:
 
@@ -356,18 +361,19 @@ field, so omitting the three defaults removes them.
 > ### ⚠️ Enabling the provider does not add the domain
 >
 > These are two different screens, and doing "the Auth" naturally means the
-> Sign-in method tab. On iconictable the provider came back `enabled: true`
-> while the domain list was still the three defaults — **`auth/unauthorized-
-> domain` for every real visitor, working perfectly on localhost.** It was
-> caught only because the §6 verification was run before the pitch email.
+> Sign-in method tab. On one earlier fork the provider came back `enabled:
+> true` while the domain list was still the three defaults —
+> **`auth/unauthorized-domain` for every real visitor, working perfectly on
+> localhost.** It was caught only because the §6 verification was run before
+> the pitch email.
 >
 > Never infer step 2 from step 1. Check it by API, every time, and check it
 > *after* someone tells you the auth is done.
 >
-> **On vizehtable (2026-08-10) the trap did not recur** — both steps were done
-> in the console and the API check confirmed all four domains and
-> `enabled: true`. That is the warning working, not the warning being
-> unnecessary. The check still cost ten seconds; keep running it.
+> On the last fork built before this note, both steps were done in the
+> console and the API check confirmed all four domains and `enabled: true` on
+> the first try — proof the check is cheap insurance, not proof it's
+> unnecessary. It still costs ten seconds; keep running it.
 
 Verify both by API rather than trusting that the clicks landed:
 
@@ -409,10 +415,10 @@ diff -r --strip-trailing-cr $SRC/src $NEW/src
 > ### ⚠️ `grep` and `sed` are line-based. Wrapped prose is not.
 >
 > A two-word channel name that happens to straddle a line break —
-> `**Football\nIconic**` in wrapped Markdown, or a sentence of JSX copy — is
-> invisible to `s/Football Iconic/.../` **and equally invisible to the `grep`
-> you then run to prove the rebrand is clean.** On the vizehtable fork the
-> audit reported zero residual references while the old channel name was still
+> `**New\nChannel**` in wrapped Markdown, or a sentence of JSX copy — is
+> invisible to `s/New Channel/.../` **and equally invisible to the `grep`
+> you then run to prove the rebrand is clean.** On one earlier fork the audit
+> reported zero residual references while the old channel name was still
 > sitting in the first paragraph of the handover's §1.
 >
 > Re-run every residual check with the newlines flattened:
@@ -425,8 +431,7 @@ diff -r --strip-trailing-cr $SRC/src $NEW/src
 >
 > The general point: **a line-based check cannot catch a line-based tool's
 > mistake** — they share the blind spot. Verify with a method that fails
-> differently from the one that did the work. Full account:
-> `vizehtable/VIZEHTABLE_HANDOVER.md` §24.8.
+> differently from the one that did the work.
 >
 > Editing with something that preserves line endings, rather than `sed -i`,
 > avoids the §1 CRLF churn at the same time — then `diff -r` is readable
@@ -450,7 +455,7 @@ Then confirm every *previous* fork is still serving what you expect — this is
 the whole point of forking rather than editing:
 
 ```bash
-curl -s -o /dev/null -w "%{http_code}\n" https://mertgurgenyatagi.github.io/theirishtable/
+curl -s -o /dev/null -w "%{http_code}\n" https://mertgurgenyatagi.github.io/$SRC/
 ```
 
 ### Confirm nothing private is public
@@ -470,10 +475,10 @@ the repository again — stop and fix the workflow before sending any email.
 
 ### Check the link you are about to send
 
-Trivial, and skipping it caused a live incident (`ZEALANDTABLE_HANDOVER.md`
-§22): a pitch email went out whose visible text said `/zealandtable/` while the
-hyperlink behind it still pointed at `/irishtable/`, copied from the previous
-pitch.
+Trivial, and skipping it caused a live incident on an earlier fork: a pitch
+email went out whose visible text named the new fork while the hyperlink
+behind it still pointed at the previous pitch's URL, copied from the email
+before.
 
 Before sending, in the actual email client:
 
@@ -492,31 +497,26 @@ pitch. After every fork:
 
 - **Sign in once, for real.** Walk sign in → quiz → predict → appear in the
   participant list against the new project. Config verified by API proves it is
-  *configured*, not that it *works*.
+  *configured*, not that it *works*. This is the only thing that exercises a
+  real Google account against a real project — worth the ten minutes even
+  though the underlying code has been proven sound on a prior fork, because
+  the remaining risk on any new fork is configuration, not code (§6 covers
+  exactly that).
 
-  **Done for the first time on vizehtable (2026-08-10), and it all works** —
-  sign in, quiz, predictions and editing a submitted prediction, against a
-  Firebase project provisioned by this playbook. That is strong evidence the
-  code path is sound for any fork, since nothing about it is fork-specific.
-  Still never done on irishtable, zealandtable or iconictable.
-
-  So the remaining risk on a new fork is **configuration, not code** — which is
-  what the §6 API checks cover. Walk it anyway; it costs ten minutes and it is
-  the only thing that exercises a real Google account against a real project.
-
-  > **If you check the database to confirm a walkthrough, check it *after* the
-  > walkthrough.** During the vizehtable fork a REST read of `predictions`
-  > returned `{}` and was briefly written up as a contradiction. It was a
-  > snapshot taken mid-testing — accurate read, wrong inference. An empty
-  > collection proves emptiness at that instant, not a broken write path.
-  > Racing a human who is actively clicking looks exactly like a bug.
+  > **If you check the database to confirm a walkthrough, check it *after*
+  > the walkthrough.** A REST read taken mid-testing on an earlier fork
+  > returned `{}` and was briefly written up as a contradiction — it was a
+  > snapshot taken while someone was still actively signing up, not a broken
+  > write path. An empty collection proves emptiness at that instant, not a
+  > broken write path. Racing a human who is actively clicking looks exactly
+  > like a bug.
   >
   > `profiles` and `predictions` are publicly readable, so they *can* be read
   > this way. `surveyResponses` returns 403 to an anonymous read **by design** —
   > that one is not a bug and cannot be checked externally at all.
 - **Write and send the email.** The site is not the deliverable.
-- **Reconsider the shared assets.** Every fork currently ships the same
-  Premier League lion logo and the same 17 inherited hero portraits (Champions
+- **Reconsider the shared assets.** Every fork so far has shipped the same
+  Premier League lion logo and the same inherited hero portraits (Champions
   League players in the wrong kits). Fine for a pitch, wrong for a launch, and
   a genuinely distinct logo is the one branding change this playbook cannot
   automate.

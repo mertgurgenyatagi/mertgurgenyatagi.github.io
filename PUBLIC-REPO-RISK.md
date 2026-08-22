@@ -3,20 +3,31 @@
 **Status:** accepted, deliberately, on 2026-08-10. **Not fixed. Not forgotten.**
 **Fix trigger:** the first YouTuber who says yes. See "When to fix this" below.
 
+**Update, 2026-08-22:** the four pitched forks this file originally worried
+about (irishtable, zealandtable, iconictable, vizehtable) have all been
+removed — none was ever accepted by a channel — along with the
+`zealandtable-pivot/` questionnaire and both project handovers this file used
+to point at. That collapses the specific pitch-secrecy scenario below to
+essentially nothing, since there is currently no live rebrand-and-pitch
+history for a stray reader to find. The risk resumes the moment a fork exists
+again (`FORKING-PLAYBOOK.md` still describes how, and will again the next time
+this file is generated for a new fork), so this file stays in place rather
+than being deleted. The `docs_for_claude/` participant-data concern in the
+caveat below is unrelated to forking and still stands regardless.
+
 ---
 
 ## The issue in three lines
 
 This repo is public, so every file in it is readable by anyone at
 `github.com/mertgurgenyatagi/mertgurgenyatagi.github.io` and
-`raw.githubusercontent.com/...`. That includes `FORKING-PLAYBOOK.md`, both
-project handovers, and the `zealandtable-pivot/` questionnaire — documents that
-describe, in plain English, that the same product is rebranded and pitched to
-one channel after another.
+`raw.githubusercontent.com/...`. That includes `FORKING-PLAYBOOK.md` and, once
+a fork exists, its handover doc — documents that describe, in plain English,
+that the same product is rebranded and pitched to one channel after another.
 
 The **website** was locked down on 2026-08-10 (the Pages deploy now publishes
 an allowlist, not the repo). The **repository** was not. Those are two separate
-doors. Full technical account: `zealandtable/ZEALANDTABLE_HANDOVER.md` §22.
+doors.
 
 Deleting the files would not be enough on its own — git keeps every past
 version, so old commits still serve them. A real fix means making the repo
@@ -24,12 +35,13 @@ private, or splitting source from published output, or rewriting history.
 
 ## Why it is being accepted for now
 
-- **No YouTuber has accepted yet.** Nobody has any reason to be looking.
+- **No YouTuber has ever accepted a pitch.** Nobody has any reason to be
+  looking, and as of 2026-08-22 there is not even a live fork to find.
 - **Nothing points at it.** Finding these files means guessing that the repo
   exists, guessing its name, and then guessing a filename. Nobody stumbles into
   a Markdown file in a repo they were never told about.
-- **The audience is zero.** The sites are live but unannounced. Traffic is
-  Mert and whoever he sends a link to.
+- **The audience is zero.** Any future fork's site would be live but
+  unannounced. Traffic is Mert and whoever he sends a link to.
 - **No credentials are exposed.** Firebase web config is public by design —
   it ships inside the client bundle of every site on the internet that uses
   Firebase. There is nothing here to rotate.

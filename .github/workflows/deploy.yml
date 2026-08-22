@@ -29,10 +29,6 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: |
-            zealandtable/package-lock.json
-            irishtable/package-lock.json
-            iconictable/package-lock.json
-            vizehtable/package-lock.json
             footydraft/package-lock.json
 
       # Every project below is cached on the hash of its own source tree,
@@ -45,108 +41,8 @@ jobs:
       # A cache miss just means a normal full rebuild; nothing here can
       # publish something stale, only skip redundant work.
 
-      # Served from /theirishtable/, NOT /irishtable/. The old path is burned:
-      # a pitch email to a different channel carries a hyperlink to it, and
-      # emails do not expire (see ZEALANDTABLE_HANDOVER.md 22). The source
-      # folder keeps its original name; only the published path differs.
-      - name: Cache irishtable build
-        id: cache-irishtable
-        uses: actions/cache@v4
-        with:
-          path: irishtable/dist
-          key: irishtable-dist-${{ hashFiles('irishtable/**') }}
-
-      - name: Build irishtable
-        if: steps.cache-irishtable.outputs.cache-hit != 'true'
-        run: |
-          cd irishtable
-          cat << 'EOF' > .env
-          VITE_FIREBASE_API_KEY=AIzaSyBMRHhfb3dpWY0RMgpdBvvIbGeBFIl_fbk
-          VITE_FIREBASE_AUTH_DOMAIN=irishtable-app.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID=irishtable-app
-          VITE_FIREBASE_APP_ID=1:378090040193:web:1e133f578f0b6e05c91680
-          VITE_FIREBASE_STORAGE_BUCKET=irishtable-app.firebasestorage.app
-          VITE_FIREBASE_MESSAGING_SENDER_ID=378090040193
-          VITE_PHOTOS_ENABLED=false
-          VITE_FIREBASE_DATABASE_URL=https://irishtable-app-default-rtdb.europe-west1.firebasedatabase.app
-          EOF
-          npm ci
-          npm run build
-
-      - name: Cache zealandtable build
-        id: cache-zealandtable
-        uses: actions/cache@v4
-        with:
-          path: zealandtable/dist
-          key: zealandtable-dist-${{ hashFiles('zealandtable/**') }}
-
-      - name: Build zealandtable
-        if: steps.cache-zealandtable.outputs.cache-hit != 'true'
-        run: |
-          cd zealandtable
-          cat << 'EOF' > .env
-          VITE_FIREBASE_API_KEY=AIzaSyCSiZwyKFwZnGncqUcXcfAsZ5WbdPLlmv8
-          VITE_FIREBASE_AUTH_DOMAIN=zealandtable-app.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID=zealandtable-app
-          VITE_FIREBASE_APP_ID=1:1046821268210:web:9d82477de3ead882effe6b
-          VITE_FIREBASE_STORAGE_BUCKET=zealandtable-app.firebasestorage.app
-          VITE_FIREBASE_MESSAGING_SENDER_ID=1046821268210
-          VITE_PHOTOS_ENABLED=false
-          VITE_FIREBASE_DATABASE_URL=https://zealandtable-app-default-rtdb.europe-west1.firebasedatabase.app
-          EOF
-          npm ci
-          npm run build
-
-      - name: Cache iconictable build
-        id: cache-iconictable
-        uses: actions/cache@v4
-        with:
-          path: iconictable/dist
-          key: iconictable-dist-${{ hashFiles('iconictable/**') }}
-
-      - name: Build iconictable
-        if: steps.cache-iconictable.outputs.cache-hit != 'true'
-        run: |
-          cd iconictable
-          cat << 'EOF' > .env
-          VITE_FIREBASE_API_KEY=AIzaSyCifJYAM6DKFT8-4zc7EMDvFsfUyYrfuwU
-          VITE_FIREBASE_AUTH_DOMAIN=iconictable-app.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID=iconictable-app
-          VITE_FIREBASE_APP_ID=1:765275086843:web:53ca844661e536c0d8755e
-          VITE_FIREBASE_STORAGE_BUCKET=iconictable-app.firebasestorage.app
-          VITE_FIREBASE_MESSAGING_SENDER_ID=765275086843
-          VITE_PHOTOS_ENABLED=false
-          VITE_FIREBASE_DATABASE_URL=https://iconictable-app-default-rtdb.europe-west1.firebasedatabase.app
-          EOF
-          npm ci
-          npm run build
-
-      - name: Cache vizehtable build
-        id: cache-vizehtable
-        uses: actions/cache@v4
-        with:
-          path: vizehtable/dist
-          key: vizehtable-dist-${{ hashFiles('vizehtable/**') }}
-
-      - name: Build vizehtable
-        if: steps.cache-vizehtable.outputs.cache-hit != 'true'
-        run: |
-          cd vizehtable
-          cat << 'EOF' > .env
-          VITE_FIREBASE_API_KEY=AIzaSyBvI6Mn8eNIW6d-sy7K0Hmr-EUkIElFb_4
-          VITE_FIREBASE_AUTH_DOMAIN=vizehtable-app.firebaseapp.com
-          VITE_FIREBASE_PROJECT_ID=vizehtable-app
-          VITE_FIREBASE_APP_ID=1:79438281238:web:1fcb1ad06e0666283b1337
-          VITE_FIREBASE_STORAGE_BUCKET=vizehtable-app.firebasestorage.app
-          VITE_FIREBASE_MESSAGING_SENDER_ID=79438281238
-          VITE_PHOTOS_ENABLED=false
-          VITE_FIREBASE_DATABASE_URL=https://vizehtable-app-default-rtdb.europe-west1.firebasedatabase.app
-          EOF
-          npm ci
-          npm run build
-
       # No .env yet -- footydraft has no backend wired in yet, so there's
-      # nothing to inject. Add the same heredoc pattern as the other four
+      # nothing to inject. Add a heredoc step writing .env before npm ci
       # once Firebase is actually wired into src/.
       - name: Cache footydraft build
         id: cache-footydraft
@@ -191,25 +87,14 @@ jobs:
           cp -r docs_for_claude/asset_pictures _site/docs_for_claude/
 
           # Built applications: only dist/, never the source tree.
-          mkdir -p _site/zealandtable
-          cp -r zealandtable/dist/* _site/zealandtable/
-
-          mkdir -p _site/theirishtable
-          cp -r irishtable/dist/* _site/theirishtable/
-
-          mkdir -p _site/iconictable
-          cp -r iconictable/dist/* _site/iconictable/
-
-          mkdir -p _site/vizehtable
-          cp -r vizehtable/dist/* _site/vizehtable/
-
           mkdir -p _site/footydraft
           cp -r footydraft/dist/* _site/footydraft/
 
-          # /irishtable/ stays retired forever. A pitch email to Zealandism
-          # carries a hyperlink to it, and that email cannot be recalled, so
-          # anything served here would be shown to the wrong channel. It
-          # bounces to a neutral 404 whose URL names no project.
+          # /irishtable/ stays retired forever, even with the irishtable
+          # project itself gone. A past pitch email carries a hyperlink to
+          # it, and that email cannot be recalled, so anything served here
+          # would be shown to the wrong channel. It bounces to a neutral 404
+          # whose URL names no project.
           mkdir -p _site/not-found _site/irishtable
           cp .github/pages/not-found.html _site/not-found/index.html
           cp .github/pages/retired-redirect.html _site/irishtable/index.html
@@ -256,10 +141,6 @@ jobs:
           #    name: "New Zealand" is real country data in src/data/countries.ts
           #    and must not trip this.
           FORKS=(
-            "zealandtable|Zealandism\|zealandtable-app"
-            "theirishtable|Irish Guy\|irishtable-app"
-            "iconictable|Football Iconic\|iconictable-app"
-            "vizehtable|Vizeh\|vizehtable-app"
           )
           for a in "${FORKS[@]}"; do
             DIR_A=${a%%|*}
