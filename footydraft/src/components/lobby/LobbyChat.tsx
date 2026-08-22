@@ -8,6 +8,7 @@ export interface Message {
   kind: 'system' | 'said'
   author: string
   body: string
+  timestamp?: number
 }
 
 interface LobbyChatProps {

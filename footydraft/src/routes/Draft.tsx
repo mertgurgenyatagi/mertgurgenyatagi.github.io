@@ -23,19 +23,21 @@ import {
   slotFor,
 } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
+import { useMultiplayerRoom, makePick as remoteMakePick, sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
 import { AuctionDraft } from './AuctionDraft'
 import { DondDraft } from './DondDraft'
 import { SpinDraft } from './SpinDraft'
 import { SquadCompare } from './SquadCompare'
 import { useI18n } from '../lib/i18n'
 
-/** What the lobby hands over. Every field falls back to the same defaults. */
 export interface DraftConfig {
+  format?: string
   scope?: string
   league?: string
   constraint?: string
   timer?: string
   drafters?: Drafter[]
+  roomId?: string
 }
 
 /**
@@ -125,7 +127,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const [pool, setPool] = useState<Player[]>([])
   const [poolError, setPoolError] = useState<string | null>(null)
 
-  const [picks, setPicks] = useState<Pick[]>([])
+  const [localPicks, setLocalPicks] = useState<Pick[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<PositionCode | null>(null)
@@ -136,9 +138,40 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     tone: 'settled',
     beat: 0,
   })
-  const [messages, setMessages] = useState<Message[]>([])
+  const [localMessages, setLocalMessages] = useState<Message[]>([])
 
   const messageId = useRef(1)
+
+  const { room, uid } = useMultiplayerRoom(config.roomId)
+  const isMultiplayer = Boolean(config.roomId)
+  const isHost = isMultiplayer ? room?.host === uid : true
+
+  // Derive picks from room if multiplayer, else local
+  const picks = useMemo(() => {
+    if (isMultiplayer) {
+      if (!room?.picks || pool.length === 0) return []
+      const remote = Object.values(room.picks).sort((a, b) => a.overall - b.overall)
+      return remote.map(p => {
+        const player = pool.find(pl => pl.id === p.playerId)
+        if (!player) return null // should not happen if pool is loaded
+        return {
+          overall: p.overall,
+          seat: p.seat,
+          slot: p.slot,
+          player
+        }
+      }).filter((p): p is Pick => p !== null)
+    }
+    return localPicks
+  }, [isMultiplayer, room?.picks, pool, localPicks])
+
+  const messages = useMemo(() => {
+    if (isMultiplayer) {
+      if (!room?.chat) return []
+      return Object.values(room.chat).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    }
+    return localMessages
+  }, [isMultiplayer, room?.chat, localMessages])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -189,26 +222,45 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
    */
   const commit = useCallback(
     (seat: number, choose: (squad: Squad, taken: ReadonlySet<string>) => Player | null) => {
-      setPicks((previous) => {
-        if (previous.length >= totalPicks) return previous
-        if (seatAt(previous.length, seatCount) !== seat) return previous
+      if (isMultiplayer && config.roomId) {
+        if (picks.length >= totalPicks) return
+        if (seatAt(picks.length, seatCount) !== seat) return
 
         const squad: Squad = {}
         const already = new Set<string>()
-        for (const pick of previous) {
+        for (const pick of picks) {
           already.add(pick.player.id)
           if (pick.seat === seat) squad[pick.slot] = pick.player
         }
 
         const player = choose(squad, already)
-        if (!player) return previous
+        if (!player) return
         const slot = slotFor(player, squad)
-        if (!slot) return previous
+        if (!slot) return
 
-        return [...previous, { overall: previous.length, seat, slot, player }]
-      })
+        remoteMakePick(config.roomId, { overall: picks.length, seat, slot, player })
+      } else {
+        setLocalPicks((previous) => {
+          if (previous.length >= totalPicks) return previous
+          if (seatAt(previous.length, seatCount) !== seat) return previous
+
+          const squad: Squad = {}
+          const already = new Set<string>()
+          for (const pick of previous) {
+            already.add(pick.player.id)
+            if (pick.seat === seat) squad[pick.slot] = pick.player
+          }
+
+          const player = choose(squad, already)
+          if (!player) return previous
+          const slot = slotFor(player, squad)
+          if (!slot) return previous
+
+          return [...previous, { overall: previous.length, seat, slot, player }]
+        })
+      }
     },
-    [seatCount, totalPicks],
+    [seatCount, totalPicks, isMultiplayer, config.roomId, picks],
   )
 
   const draftSelected = useCallback(() => {
@@ -224,8 +276,14 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   useEffect(() => {
     if (complete || scoped.length === 0 || activeSeat === youSeat) return
+    if (isMultiplayer && !isHost) return // Only host simulates bots in multiplayer
 
     const drafter = drafters[activeSeat]
+    if (drafter.kind !== 'bot') {
+      // If multiplayer and this is a human seat, don't simulate them! They will make their own picks.
+      if (isMultiplayer) return
+    }
+
     const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
     const wait = low + Math.random() * (high - low)
 
@@ -236,7 +294,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     }, wait)
 
     return () => window.clearTimeout(timer)
-  }, [activeSeat, complete, scoped, youSeat, drafters, commit, constraint, round])
+  }, [activeSeat, complete, scoped, youSeat, drafters, commit, constraint, round, isMultiplayer, isHost])
 
   /* ---------------------------------------------------------- the narrator -- */
 
@@ -276,16 +334,21 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (round === previousRound.current || complete) return
     previousRound.current = round
-    setMessages((current) => [
-      ...current,
-      {
-        id: messageId.current++,
-        kind: 'system',
-        author: '',
-        body: `Round ${round} — the order reverses`,
-      },
-    ])
-  }, [round, complete])
+    if (isMultiplayer && isHost && config.roomId) {
+      // Only host writes the system message
+      remoteSendChatMessage(config.roomId, '', `Round ${round} — the order reverses`)
+    } else if (!isMultiplayer) {
+      setLocalMessages((current) => [
+        ...current,
+        {
+          id: messageId.current++,
+          kind: 'system',
+          author: '',
+          body: `Round ${round} — the order reverses`,
+        },
+      ])
+    }
+  }, [round, complete, isMultiplayer, isHost, config.roomId])
 
   // The room talks about what just went. Not every pick, or it is noise.
   const chattered = useRef(-1)
@@ -296,19 +359,26 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     if (Math.random() > 0.34) return
 
     const timer = window.setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: messageId.current++,
-          kind: 'said',
-          author: drafters[last.seat].name,
-          body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
-        },
-      ])
+      if (isMultiplayer && isHost && config.roomId) {
+        // We only want the host to simulate bots talking in multiplayer
+        if (drafters[last.seat].kind === 'bot') {
+           remoteSendChatMessage(config.roomId, drafters[last.seat].name, CHATTER[Math.floor(Math.random() * CHATTER.length)])
+        }
+      } else if (!isMultiplayer) {
+        setLocalMessages((current) => [
+          ...current,
+          {
+            id: messageId.current++,
+            kind: 'said',
+            author: drafters[last.seat].name,
+            body: CHATTER[Math.floor(Math.random() * CHATTER.length)],
+          },
+        ])
+      }
     }, 900)
 
     return () => window.clearTimeout(timer)
-  }, [picks, youSeat, drafters])
+  }, [picks, youSeat, drafters, isMultiplayer, isHost, config.roomId])
 
   /* ------------------------------------------------------------- the pool -- */
 
@@ -454,12 +524,16 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
           <DraftChat
             messages={messages}
             you={you.name}
-            onSend={(body) =>
-              setMessages((current) => [
-                ...current,
-                { id: messageId.current++, kind: 'said', author: you.name, body },
-              ])
-            }
+            onSend={(body) => {
+              if (isMultiplayer && config.roomId) {
+                remoteSendChatMessage(config.roomId, you.name, body)
+              } else {
+                setLocalMessages((current) => [
+                  ...current,
+                  { id: messageId.current++, kind: 'said', author: you.name, body },
+                ])
+              }
+            }}
           />
         </div>
 

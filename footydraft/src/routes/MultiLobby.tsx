@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ChipGroup, Collapse } from '../components/lobby/ChipGroup'
 import { LobbyChat, type Message } from '../components/lobby/LobbyChat'
@@ -10,10 +10,11 @@ import { SeatList, type Seat } from '../components/lobby/SeatList'
 import { BackHome } from '../components/ui/BackHome'
 import { Button } from '../components/ui/Button'
 import { formats } from '../data/formats'
-import { MAX_SEATS, MIN_SEATS, constraints, leagues, scopes, timers } from '../data/lobbyOptions'
-import { CHATTER_DELAY, arrivalDelays, arrivalLines, people, type Person } from '../data/lobbyPeople'
-import { codeSeed, normaliseRoomCode } from '../lib/roomCode'
+import { MAX_SEATS, MIN_SEATS, constraints, scopes, timers } from '../data/lobbyOptions'
+import { normaliseRoomCode } from '../lib/roomCode'
 import { readSession, writeSession, type LobbySession } from '../lib/lobbySession'
+import { useMultiplayerRoom, joinRoom, updateRoomConfig, setRoomStatus, sendChatMessage, addBot, removeBot } from '../lib/multiplayer'
+import type { DraftConfig } from '../routes/Draft'
 import {
   effectiveSize,
   hasDimmedOptions,
@@ -80,127 +81,93 @@ export function MultiLobby() {
 
 function Room({ code, session }: { code: string; session: LobbySession }) {
   const navigate = useNavigate()
-  /** What the host of this particular room settled on. The same code always
-   *  opens the same draft, so two people typing it in see one lobby. */
-  const seed = codeSeed(code)
-  const hostName = people[0].name
+  const { room, uid } = useMultiplayerRoom(code)
 
-  const [humans, setHumans] = useState<(Person & { host?: boolean })[]>(() =>
-    session.host ? [] : [{ ...people[0], host: true }],
-  )
-
-  /** Ids rather than a count, so adding a seat animates only the row that arrived. */
-  const nextBotId = useRef(1)
-  const [bots, setBots] = useState<number[]>([])
-
-  const [format, setFormat] = useState<string | null>(() =>
-    session.host ? null : formats[seed % formats.length].id,
-  )
-  const [scope, setScope] = useState(() =>
-    session.host ? 'top-5' : scopes[(seed >> 3) % scopes.length].id,
-  )
-  const [league, setLeague] = useState(() =>
-    session.host ? 'premier-league' : leagues[(seed >> 6) % leagues.length].id,
-  )
-  const [constraint, setConstraint] = useState(() =>
-    session.host ? 'club-1' : constraints[(seed >> 12) % constraints.length].id,
-  )
-  const [timer, setTimer] = useState(() =>
-    session.host ? '15' : timers[(seed >> 15) % timers.length].id,
-  )
-
-  const [messages, setMessages] = useState<Message[]>(() => [
-    {
-      id: 0,
-      kind: 'system',
-      author: '',
-      body: session.host ? 'Lobby opened — share the code.' : `${hostName} opened the lobby.`,
-    },
-  ])
-
-
-  const nextMessageId = useRef(1)
-  const say = (message: Omit<Message, 'id'>) => {
-    const id = nextMessageId.current
-    nextMessageId.current += 1
-    setMessages((current) => [...current, { ...message, id }])
-  }
-
-  // Read by the arrival timers below, which fire outside a render and so can't
-  // see the state directly.
-  const occupancy = useRef({ humans: humans.length, bots: 0 })
   useEffect(() => {
-    occupancy.current = { humans: humans.length, bots: bots.length }
-  }, [humans, bots])
+    if (!uid) return
+    const isHost = session.host
+    const defaultConfig: DraftConfig = {
+      scope: 'top-5',
+      league: 'premier-league',
+      constraint: 'club-1',
+      timer: '15'
+    }
+    // We pass format null initially, host selects it
+    joinRoom(
+      code,
+      { id: uid, name: session.name, kind: 'human', mark: initialOf(session.name) },
+      isHost,
+      isHost ? defaultConfig : undefined
+    )
+  }, [uid, code, session])
 
-  /**
-   * People turn up. There's no server behind this yet, so the lobby plays the
-   * arrivals itself — on a stagger, taking real seats, stopping the moment the
-   * table is full.
-   */
   useEffect(() => {
-    const waiting = people.filter((person) => !humans.some((entry) => entry.id === person.id))
-    const pending: number[] = []
+    if (room?.status === 'drafting' && room.config) {
+      navigate(`/draft/${room.config.format || 'free-pick'}`, {
+        state: { ...room.config, roomId: code },
+        replace: true
+      })
+    }
+  }, [room?.status, room?.config, navigate, code])
 
-    waiting.slice(0, arrivalDelays.length).forEach((person, index) => {
-      pending.push(
-        window.setTimeout(() => {
-          const { humans: seated, bots: botCount } = occupancy.current
-          if (1 + seated + botCount >= MAX_SEATS) return
+  // Derive UI state from room
+  const config = room?.config || {}
+  const format = config.format || null
+  const scope = config.scope || 'top-5'
+  const league = config.league || 'premier-league'
+  const constraint = config.constraint || 'club-1'
+  const timer = config.timer || '15'
 
-          setHumans((current) => [...current, person])
-          say({ kind: 'system', author: '', body: `${person.name} joined.` })
+  const hostUid = room?.host || uid
+  const hostName = (hostUid && room?.drafters?.[hostUid]?.name) || 'The host'
 
-          pending.push(
-            window.setTimeout(() => {
-              say({
-                kind: 'said',
-                author: person.name,
-                body: arrivalLines[index % arrivalLines.length],
-              })
-            }, CHATTER_DELAY),
-          )
-        }, arrivalDelays[index]),
-      )
+  const messages = room?.chat ? Object.values(room.chat).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)) : []
+
+  // Extract seats from drafters
+  const seats: Seat[] = []
+  if (room?.drafters) {
+    const drafterEntries = Object.entries(room.drafters)
+    // Host first
+    const hostEntry = drafterEntries.find(([id]) => id === room.host)
+    if (hostEntry) {
+      seats.push({
+        id: hostEntry[0],
+        kind: hostEntry[1].kind as any,
+        name: hostEntry[1].name,
+        mark: hostEntry[1].mark,
+        note: 'Host — sets the draft on the right',
+        tag: hostUid === uid ? 'You (Host)' : 'Host'
+      })
+    }
+    // Others
+    drafterEntries.forEach(([id, d]) => {
+      if (id === room.host) return
+      seats.push({
+        id,
+        kind: d.kind as any,
+        name: d.name,
+        mark: d.mark,
+        note: d.online ? 'At the table' : 'Offline',
+        tag: id === uid ? 'You' : undefined
+      })
     })
-
-    return () => pending.forEach((id) => window.clearTimeout(id))
-    // Runs once for the room: the schedule is the room's, not a reaction to it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const you: Seat = {
-    id: 'you',
-    kind: 'you',
-    name: session.name,
-    mark: initialOf(session.name),
-    note: session.host ? 'Host — sets the draft on the right' : 'At the table',
-    tag: session.host ? 'Host' : 'You',
   }
 
-  const humanSeats: Seat[] = humans.map((person) => ({
-    id: person.id,
-    kind: 'human' as const,
-    name: person.name,
-    mark: initialOf(person.name),
-    note: person.host ? 'Host — sets the draft on the right' : 'At the table',
-    tag: person.host ? 'Host' : undefined,
-  }))
+  const setConfig = (updates: Partial<DraftConfig>) => {
+    if (session.host && room) {
+      updateRoomConfig(code, { ...room.config, ...updates })
+    }
+  }
 
-  const botSeats: Seat[] = bots.map((id, index) => ({
-    id: String(id),
-    kind: 'bot' as const,
-    name: `Bot ${index + 1}`,
-    mark: String(index + 1),
-    note: 'Default style',
-  }))
+  const setFormat = (f: string) => setConfig({ format: f })
+  const setScope = (s: string) => setConfig({ scope: s })
+  const setLeague = (l: string) => setConfig({ league: l })
+  const setConstraint = (c: string) => setConfig({ constraint: c })
+  const setTimer = (t: string) => setConfig({ timer: t })
 
-  // The host sits first because they opened the room; everyone else is in the
-  // order they walked in.
-  const seats: Seat[] = session.host
-    ? [you, ...humanSeats, ...botSeats]
-    : [...humanSeats.filter((seat) => seat.tag === 'Host'), you,
-       ...humanSeats.filter((seat) => seat.tag !== 'Host'), ...botSeats]
+  const say = (body: string) => {
+    if (uid) sendChatMessage(code, session.name, body)
+  }
 
   /** Constraints exist for Free Pick and are not offered anywhere else. */
   const takesConstraint = format === 'free-pick'
@@ -255,15 +222,14 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
           onAdd={
             session.host
               ? () => {
-                  const id = nextBotId.current
-                  nextBotId.current += 1
-                  setBots((current) => [...current, id])
+                  const currentBots = seats.filter(s => s.kind === 'bot').length
+                  addBot(code, currentBots + 1)
                 }
               : undefined
           }
           onRemove={
             session.host
-              ? (id) => setBots((current) => current.filter((entry) => String(entry) !== id))
+              ? (id) => removeBot(code, id)
               : undefined
           }
         />
@@ -271,8 +237,8 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
       leftFooterContent={
         <LobbyChat
           you={session.name}
-          messages={messages}
-          onSend={(body) => say({ kind: 'said', author: session.name, body })}
+          messages={messages as Message[]}
+          onSend={say}
         />
       }
       settingsContent={
@@ -350,16 +316,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
           variant="accent"
           disabled={!canStart}
           onClick={() => {
-            if (!format) return
-            navigate(`/draft/${format}`, {
-              state: {
-                scope,
-                league,
-                constraint,
-                timer,
-                drafters: seats.map(({ id, kind, name, mark }) => ({ id, kind, name, mark })),
-              },
-            })
+            if (format) setRoomStatus(code, 'drafting')
           }}
         >
           {session.host ? 'Kick off →' : 'Waiting for the host'}
