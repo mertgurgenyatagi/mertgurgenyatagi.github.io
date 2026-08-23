@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -A 'Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0.0.0 Safari/537.36' https://www.bubilet.com.tr/mekan/ankaworkshop -o /c/Users/Mert/AppData/Local/Temp/claude/c--Users-Mert-Desktop-repos-mertgurgenyatagi-github-io/5fc9a15c-3c74-4326-893f-70f7d4634d86/scratchpad/bubilet_venue_page.html --max-time 30)",
+      "Bash(node __TRACKED_VAR__/get_full_event.js __TRACKED_VAR__/bubilet_venue_page.html anka-workshop-heykel-workshop-sid-heykeli)",
+      "Bash(node C:/Users/Mert/AppData/Local/Temp/claude/c--Users-Mert-Desktop-repos-mertgurgenyatagi-github-io/5fc9a15c-3c74-4326-893f-70f7d4634d86/scratchpad/get_full_event.js C:/Users/Mert/AppData/Local/Temp/claude/c--Users-Mert-Desktop-repos-mertgurgenyatagi-github-io/5fc9a15c-3c74-4326-893f-70f7d4634d86/scratchpad/bubilet_venue_page.html anka-workshop-heykel-workshop-sid-heykeli)",
+      "Bash(node -e ' *)"
+    ]
+  }
+}
