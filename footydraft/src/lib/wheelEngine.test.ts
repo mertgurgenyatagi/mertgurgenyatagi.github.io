@@ -62,6 +62,59 @@ describe('the wheel', () => {
     expect(keys).not.toContain('serie-a')
     expect(keys).toHaveLength(leagues.length - 1)
   })
+
+  it('restricts club category to the top 15 clubs and randomizes wheel placement', () => {
+    const clubs = [
+      { name: 'Real Madrid', slug: 'real-madrid', league: 'la-liga' as const },
+      { name: 'Arsenal', slug: 'arsenal', league: 'premier-league' as const },
+      { name: 'Barcelona', slug: 'barcelona', league: 'la-liga' as const },
+      { name: 'Juventus', slug: 'juventus', league: 'serie-a' as const },
+      { name: 'Tottenham', slug: 'tottenham', league: 'premier-league' as const },
+      { name: 'Chelsea', slug: 'chelsea', league: 'premier-league' as const },
+      { name: 'Liverpool', slug: 'liverpool', league: 'premier-league' as const },
+      { name: 'Atletico Madrid', slug: 'atletico-madrid', league: 'la-liga' as const },
+      { name: 'Bayern Munich', slug: 'bayern-munich', league: 'bundesliga' as const },
+      { name: 'Manchester United', slug: 'manchester-united', league: 'premier-league' as const },
+      { name: 'PSG', slug: 'psg', league: 'ligue-1' as const },
+      { name: 'Aston Villa', slug: 'aston-villa', league: 'premier-league' as const },
+      { name: 'Napoli', slug: 'napoli', league: 'serie-a' as const },
+      { name: 'Manchester City', slug: 'manchester-city', league: 'premier-league' as const },
+      { name: 'Inter', slug: 'inter', league: 'serie-a' as const },
+      { name: 'Free Agent', slug: 'free-agent', league: null },
+      { name: 'Sassuolo', slug: 'sassuolo', league: 'serie-a' as const },
+    ]
+
+    const pool: Player[] = clubs.map((c) => ({
+      id: c.slug,
+      name: c.name,
+      surname: c.name,
+      nation: 'Nowhere',
+      age: 25,
+      club: c.name,
+      clubSlug: c.slug,
+      league: c.league,
+      position: 'ST',
+      ability: 85,
+      price: 50,
+      crest: '',
+      portraitBase: '',
+    }))
+
+    const squad: Squad = {}
+    const taken = new Set<string>()
+    const slices = wheelSlices(pool, squad, taken, 'club')
+
+    // Only the top 15 clubs should be included (excluding free-agent and sassuolo, including inter)
+    expect(slices).toHaveLength(15)
+    expect(slices.map((s) => s.key)).toContain('inter')
+    expect(slices.map((s) => s.key)).not.toContain('free-agent')
+    expect(slices.map((s) => s.key)).not.toContain('sassuolo')
+
+    // Wheel placement is randomized (not sorted by league or alphabetically)
+    const leagueOrder = slices.map((s) => s.league)
+    // Confirm it is not grouped into contiguous blocks of leagues
+    expect(leagueOrder).not.toEqual([...leagueOrder].sort())
+  })
 })
 
 /**

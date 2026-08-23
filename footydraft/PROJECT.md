@@ -2431,13 +2431,13 @@ clubs. The setting travels as `config.wheel` and `categoryFor(scope, preference)
 `wheelEngine.ts` resolves it, falling back to league for any config that carries no
 preference.
 
-A club wheel is a much finer grain — up to sixty-nine wedges under Top 5 leagues — so
-two things hold it together: slices are **sorted by league and then A–Z inside it**, and
-each club is painted in **its league's colour**, alternating with a darker mix of the
-same so one club is still divided from the next. The wheel reads as five bands rather
-than as noise, and the hub names whatever it lands on, which is what carries the result
-once the wedges are too narrow to hold a crest (the chips drop out past fourteen
-slices, as they always have).
+A club wheel is restricted to the **top 15 clubs by player count** in the database
+(excluding Free Agent, including Inter — Real Madrid, Arsenal, Barcelona, Juventus,
+Tottenham, Chelsea, Liverpool, Atletico Madrid, Bayern Munich, Manchester United,
+PSG, Aston Villa, Napoli, Manchester City, Inter) *(refined by Mert, 2026-08-23)*.
+Slice placement is **randomized around the wheel** (via a deterministic 32-bit hash)
+rather than grouped by league or alphabetically, each club is painted in **its league's
+colour**, and the wheel disc renders all 15 crest chips inside their wedges.
 
 R3-Q3's fourth case — "one specific nationality fixes nationality, leaving leagues or
 clubs" — is **moot since the nationality Scope was withdrawn** (see Scope below). No
@@ -3444,5 +3444,22 @@ git commit -m "Tweak sweep: shared constraints, auction pass, club wheel, Turkis
 git push origin aug-23-tweaks
 git checkout main
 git merge aug-23-tweaks
+git push origin main
+```
+
+## 2026-08-23 Club Wheel Fix — `wheel-club-fix`
+
+- **Restricted Club Wheel to Top 15 Clubs:** The club wheel was refined to draw only from the top 15 clubs with the most players in the dataset (excluding *Free Agent* and including *Inter*): Real Madrid, Arsenal, Barcelona, Juventus, Tottenham, Chelsea, Liverpool, Atletico Madrid, Bayern Munich, Manchester United, PSG, Aston Villa, Napoli, Manchester City, Inter.
+- **Randomized Wheel Placement:** Club placement around the wheel is randomized using a deterministic 32-bit FNV-1a hash (`hashKey`), avoiding clumping by league while staying synchronized across multiplayer clients.
+- **Crest Chips on the Wheel:** Slices render crest chips up to 16 slices (at 8.5% chip size) so all 15 clubs display their badges on the wheel.
+
+### Git Operations — 2026-08-23 (wheel club fix)
+
+```bash
+git add footydraft/PROJECT.md footydraft/src/lib/wheelEngine.ts footydraft/src/lib/wheelEngine.test.ts footydraft/src/components/draft/SpinWheel.tsx
+git commit -m "Restrict club wheel to top 15 clubs and randomize wheel placement"
+git push origin wheel-club-fix
+git checkout main
+git merge wheel-club-fix
 git push origin main
 ```

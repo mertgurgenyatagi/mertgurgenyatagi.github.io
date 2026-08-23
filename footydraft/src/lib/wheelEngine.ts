@@ -87,6 +87,45 @@ function entityMark(player: Player, category: WheelCategory): string | null {
 }
 
 /**
+ * The top 15 clubs by player count in the database (excluding Free Agent,
+ * including Inter). When the wheel is set to 'club', only these 15 clubs
+ * appear on the wheel.
+ */
+export const TOP_WHEEL_CLUBS = [
+  'real-madrid',
+  'arsenal',
+  'barcelona',
+  'juventus',
+  'tottenham',
+  'chelsea',
+  'liverpool',
+  'atletico-madrid',
+  'bayern-munich',
+  'manchester-united',
+  'psg',
+  'aston-villa',
+  'napoli',
+  'manchester-city',
+  'inter',
+] as const
+
+export const TOP_WHEEL_CLUBS_SET: ReadonlySet<string> = new Set(TOP_WHEEL_CLUBS)
+
+/**
+ * Deterministic 32-bit FNV-1a hash to randomize entity placement around the wheel
+ * without clustering by league or alphabetical name, while staying stable across
+ * re-renders and multiplayer clients.
+ */
+export function hashKey(str: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i += 1) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
+}
+
+/**
  * One equal slice for every entity that currently holds at least one
  * footballer the drafter on the clock could legally take — so a league whose
  * remaining players all play in positions you have already filled is not on
@@ -94,7 +133,7 @@ function entityMark(player: Player, category: WheelCategory): string | null {
  *
  * Which means the wheel is rebuilt for whoever is picking, not once for the
  * table. Leagues keep the lobby's order so the wheel does not reshuffle its
- * colours between spins; clubs and nations go A–Z.
+ * colours between spins; clubs have their placement randomized across the wheel.
  */
 export function wheelSlices(
   pool: Player[],
@@ -105,6 +144,7 @@ export function wheelSlices(
   const found = new Map<string, WheelSlice>()
 
   for (const player of pool) {
+    if (category === 'club' && !TOP_WHEEL_CLUBS_SET.has(player.clubSlug)) continue
     if (!isEligible(player, squad, 'none', taken)) continue
     const key = entityKey(player, category)
     if (found.has(key)) continue
@@ -128,11 +168,9 @@ export function wheelSlices(
     return slices.sort((a, b) => at(a.key) - at(b.key))
   }
 
-  /* Clubs group by league before going A–Z inside it, so a club wheel reads
-     as five bands of colour rather than as a shuffled ring — and so the wedge
-     the pointer is heading for is legible before the hub names it. */
+  /* Club wheel placement is randomized around the wheel rather than grouped by league. */
   if (category === 'club') {
-    return slices.sort((a, b) => at(a.league) - at(b.league) || a.label.localeCompare(b.label))
+    return slices.sort((a, b) => hashKey(a.key) - hashKey(b.key))
   }
 
   return slices.sort((a, b) => a.label.localeCompare(b.label))
