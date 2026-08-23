@@ -207,73 +207,58 @@ export function landingRotation(
 }
 
 /**
- * The wheel's face. A hard-stopped conic gradient rather than eleven rotated
- * elements: one paint, no seams, and it survives any slice count the pool
- * hands it. Each boundary carries a hairline of the ground colour so the
- * slices read as cut rather than as a blend.
+ * A curated palette of select rich colors paired into vibrant gradients.
+ * Used across all wheel modes and elements rather than hardcoded league/entity colors.
  */
-export function sliceGradient(colours: string[]): string {
-  const count = colours.length
+export const WHEEL_GRADIENTS: readonly [string, string][] = [
+  ['#1e3a8a', '#3b82f6'], // Deep Sapphire -> Azure
+  ['#047857', '#10b981'], // Forest Emerald -> Mint
+  ['#6b21a8', '#a855f7'], // Deep Purple -> Bright Violet
+  ['#be123c', '#fb7185'], // Ruby Rose -> Coral Pink
+  ['#0f766e', '#14b8a6'], // Deep Teal -> Aqua
+  ['#b45309', '#f59e0b'], // Warm Amber -> Gold
+  ['#4338ca', '#818cf8'], // Deep Indigo -> Periwinkle
+  ['#9f1239', '#e11d48'], // Crimson -> Bright Red
+  ['#115e59', '#2dd4bf'], // Dark Cyan -> Turquoise
+  ['#581c87', '#c026d3'], // Royal Violet -> Fuchsia
+  ['#831843', '#f43f5e'], // Wild Berry -> Rose
+  ['#14532d', '#22c55e'], // Hunter Green -> Bright Lime
+  ['#312e81', '#6366f1'], // Midnight Navy -> Electric Indigo
+  ['#701a75', '#d946ef'], // Dark Plum -> Magenta
+  ['#c2410c', '#fb923c'], // Terracotta -> Tangerine
+  ['#0369a1', '#38bdf8'], // Deep Ocean -> Sky Blue
+]
+
+/**
+ * The wheel's face. Rendered as a conic gradient of select colors chosen at random/hash
+ * for each slice across all modes, separated by a hairline cut of the ground colour.
+ */
+export function sliceGradient(slices: (WheelSlice | string)[]): string {
+  const count = slices.length
   if (count === 0) return `conic-gradient(var(--color-surface) 0deg 360deg)`
 
   const step = 360 / count
   const cut = Math.min(1.4, step * 0.06)
   const stops: string[] = []
 
-  colours.forEach((colour, index) => {
+  slices.forEach((slice, index) => {
     const from = index * step
+    const to = (index + 1) * step
+    const key = typeof slice === 'string' ? slice : slice.key
+    const paletteIndex = (hashKey(key) + index) % WHEEL_GRADIENTS.length
+    const [cStart, cEnd] = WHEEL_GRADIENTS[paletteIndex]
+
     stops.push(`var(--color-ground) ${from}deg ${from + cut}deg`)
-    stops.push(`${colour} ${from + cut}deg ${from + step}deg`)
+    stops.push(`${cStart} ${from + cut}deg`)
+    stops.push(`${cEnd} ${to}deg`)
   })
 
   return `conic-gradient(from 0deg, ${stops.join(', ')})`
 }
 
-/**
- * The one place in the app that paints outside the four primes without a
- * licensed crest in its hand — see the note on `--color-league-*` in
- * index.css. Anything that is not one of the five leagues falls back to a
- * ramp mixed from the primes.
- */
-const NEUTRAL_RAMP = [
-  'var(--color-surface-2)',
-  'var(--color-shade)',
-  'var(--color-surface)',
-  'var(--color-accent-ink)',
-]
-
-export function sliceColours(slices: WheelSlice[], category: WheelCategory): string[] {
-  if (category === 'league') {
-    // The fallback is what the everybody-else slice paints in: there is no
-    // `--color-league-other`, and there should not be — it is not a league.
-    return slices.map((slice) => `var(--color-league-${slice.key}, var(--color-surface-2))`)
-  }
-
-  /**
-   * A club wheel is coloured by the club's *league*, with neighbouring clubs
-   * in the same league alternating between the league's colour and a slightly
-   * darker mix of it. That keeps the five bands readable at sixty slices while
-   * still drawing a boundary between one club and the next, which a flat band
-   * would not. A club outside the top five has no league colour to take and
-   * falls back to the neutral ramp.
-   */
-  if (category === 'club') {
-    let run = 0
-    let previous: string | null = null
-    return slices.map((slice, index) => {
-      if (slice.league !== previous) {
-        previous = slice.league
-        run = 0
-      } else {
-        run += 1
-      }
-      if (!slice.league) return NEUTRAL_RAMP[index % NEUTRAL_RAMP.length]
-      const base = `var(--color-league-${slice.league}, var(--color-surface-2))`
-      return run % 2 === 0
-        ? base
-        : `color-mix(in oklab, ${base} 62%, var(--color-ground))`
-    })
-  }
-
-  return slices.map((_, index) => NEUTRAL_RAMP[index % NEUTRAL_RAMP.length])
+export function sliceColours(slices: WheelSlice[], _category?: WheelCategory): string[] {
+  return slices.map((slice, index) => {
+    const paletteIndex = (hashKey(slice.key) + index) % WHEEL_GRADIENTS.length
+    return WHEEL_GRADIENTS[paletteIndex][0]
+  })
 }

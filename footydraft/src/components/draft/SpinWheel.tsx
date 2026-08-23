@@ -39,7 +39,7 @@ export function SpinWheel({
   const { t } = useI18n()
   const count = slices.length
   const step = count > 0 ? 360 / count : 360
-  const gradient = sliceGradient(sliceColours(slices, category))
+  const gradient = sliceGradient(slices)
   const chip = count <= 6 ? '15%' : count <= 10 ? '11.5%' : count <= 16 ? '8.5%' : '7%'
   const spin = { transitionDuration: `${durationMs}ms` }
 

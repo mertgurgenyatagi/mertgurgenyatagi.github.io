@@ -1885,10 +1885,11 @@ Top bar — narrator and table strip, same as Free Pick. Then three hairline-div
 - **Boxes follow the pool's own higher-ability skew** (R6-Q2), not an even draw —
   `dondEngine.skewedSample` reuses the `p ∝ exp((ability − max)/10)` formula the bot training
   design settled on.
-- **The banker's offer is flat and position-based**: `bankerTarget` prices at fifteen points
-  under the average ability of whatever is still sealed (R3-Q4/R8-Q5/R9-Q6); `bankerOffers`
-  draws the named footballer from the undrafted pool for that position, excluding this
-  round's own boxes, one distinct name per drafter who asked (R6-Q8).
+- **The banker's offer is flat and position-based**: `bankerTarget` prices at the exact
+  average ability of whatever is still sealed (amended 2026-08-23, removing the fifteen-point
+  subtraction; R3-Q4/R8-Q5/R9-Q6 superseded); `bankerOffers` draws the named footballer from
+  the undrafted pool for that position, excluding this round's own boxes, one distinct name
+  per drafter who asked (R6-Q8).
 - **Going back to the boxes forces the next one** — no second choice once you decline the
   offer, per the briefing's own rule.
 - **Unopened or rejected boxes return to the pool at round end** (R8-Q6) — handled by
@@ -3458,6 +3459,23 @@ git push origin main
 ```bash
 git add footydraft/PROJECT.md footydraft/src/lib/wheelEngine.ts footydraft/src/lib/wheelEngine.test.ts footydraft/src/components/draft/SpinWheel.tsx
 git commit -m "Restrict club wheel to top 15 clubs and randomize wheel placement"
+git push origin wheel-club-fix
+git checkout main
+git merge wheel-club-fix
+git push origin main
+```
+
+## 2026-08-23 Wheel Styling, Random Gradients & Banker Offer Refinements
+
+- **Wheel Chip Styling:** Removed the circular white frame/background on wheel chips (`background: transparent`), replacing it with an ultra-thin white stroke (`drop-shadow` contour) directly hugging the SVG crests and logos across all modes.
+- **Randomized Color Gradients on the Wheel:** Eliminated prescribed league colors on the wheel face; every slice is now rendered as a smooth gradient from a curated palette of select vibrant tones chosen pseudo-randomly/deterministically per slice.
+- **Banker Offer at Exact Average Ability:** Removed the 15-point ability penalty from `bankerTarget` in Deal or No Deal; the banker now prices at the exact average ability of the remaining unopened boxes.
+
+### Git Operations — 2026-08-23 (wheel styling, gradients & banker offer)
+
+```bash
+git add footydraft/PROJECT.md footydraft/src/styles/index.css footydraft/src/lib/wheelEngine.ts footydraft/src/components/draft/SpinWheel.tsx footydraft/src/lib/wheelEngine.test.ts footydraft/src/lib/dondEngine.ts footydraft/src/lib/dondEngine.test.ts
+git commit -m "Refine wheel stroke & random gradients, update banker offer to exact average"
 git push origin wheel-club-fix
 git checkout main
 git merge wheel-club-fix

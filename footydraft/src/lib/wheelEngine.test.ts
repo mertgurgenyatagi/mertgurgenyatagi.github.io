@@ -46,8 +46,9 @@ describe('the wheel', () => {
   it('cuts the face into equal wedges with a hairline between them', () => {
     const gradient = sliceGradient(['red', 'blue', 'green', 'gold'])
     expect(gradient.startsWith('conic-gradient(from 0deg,')).toBe(true)
-    expect(gradient).toContain('red 1.4deg 90deg')
-    expect(gradient).toContain('gold 271.4deg 360deg')
+    expect(gradient).toContain('var(--color-ground) 0deg')
+    expect(gradient).toContain('var(--color-ground) 270deg')
+    expect(gradient).toContain('360deg')
   })
 
   it('only offers a category that still holds somebody legal', () => {

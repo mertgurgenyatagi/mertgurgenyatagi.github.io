@@ -71,8 +71,8 @@ describe('the banker', () => {
       openedBy: null,
     }))
 
-  it('prices fifteen under the average of what is still sealed', () => {
-    expect(bankerTarget(boxed([100, 120, 140]))).toBeCloseTo(105, 6)
+  it('prices at the exact average of what is still sealed', () => {
+    expect(bankerTarget(boxed([100, 120, 140]))).toBeCloseTo(120, 6)
   })
 
   it('names somebody from the pool, never from inside a box, one each', () => {

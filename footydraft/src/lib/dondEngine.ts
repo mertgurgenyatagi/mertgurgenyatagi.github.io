@@ -109,10 +109,8 @@ export function drawBoxes(
 /* ----------------------------------------------------------- the banker --- */
 
 /**
- * What the banker is aiming at: fifteen points under the average ability of
- * whatever is still sealed *(R3-Q4, R8-Q5, R9-Q6)*. Sticking with the boxes is
- * meant to feel like the tempting side of the choice and the deal like a
- * concession, and this is the whole of that mechanism.
+ * What the banker is aiming at: the exact average ability of whatever is
+ * still sealed in the remaining unopened boxes (amended 2026-08-23).
  *
  * It is flat and position-based only — the same number for everyone hearing an
  * offer this round, never adjusted per drafter for squad need or history
@@ -121,7 +119,7 @@ export function drawBoxes(
 export function bankerTarget(unopened: Box[]): number {
   if (unopened.length === 0) return 0
   const total = unopened.reduce((sum, box) => sum + box.player.ability, 0)
-  return total / unopened.length - 15
+  return total / unopened.length
 }
 
 /**

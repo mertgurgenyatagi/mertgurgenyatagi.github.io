@@ -1230,23 +1230,22 @@
   transform: translate(-50%, -50%);
   display: grid;
   place-items: center;
-  padding: 5%;
-  border-radius: 50%;
-  background: var(--color-ink);
-  box-shadow: 0 0 0 0 transparent;
-  transition: box-shadow 320ms var(--ease-out);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: transform 320ms var(--ease-out);
 }
 
-/* Where it stopped, said twice: the hub names it and its own mark is ringed.
-   A ring rather than a glow, and drawn outside the artwork rather than on it. */
+/* Where it stopped: scaled and highlighted with subtle glow */
 .wheel-chip-landed {
-  box-shadow: 0 0 0 3px var(--color-accent);
+  transform: translate(-50%, -50%) scale(1.18);
+  filter: drop-shadow(0 0 5px var(--color-accent));
 }
 
 /* Counter-rotated on the same curve and duration as the wheel, so a crest is
-   upright at every frame of the spin rather than only at the end of it. The
-   mark goes unstroked here: the chip is already an off-white disc, so there is
-   nothing for an outline to separate it from. */
+   upright at every frame of the spin rather than only at the end of it. An
+   extremely thin white outline contour keeps it distinct against any slice gradient. */
 .wheel-chip img,
 .wheel-chip b {
   width: 100%;
@@ -1256,15 +1255,22 @@
   transition-timing-function: cubic-bezier(0.1, 0.78, 0.14, 1);
 }
 
+.wheel-chip img {
+  filter: drop-shadow(0.75px 0 0 #ffffff) drop-shadow(-0.75px 0 0 #ffffff)
+    drop-shadow(0 0.75px 0 #ffffff) drop-shadow(0 -0.75px 0 #ffffff);
+}
+
 .wheel-chip b {
   display: grid;
   place-items: center;
   font-family: var(--font-display);
   font-size: 60%;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-ground);
+  color: #ffffff;
+  -webkit-text-stroke: 0.5px #ffffff;
+  text-shadow: 0 0 1px #ffffff;
 }
 
 /* Outside the rotating element rather than inside it counter-rotated: a hub
