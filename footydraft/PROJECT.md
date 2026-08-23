@@ -3181,3 +3181,20 @@ Multiplayer functionality was stabilized for all draft formats:
 
 With these fixes, all draft formats support stable, synchronized real-time multiplayer across desktop and mobile.
 
+
+## 2026-08-23 Player Pool Update
+
+Ingested 149 new players on the `player-update` branch. Computed and appended Derived Price and Opening Bid formulas to `player_data.csv`. Fetched and cropped perfect 4:5 aspect ratio images and generated multi-density color masks for the UI. Verified all 694 club affiliations against Wikidata's 2026 current team statements.
+
+### Git Operations — 2026-08-23
+
+```bash
+git add -A
+git commit -m "Update PROJECT.md with 2026-08-23 player pool ingestion"
+git push origin player-update
+git checkout main
+git merge player-update
+git push origin main
+git checkout -b aug-23-tweaks
+git push -u origin aug-23-tweaks
+```
