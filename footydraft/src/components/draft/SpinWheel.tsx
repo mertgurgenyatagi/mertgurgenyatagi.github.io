@@ -1,9 +1,9 @@
-import { type WheelCategory, type WheelSlice, sliceColours, sliceGradient } from '../../lib/wheelEngine'
+import { type WheelCategory, type WheelSlice, sliceGradient } from '../../lib/wheelEngine'
 import { useI18n } from '../../lib/i18n'
 
 interface SpinWheelProps {
   slices: WheelSlice[]
-  category: WheelCategory
+  category?: WheelCategory
   /** Absolute degrees. Only ever increases, so the wheel never unwinds. */
   rotation: number
   spinning: boolean
@@ -29,7 +29,6 @@ interface SpinWheelProps {
  */
 export function SpinWheel({
   slices,
-  category,
   rotation,
   spinning,
   landed,
