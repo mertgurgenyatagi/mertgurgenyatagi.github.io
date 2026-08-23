@@ -104,7 +104,7 @@ export function LobbyLayout({
           <LanguageSwitch />
           <Link
             to="/"
-            aria-label="#footydraft — back to the home page"
+            aria-label={t('#footydraft — back to the home page')}
             className="shrink-0 font-wordmark text-[19px] uppercase leading-none tracking-[0.06em] text-ink transition-opacity duration-150 ease-out hover:opacity-70"
           >
             <span className="text-accent">#</span>{t("footydraft")}</Link>

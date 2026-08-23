@@ -1,8 +1,15 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+
+// The friends lobby is backed by the Realtime Database, which under jsdom
+// never resolves — so without this every assertion below was failing on an
+// empty room rather than on anything it meant to check. See `fakeRoom`.
+vi.mock('../lib/multiplayer', async () => await import('../test/fakeRoom'))
+
 import { MultiLobby } from './MultiLobby'
+import { resetFakeRooms } from '../test/fakeRoom'
 
 function renderLobby(state?: { name: string; host: boolean }) {
   return render(
@@ -18,6 +25,7 @@ describe('MultiLobby', () => {
   beforeEach(() => {
     sessionStorage.clear()
     localStorage.clear()
+    resetFakeRooms()
   })
 
   it('asks for a name before it opens, then seats you in the room', async () => {
@@ -31,7 +39,7 @@ describe('MultiLobby', () => {
     await user.click(screen.getByRole('button', { name: /join lobby/i }))
 
     expect(screen.getByText('KX7QD')).toBeInTheDocument()
-    expect(screen.getByText('Mert')).toBeInTheDocument()
+    expect(await screen.findByText('Mert')).toBeInTheDocument()
   })
 
   it('shows a guest the host’s settings without offering them', async () => {
@@ -42,9 +50,9 @@ describe('MultiLobby', () => {
     await user.click(screen.getByRole('button', { name: /join lobby/i }))
 
     // The chips are still on screen — they just aren't controls any more.
+    expect(await screen.findByRole('button', { name: /waiting for the host/i })).toBeDisabled()
     expect(screen.queryByRole('button', { name: 'Auction' })).not.toBeInTheDocument()
     expect(screen.getByText('Auction')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /waiting for the host/i })).toBeDisabled()
   })
 
   it('lets the host fill the table and talk to it', async () => {
@@ -52,7 +60,7 @@ describe('MultiLobby', () => {
     renderLobby({ name: 'Mert', host: true })
 
     // Alone with no format: two separate reasons it can't start yet.
-    expect(screen.getByText('1 / 5 seats')).toBeInTheDocument()
+    expect(await screen.findByText('1 / 5 seats')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /kick off/i })).toBeDisabled()
 
     await user.click(screen.getByRole('button', { name: 'Free Pick' }))
@@ -60,11 +68,11 @@ describe('MultiLobby', () => {
 
     const [addBot] = screen.getAllByRole('button', { name: /add a bot/i })
     await user.click(addBot)
-    expect(screen.getByText('2 / 5 seats')).toBeInTheDocument()
+    expect(await screen.findByText('2 / 5 seats')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /kick off/i })).toBeEnabled()
 
     await user.type(screen.getByLabelText(/message the lobby/i), 'right, who’s in')
     await user.click(screen.getByRole('button', { name: /send/i }))
-    expect(screen.getByText('right, who’s in')).toBeInTheDocument()
+    expect(await screen.findByText('right, who’s in')).toBeInTheDocument()
   })
 })

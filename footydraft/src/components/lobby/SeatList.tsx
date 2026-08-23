@@ -114,7 +114,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
                 <span className="font-display text-[17px] font-bold uppercase leading-none tracking-[0.02em]">
                   {seat.name}
                 </span>
-                <span className="text-[11px] text-dim">{seat.note}</span>
+                <span className="text-[11px] text-dim">{t(seat.note)}</span>
               </span>
             </div>
 
@@ -134,7 +134,7 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
                     : 'border-line text-dim',
                 ].join(' ')}
               >
-                {seat.tag}
+                {t(seat.tag)}
               </span>
             ) : null}
           </li>
@@ -156,8 +156,8 @@ export function SeatList({ seats, minSeats = MIN_SEATS, onAdd, onRemove }: SeatL
                 <span className="font-display text-[17px] font-bold uppercase leading-none tracking-[0.02em] text-dim transition-colors duration-150 ease-out group-hover/seat:text-ink">{t("Add a bot")}</span>
                 <span className="text-[11px] text-faint">
                   {MAX_SEATS - seats.length === 1
-                    ? 'One seat left'
-                    : `${MAX_SEATS - seats.length} seats left`}
+                    ? t('One seat left')
+                    : t('{count} seats left', { count: MAX_SEATS - seats.length })}
                 </span>
               </span>
             </button>

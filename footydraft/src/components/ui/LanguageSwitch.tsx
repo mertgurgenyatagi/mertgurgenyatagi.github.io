@@ -6,20 +6,17 @@ const LANGUAGES = [
 ] as const
 
 /**
- * English and Turkish, on every screen.
- *
- * The switch moves; nothing behind it does yet. Copy is still English in both
- * positions — translation is its own pass, and the control is here first so
- * every layout already has the room for it rather than having one cut into it
- * later.
+ * English and Turkish, on every screen — and wired, as of 2026-08-23. The
+ * choice is remembered in `localStorage` and stamped on `<html lang>`; see
+ * `I18nProvider`.
  */
 export function LanguageSwitch({ className = '' }: { className?: string }) {
-  const { language, setLanguage } = useI18n()
+  const { language, setLanguage, t } = useI18n()
 
   return (
     <div
       role="group"
-      aria-label="Language"
+      aria-label={t('Language')}
       className={`flex shrink-0 items-center overflow-hidden rounded-sm border border-line ${className}`}
     >
       {LANGUAGES.map((entry) => (

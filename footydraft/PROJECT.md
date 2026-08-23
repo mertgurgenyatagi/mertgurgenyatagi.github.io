@@ -542,14 +542,31 @@ it has its own token (`--font-wordmark`) so nothing else can reach for it by acc
 segmented control — `EN` / `TR`, English selected — and it appears on the home page's
 header, in both lobbies' right pane, and in the top bar of all four draft screens.
 
-**It is deliberately not wired to anything yet** *(2026-08-22)*. The switch moves and
-holds its position; the copy stays English in both. Translating the app is its own pass,
-and the control shipped ahead of it so that every layout already carries the room for it
-— a switch cut into seven finished screens later is seven layout arguments, and this way
-they are already had.
+~~**It is deliberately not wired to anything yet** *(2026-08-22)*.~~ **Wired, and
+translated, 2026-08-23.** The choice is kept in `localStorage` and stamped on
+`<html lang>`, so it survives a reload and a deep link.
 
-Nothing in `src/` reads the selection. When translation does land, this is the component
-that grows a context; nothing else has to move.
+**The pass this replaced was thrown away rather than extended.** It was a flat table of
+word-for-word substitutions keyed on English strings, and it read like one — `Draft`,
+the noun this app is named after, came back as *"Taslak"*, a rough draft of a document;
+`Message the lobby` became an imperative aimed at the room rather than a field label.
+That is not a quality problem that more entries fix, it is structural: **the old `t()`
+received fragments**, and English assembles a sentence subject-verb-object where Turkish
+assembles it subject-object-verb. `"Waiting on " + name` can be translated correctly
+word by word and still come out backwards.
+
+So the contract changed with the content. `t(key, vars)` takes **whole phrases with
+`{placeholder}` substitutions**, and the translation is free to move a placeholder to
+where its own grammar wants it — `Waiting on {name}.` is `{name} bekleniyor.` in
+Turkish. Anything a rule produces that ends up on screen returns a key and its
+substitutions rather than a finished English string: see `Blocked` in `draftEngine.ts`,
+and the `Translate` parameter `seatsPhrase`/`unavailableReason` now take.
+
+**What is translated:** everything the app says, including **position codes and their
+full names** (GK → KL, CB → STP, CDM → ÖLB, ST → SF; Goalkeeper → Kaleci, and so on, in
+the vocabulary Turkish match reports use), the four format names, scopes, constraints
+and league names. **What is not:** club names and footballer names, which is why neither
+is a key.
 
 ### Leaving a screen
 
@@ -2216,7 +2233,7 @@ Every draft is configured along three independent axes: **Format**, **Scope**, a
 the pool: **(Average Derived Price of all players in the selected pool) × 19, rounded to the nearest 100M EUR** *(R8-Q0 / amended 2026-08-19)*.
 A footballer comes up starting at a predetermined opening bid (70% of derived market value, rounded to nearest 5M).
 The **first bid on a lot is exactly at the opening price** *(clarified 2026-08-19)*, so increment buttons are redundant in the first round and mask down to a single Bid.
-*(That used to read `{Pass, Bid}`; there is no Pass control as of 2026-08-22 — a seat that stops bidding has passed, and the rules never had a pass **action**.)*
+*(That used to read `{Pass, Bid}`; the Pass control was cut on 2026-08-22 and **restored on 2026-08-23** — see the pass rule below.)*
 Players bid in real time. The **Bid timer** represents the maximum allowed inactivity without a bid:
 **any valid bid resets the countdown timer back to its full duration** (e.g. 15s) *(R8-Q3)*.
 It is the only timer in the game — see Turns & Timers.
@@ -2248,8 +2265,12 @@ whatever they have at any time. Instead, once the auction **runs its course** (d
 as: every footballer **on the lot list** has been through the block — the list is capped
 at 15 × lobby size, see below — *or* every player still short of a full XI can no longer
 afford any unsold eligible footballer for their open slots — whichever comes first), any
-player left with empty slots has them auto-filled with the **cheapest still-eligible
-unsold footballers** for those positions. Under the cap, "unsold" means the whole scoped
+player left with empty slots has them auto-filled with the **lowest-rated
+still-eligible unsold footballers** for those positions *(amended 2026-08-23; it read
+"cheapest" until then, which is nearly but not quite the same ordering, derived price
+being an exponential function of ability)*. They are drawn from the whole scoped pool
+rather than from the lot list: the `15 × N` cap and its high-ability skew decide who
+goes on the block and have no business deciding who fills a slot nobody bid for. Under the cap, "unsold" means the whole scoped
 pool minus whatever was sold, so backfill draws first from the footballers the cap kept
 off the block, and only falls back to the unsold pile — the ones that went to the block
 and drew no bid — when nothing else eligible remains, exactly as R8-Q4 already
@@ -2258,6 +2279,19 @@ permanently broken squad — you end up with worse players, not fewer players. T
 also the default behavior when a pick/bid timer expires unattended (see Turns &
 Timers). Deal or No Deal has no budget in the briefing, so "running out of money"
 doesn't apply there.
+
+**A seat may pass, and passing closes a lot early** *(set by Mert, 2026-08-23)*.
+Passing is a real move again rather than a description of what a seat that stopped
+bidding had done. It is **final for that lot** — a seat that has passed does not get to
+think again at a higher price — and that is exactly what makes the shortcut sound:
+**the moment every seat but the current holder has passed, the lot sells immediately**
+rather than sitting out a countdown nobody is going to interrupt. With nobody holding
+it, everybody passing sends it to the unsold pile *(R8-Q4)* on the spot.
+
+A bot the price has already climbed past is marked out by the same mechanism, so it
+counts toward the close. The clock remains the ordinary closing mechanism; this only
+covers the case where waiting decides nothing. `lotIsDecided` in `auctionEngine.ts` is
+the rule.
 
 **Bidding is real time, not turn-based** *(restated 2026-08-21 as a constraint on the screen)*.
 Every seat can raise at any moment; there is no rotation, no "your turn", and no per-seat window.
@@ -2359,9 +2393,12 @@ at draft start. *(R2-Q6, also applies to Spin the Wheel below)*
 This is the **only format that supports Constraints** — see Constraints below.
 Footballers that would break a player's constraint are **filtered out of what they can
 even select** during their turn, not just blocked on attempt. *(R5-Q2, R5-Q9)* A
-constraint is checked **per player's own squad only** — "1 per club" means *you*
+~~A constraint is checked **per player's own squad only** — "1 per club" means *you*
 personally can't have two from the same club, it says nothing about what anyone else
-in the lobby ends up with. *(R6-Q3)*
+in the lobby ends up with. *(R6-Q3)*~~ **Overturned 2026-08-23: constraints are shared
+by the table.** One Real Madrid footballer going anywhere at the table takes Real Madrid
+off everybody's board — the cap is a property of the draft rather than of your own
+eleven. See Constraints below.
 
 Since the position reform made positions a **hard gate** — a footballer only ever fills
 their one listed slot, no exceptions *(R7.3-Q1)* — the same filtering mechanism also
@@ -2386,6 +2423,21 @@ category: Scope = All players or Top 5 Leagues leaves all three eligible; one sp
 league fixes league, leaving clubs or nationalities as options. *(R3-Q3)* That category
 is picked **once, at the very start of the draft** — the whole draft uses that one
 category type throughout, it doesn't change between spins. *(R5-Q1)*
+
+**Which of the open axes it gets fixed to is the lobby's choice** *(set by Mert,
+2026-08-23)*. A `Wheel` setting offers **By league** and **By club**; it collapses away
+under a single-league Scope, where league is already fixed and the wheel can only be
+clubs. The setting travels as `config.wheel` and `categoryFor(scope, preference)` in
+`wheelEngine.ts` resolves it, falling back to league for any config that carries no
+preference.
+
+A club wheel is a much finer grain — up to sixty-nine wedges under Top 5 leagues — so
+two things hold it together: slices are **sorted by league and then A–Z inside it**, and
+each club is painted in **its league's colour**, alternating with a darker mix of the
+same so one club is still divided from the next. The wheel reads as five bands rather
+than as noise, and the hub names whatever it lands on, which is what carries the result
+once the wedges are too narrow to hold a crest (the chips drop out past fourteen
+slices, as they always have).
 
 R3-Q3's fourth case — "one specific nationality fixes nationality, leaving leagues or
 clubs" — is **moot since the nationality Scope was withdrawn** (see Scope below). No
@@ -2421,6 +2473,23 @@ Constraints only apply to **Free Pick** — Auction, Deal or No Deal, and Spin t
 all skip Constraints entirely. *(R4-Q1/Q2 → narrowed by R5-Q2)* The setting simply
 **isn't offered** for the other three formats — not shown, not silently ignored.
 *(R5-Q2)*
+
+**A constraint is shared by the whole table, not held per squad** *(set by Mert,
+2026-08-23, overturning R6-Q3)*. Under `1 per club` the table may hold one Real Madrid
+footballer in total, not one each; under `3 per club`, three in total. The count is a
+tally over every pick anybody has made, so there is one counter and no way for two
+seats to disagree about what is left — `tableSpend` in `src/lib/draftEngine.ts` is that
+tally, and `blockedReason` reads it.
+
+Two consequences worth knowing before touching this:
+
+- **Every constrained configuration got much tighter**, and the viability table had to
+  be re-measured — see Draft Viability below. `Top 5 leagues · 1 per club` now tops out
+  at **three** drafters where it used to seat five.
+- **The `Used` rail on the Free Pick screen shows the table's spend**, not your own.
+  Your own picks are drawn at full weight inside it and everybody else's at a third, so
+  both readings live in one list. A rail that listed only your own clubs would be
+  answering a question nobody asked while getting the one they did ask wrong.
 
 ### Lobby Size
 **2–5** drafters (humans + bots combined), no minimum-to-start beyond 2. The size isn't
@@ -2474,16 +2543,14 @@ So **Free Pick, Spin the Wheel and Deal or No Deal run no clock at all**: no cou
 badge, no drain, and no auto-choice on expiry. `timeoutChoice` remains in
 `draftEngine.ts` — still correct, called by nothing.
 
-**The Bid timer is offered on the Auction only**, and has **two values: 15 s or Off**
-*(narrowed from 10/15/30/60/Off, 2026-08-22)*. The intermediate lengths were never a
-decision anybody was making; they were a slider drawn as chips. In both lobbies the group
-collapses away entirely when the format isn't Auction, the same way the Constraint group
-does for everything but Free Pick.
-
-`Off` is still honoured as a *setting* and still cannot switch the clock off in practice —
-see the judgement call under The Auction draft screen: with no turns, a lot with no clock
-stays open forever, so the screen falls back to the 15s default. That is unchanged from
-2026-08-21 and remains the one place a setting doesn't do what it says.
+~~**The Bid timer is offered on the Auction only**, and has **two values: 15 s or Off**
+*(narrowed from 10/15/30/60/Off, 2026-08-22)*.~~ **The bid timer is no longer a setting
+at all** *(removed by Mert, 2026-08-23)*. It had already narrowed from five values to
+two, and the surviving `Off` never switched anything off: with no turns, a lot that runs
+no clock stays open forever, so the screen fell back to fifteen seconds either way. A
+control whose two positions do the same thing is not a setting. The group is gone from
+both lobbies and the Auction runs at **fifteen seconds**, which now lives as
+`AUCTION_BID_SECONDS` in `src/lib/auctionEngine.ts`.
 
 On expiry the Auction needs no special handling: bidding closes without that seat's input
 if they don't act. *(The per-format timeout defaults settled in R2-Q7 and the Deal or No
@@ -2756,7 +2823,13 @@ until 2026-08-22, when that comparison was judged done with and the file deleted
 
 ### What it found
 
-- **114 of 2,176 configurations survive** (5.2%).
+**Re-measured 2026-08-23**, and it had to be: constraints became a table-wide tally
+rather than a per-squad one, and the pool grew from 546 rows to 694. Either change on
+its own invalidates every number here. **117 of 2,176 configurations survive** and
+`draftViability.ts` holds **32** triples. The findings below are from the original
+2026-08-18 run and are kept for the shape of the result rather than for the figures:
+
+- ~~**114 of 2,176 configurations survive** (5.2%).~~
 - **Viability is strictly monotonic in lobby size** — a configuration that fails at N
   fails at every size above N. Verified at generation time, and it's what lets the
   shipped data compress to one number per configuration.
@@ -2779,7 +2852,11 @@ until 2026-08-22, when that comparison was judged done with and the file deleted
 `src/data/draftViability.ts` — one number per `format|scope|constraint` triple: the
 largest table it still completes at, absent meaning never. It drops the nationality
 rows (unreachable now the Scope is gone) and re-verifies monotonicity, throwing if it
-ever breaks. 34 entries.
+ever breaks. **32 entries as of the 2026-08-23 re-run.**
+
+The two numbers most worth knowing from that run: **`free-pick|top-5|club-1` seats
+three** (it seated five under per-squad constraints), and **`free-pick|all|club-1` still
+seats five**. Ligue 1 remains unusable at any table size, in every format.
 
 `src/lib/draftViability.ts` is the lookup the lobbies use. Regenerate with
 `node scripts/draft-data/generate_viability_data.mjs` after any re-run of the simulation, and note
@@ -2860,6 +2937,8 @@ questionnaire is answered.
 ~~22. Host transfer on disconnect~~ Resolved R6-Q6: auto-passes to next-earliest joiner.
 ~~23. Indefinite blocking bids in Auction~~ Resolved R6-Q7: intended, no cap.
 ~~24. AI proposer offer targeting~~ Resolved R6-Q8: flat/position-based, not per-player.
+~~20. Constraint scope: per squad or shared?~~ Resolved R6-Q3 (per squad), **reopened and
+    reversed 2026-08-23: constraints are shared by the table.** See Constraints above.
 ~~25. Squad-share export timing~~ Resolved R6-Q9: manually triggered.
 ~~26. Lobby carryover between back-to-back drafts~~ Resolved R6-Q10: nothing carries
     over, clean slate every time.
@@ -3197,4 +3276,173 @@ git merge player-update
 git push origin main
 git checkout -b aug-23-tweaks
 git push -u origin aug-23-tweaks
+```
+
+
+## 2026-08-23 Tweak Sweep — `aug-23-tweaks`
+
+A single Tachyon-mode pass across every screen, run on `aug-23-tweaks`. **No Playwright
+by instruction, so nothing below is browser-verified**; `npx tsc --noEmit` is clean,
+`npm run build` passes and `npm test` runs **49 tests across 12 files**, all passing.
+Where a rule changed, the rule's own section above was corrected in place — this is the
+record of the pass, not a second copy of the rules.
+
+### The three faults underneath most of the multiplayer complaints
+
+The reports were "non-hosts get a dark screen", "Deal or No Deal turn logic is riddled
+with glitches", and "the bot sometimes doesn't take over". They turned out to share
+three causes, none of which is specific to the screen it was reported on.
+
+**1. Seat order depended on `kind`, so a bot takeover renumbered the table.** All four
+draft screens carried their own copy of the same derivation: host first, then humans,
+then bots. The moment a dropped seat was turned over (`kind: 'human'` → `'bot'`) that
+seat *moved*, and every seat after it renumbered. Seat index is the key every piece of
+draft state is stored against — picks, sales, bids, box openings, whose turn it is — so
+a takeover silently reassigned the whole draft's history to the wrong people, on every
+client, at a different moment on each. There is one `useSeats` now (`src/lib/seats.ts`),
+ordering by **host first, then id ascending**: nothing about it can change mid-draft,
+because neither a seat's id nor who the host is ever does.
+
+**2. An unseated client was seat 0 — the host's seat.** `Math.max(0, findIndex(...))`
+returns 0 when you are not in the room yet, so for the render or two before your own
+drafter record arrived you were drawn as the host, read the host's board, and could act
+on the host's behalf. Anything that then indexed off a seat which did not exist
+(`drafters[holder].name`, a squad, a budget) reached into an empty array and took the
+screen down. `youSeat` is `-1` until the room actually holds you, and every draft screen
+renders `DraftGate` until it does.
+
+**3. Firebase drops every null and every empty container**, so what a non-host read back
+was never the object the host wrote. `holder: null` arrived *absent* — and `holder !==
+null` is what the Auction screen keys off, so on a guest it was permanently true: that
+is both "non-hosts don't have an Open bidding button" and "non-hosts see *highest
+bidder: seat un…*", one cause. `openedBy: null` on a sealed Deal or No Deal box arrived
+absent too, so a shut box read as open and stopped being clickable; `openedIndex: null`
+likewise, so the stage tried to render `boxes[undefined]`. Every read of the room now
+goes through a normaliser (`normaliseBlock`, `normaliseSales`, `normaliseRound`).
+
+**And a fourth, in the queues:** `onChildAdded` replays every child already under a path
+the moment it attaches, and nothing was ever removed — so a host whose listener
+re-attached re-ran the entire draft's worth of bids and box-opens. `useActionQueue`
+removes each entry as it handles it, which drains the queue and makes a re-attachment a
+no-op.
+
+### General
+
+- **Talisca is the right way up.** His photo was rotated 90° clockwise at source. The
+  raw fetch is gone (`public/players/` was deleted 2026-08-22 and `assets/` never had
+  him), so the 4:5 crop was the only surviving copy: it was rotated back, the marked
+  face box was transformed through the rotation, and the crop was re-derived with
+  `crop_players_4x5.py`'s own arithmetic, then the four cell densities regenerated. The
+  face lands at **18.4 / 35 / 51.6%** rather than the canonical 15 / 27.5 / 40 — a
+  clamp, because the rotated frame is landscape and has no headroom above the face. That
+  is the same outcome as the other 280 clamped crops. **`data/face_coordinates.json` was
+  deliberately not updated**: its numbers are in the original photo's coordinate space,
+  and that photo no longer exists, so editing it would describe a file nobody can
+  regenerate.
+- **Turkish, rewritten from nothing.** See **Language** under Frontend for the mechanism
+  and for why the old table could not be extended.
+- **The comparison screen's nodes run at three times the size**, with the name plates and
+  position codes scaled to match, and they draw the **dot-grid portrait** rather than the
+  club crest — at 100px a crest is a logo and a face is a squad. At that size a node
+  overhangs the touchline it stands on and its name plate overhangs further, so the pitch
+  box got real geometry: `min()` of both axes of its own container (`.squad-pitch-stage`).
+  It had been sized off height alone, with an `aspect-ratio` deriving a width that nothing
+  stopped running past the column — harmless at 34px, not at 102px.
+- **An `ErrorBoundary` wraps the routes.** There wasn't one, so any render error unmounted
+  the whole tree and left the shell's own near-black ground with nothing on it — which is
+  *literally* the dark screen that was reported, whatever the underlying fault was on a
+  given evening. The specific faults are fixed above; this is the net under them. A failed
+  screen now says so, keeps the way out, and prints the error message.
+
+### Auction
+
+- **Pass is a control again, and it closes lots early** — see the rule under
+  Configuration Mechanics → Formats → Auction.
+- **The bid timer is no longer a setting** — see Turns & Timers.
+- **Your budget takes the space the bid cards leave.** Below five drafters the row of
+  bids left a third of the column empty, on a screen whose every decision is whether you
+  can afford the next raise. The figure is sized against its own cell (`cqw`, on a
+  container the budget panel declares), so it is enormous at two drafters and merely
+  large at five without needing a second layout. Under 768px it takes its own row.
+- **The steps say only what they are** — `+5`, `+10`, `+25`, about 30% larger, with the
+  "to €175M" second line gone. Two figures on one button, the smaller in ten-pixel type,
+  against a clock, was not a thing anyone was reading. Their *accessible* names spell the
+  action out (`Raise by 5`), since `+5` read aloud is not one.
+- **Chat no longer types out transactions.** The sold record is the record.
+- **Backfill takes the lowest-rated player from the scoped pool** — see the Auction rules.
+- **The clubs are current.** Nothing was wrong in `src/`: the local `dist/` was a stale
+  build carrying 546 players and Rodri still at Manchester City. The rebuild in this pass
+  refreshes it. Worth remembering as a diagnosis — `dist/` is gitignored and rebuilt by
+  CI, so a stale local preview is invisible to everything except the person looking at it.
+
+### Deal or No Deal
+
+**The turn machine was rebuilt** rather than patched. It mutated two pieces of state
+(`round` and `picks`) from separate updaters, read by effects whose dependency lists were
+suppressed with `eslint-disable` and whose closures therefore went stale; and it applied
+a remote action to *whoever happened to be active* rather than to the seat that sent it,
+so a duplicated or late message opened a box on somebody else's behalf. Every transition
+goes through one `commit` now, which reads the current round out of a ref written
+synchronously, checks the asking seat against the seat on the clock, and writes both
+pieces of state together. Two actions landing in the same tick see each other.
+
+Two real bugs fell out of it that were not merely mechanical:
+
+- **A round could deadlock.** `bankerOffers` draws one distinct footballer per seat that
+  asked *(R6-Q8)*, and late in a draft the pool for a position can be thinner than the
+  queue — those seats reached `weighing` with no offer to weigh and the round simply
+  stopped. A seat the banker cannot name anybody for now keeps the box it opened, which
+  is the same outcome as sticking and the only honest one: there was nothing to offer.
+- **Your pitch previewed somebody else's box.** The pending-slot preview was keyed on
+  whatever was on stage rather than on whether the thing on stage was yours.
+
+### Free Pick
+
+**Constraints are shared by the table** — see Constraints. This invalidated the viability
+data, which was re-measured; see Draft Viability.
+
+### Spin the Wheel
+
+**The wheel can be cut by club** — see Spin the Wheel under Formats.
+
+### One audit find worth keeping
+
+**Both Edersons were drawing the crest ring, not just the Atalanta one.** The photo
+fetched for the Fenerbahçe keeper is on disk as `ederson-fenerbahce`, but `portraitBase`
+looked up the bare `slugify(name)` — `ederson` — which matches no file, so *neither* of
+them found a portrait, including the one whose picture was sitting right there. A
+portrait slug now carries the club **only when the name is ambiguous in the pool**, which
+is a rule rather than a special case: the next pair of namesakes behaves the same way and
+nothing has to be renamed by hand. `ederson-atalanta` still has no photo and still falls
+through to the ring, exactly as Art assets already describes.
+
+### Still not done
+
+- **Nothing in this pass was checked in a browser.** The three worth looking at first:
+  the Auction bid row at five drafters (where the budget cell is at its tightest), the
+  comparison screen at five drafters, and the club wheel under `All players`, which will
+  carry roughly a hundred slices.
+- The 280 clamped 4:5 crops still have not had a systematic pass, and Safari's
+  `mask-image` support at these tile sizes still has not been checked.
+- The exported ML policies are still wired into the Auction only; the other three
+  screens' bots remain local heuristics.
+- The Auction policy still has no scripted-bidder benchmark — see the 2026-08-20 update
+  under Project Handover.
+
+### Git Operations — 2026-08-23 (tweak sweep)
+
+Staged by path rather than with `git add -A`. The repo root carries untracked work from
+another project (`EVENTPORTAL-HANDOVER.md`, two `eventportal-*.csv` exports,
+`scripts/simulate-scenario.js`) and three assistant tool directories (`.claude/`,
+`.serena/`, `.playwright-mcp/`), none of which belongs in this commit — and this is a
+public repo. `footydraft/data/crop_4x5_report.csv` is regenerated debris from the crop
+script and is left untracked too, as it was when it was deleted on 2026-08-22.
+
+```bash
+git add footydraft/PROJECT.md footydraft/src footydraft/scripts footydraft/data/draft_config_simulation_results.csv footydraft/public/players-4x5/talisca.webp footydraft/public/players-cells
+git commit -m "Tweak sweep: shared constraints, auction pass, club wheel, Turkish, multiplayer seat fixes"
+git push origin aug-23-tweaks
+git checkout main
+git merge aug-23-tweaks
+git push origin main
 ```

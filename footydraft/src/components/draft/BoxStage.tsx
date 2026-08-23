@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { Dotgrid } from './Dotgrid'
+import { useI18n } from '../../lib/i18n'
 
 export interface Decision {
   label: string
@@ -37,6 +38,7 @@ interface BoxStageProps {
  * choice are never in two different places.
  */
 export function BoxStage({ player, label, accent = false, decisions = [], note }: BoxStageProps) {
+  const { t } = useI18n()
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [player.id])
 
@@ -83,7 +85,7 @@ export function BoxStage({ player, label, accent = false, decisions = [], note }
             {player.club} · {player.nation} · {player.age}
           </span>
           <span className="font-display text-[12.5px] font-medium uppercase leading-none tracking-[0.1em] text-dim">
-            {player.position}
+            {t(player.position)}
           </span>
         </span>
 

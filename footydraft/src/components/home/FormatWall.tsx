@@ -39,7 +39,7 @@ export function FormatWall({ onPick }: FormatWallProps) {
               className="group/format relative flex h-full w-full items-end overflow-hidden rounded-md border border-line-strong bg-surface/70 px-3 py-2 text-left transition-[border-color,background-color] duration-100 ease-out hover:border-accent-line hover:bg-accent-soft focus-visible:border-accent-line sm:px-4 sm:py-[13px]"
             >
               <span className="font-display text-[clamp(0.88rem,1.15vw,1.12rem)] font-medium uppercase leading-tight tracking-[0.05em] text-ink">
-                {format.name}
+                {t(format.name)}
               </span>
 
               {/* Slides in from the left edge as the tile lifts. */}

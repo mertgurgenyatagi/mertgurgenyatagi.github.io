@@ -27,9 +27,17 @@ import {
   seatAt,
   slotFor,
 } from '../lib/draftEngine'
-import { useMultiplayerRoom, useHostBotTakeover, updateSpinState, placeSpinAction, sendChatMessage } from '../lib/multiplayer'
-import { ref, onChildAdded } from 'firebase/database'
-import { database } from '../lib/firebase'
+import {
+  useMultiplayerRoom,
+  useHostBotTakeover,
+  useActionQueue,
+  updateSpinState,
+  placeSpinAction,
+  sendChatMessage,
+  sendSystemMessage,
+} from '../lib/multiplayer'
+import { useSeats } from '../lib/seats'
+import { DraftGate } from '../components/draft/DraftGate'
 import { type Player, inScope, loadPool } from '../lib/players'
 import {
   type WheelSlice,
@@ -81,8 +89,8 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
 
-  /* No clock: the bid timer is the Auction's alone — see the note on `timers`
-     in lobbyOptions. A spin ends the turn when somebody picks off what it
+  /* No clock: the bid timer is the Auction's alone — see the note where `timers`
+     used to be in lobbyOptions. A spin ends the turn when somebody picks off what it
      landed on, so there was never anything here for a countdown to close. */
 
   const { room, uid } = useMultiplayerRoom(config.roomId)
@@ -91,50 +99,15 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
-  
-  const drafters = useMemo(() => {
-    if (!isMultiplayer || !room?.drafters) return baseDrafters
-    
-    const computedSeats: Drafter[] = []
-    const drafterEntries = Object.entries(room.drafters)
-    const hostEntry = drafterEntries.find(([id]) => id === room.host)
-    if (hostEntry) {
-      computedSeats.push({
-        id: hostEntry[0],
-        kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
-        name: hostEntry[1].name,
-        mark: hostEntry[1].mark,
-      })
-    }
-    
-    const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
-    for (const [id, drafter] of humanEntries) {
-      computedSeats.push({
-        id,
-        kind: id === uid ? 'you' : drafter.kind as any,
-        name: drafter.name,
-        mark: drafter.mark,
-      })
-    }
-    
-    const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
-    for (const [id, drafter] of botEntries) {
-      computedSeats.push({
-        id,
-        kind: 'bot',
-        name: drafter.name,
-        mark: drafter.mark,
-      })
-    }
-    return computedSeats
-  }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
+  const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
 
   const seatCount = drafters.length
-  const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
   const totalPicks = seatCount * SQUAD_SIZE
 
-  /* The wheel's category is fixed once, here, and never changes between spins. */
-  const category = useMemo(() => categoryFor(scope), [scope])
+  /* The wheel's category is fixed once, here, and never changes between spins
+     *(R5-Q1)*. Which of the two open axes it gets fixed to is the lobby's
+     choice as of 2026-08-23 — see `wheels` in lobbyOptions. */
+  const category = useMemo(() => categoryFor(scope, config.wheel), [scope, config.wheel])
 
   const [pool, setPool] = useState<Player[]>([])
   const [poolError, setPoolError] = useState<string | null>(null)
@@ -143,10 +116,16 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<PositionCode | null>(null)
-  const [tab, setTab] = useState(youSeat)
+  const [tab, setTab] = useState(0)
   const [pane, setPane] = useState<'wheel' | 'pool' | 'board'>('pool')
   const [localMessages, setMessages] = useState<Message[]>([])
-  const messages = isMultiplayer && room?.chat ? Object.values(room.chat).sort((a, b) => a.id - b.id) : localMessages
+  const messages = useMemo(() => {
+    if (isMultiplayer) {
+      if (!room?.chat) return []
+      return Object.values(room.chat).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    }
+    return localMessages
+  }, [isMultiplayer, room?.chat, localMessages])
   const [feed, setFeed] = useState<FeedLine[]>([])
 
   const [rotation, setRotation] = useState(-179)
@@ -197,7 +176,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
       .then(setPool)
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
-        setPoolError(error instanceof Error ? error.message : 'The player pool would not load.')
+        setPoolError(error instanceof Error ? error.message : t('The player pool would not load.'))
       })
     return () => controller.abort()
   }, [])
@@ -302,10 +281,15 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     announced.current = overall
 
     const where = landed
-      ? `The wheel landed on ${landed.label}`
-      : 'The wheel came up empty — the whole board is open'
-    if (yourTurn) report(`${where} — your pick.`, 'you')
-    else report(`${where} — ${drafters[activeSeat].name} is picking.`, 'waiting')
+      ? t('The wheel landed on {slice}', { slice: t(landed.label) })
+      : t('The wheel came up empty — the whole board is open')
+    if (yourTurn) report(t('{where} — your pick.', { where }), 'you')
+    else {
+      report(
+        t('{where} — {name} is picking.', { where, name: drafters[activeSeat]?.name ?? '' }),
+        'waiting',
+      )
+    }
   }, [settled, overall, complete, landed, yourTurn, drafters, activeSeat, report])
 
   /**
@@ -354,14 +338,19 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     if (!last || reported.current === last.overall) return
     reported.current = last.overall
     report(
-      `${drafters[last.seat].name} took ${last.player.name} — ${last.player.position}, ${last.player.club}.`,
+      t('{name} took {player} — {position}, {club}.', {
+        name: drafters[last.seat]?.name ?? '',
+        player: last.player.name,
+        position: t(last.player.position),
+        club: last.player.club,
+      }),
       'settled',
     )
   }, [picks, drafters, report])
 
   useEffect(() => {
     if (!complete) return
-    report('Every eleven is full. The draft is done.', 'settled')
+    report(t('Every eleven is full. The draft is done.'), 'settled')
   }, [complete, report])
 
   // A round turning over is the one structural event a pick line cannot carry,
@@ -370,9 +359,9 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   useEffect(() => {
     if (round === previousRound.current || complete) return
     previousRound.current = round
-    report(`Round ${round} — the order reverses.`, 'settled')
+    report(t('Round {n} — the order reverses', { n: round }), 'settled')
     if (isMultiplayer && isHost && config.roomId) {
-      sendChatMessage(config.roomId, '', `Round ${round} — the order reverses`)
+      sendSystemMessage(config.roomId, t('Round {n} — the order reverses', { n: round }))
     } else if (!isMultiplayer) {
       setMessages((current) => [
         ...current,
@@ -380,7 +369,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
           id: messageId.current++,
           kind: 'system',
           author: '',
-          body: `Round ${round} — the order reverses`,
+          body: t('Round {n} — the order reverses', { n: round }),
         },
       ])
     }
@@ -421,8 +410,15 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     setSelectedId(rows[0]?.id ?? null)
   }, [rows, selectedId])
 
+  const tabbed = useRef(false)
   useEffect(() => {
-    if (yourTurn) setTab(youSeat)
+    if (tabbed.current || youSeat < 0) return
+    tabbed.current = true
+    setTab(youSeat)
+  }, [youSeat])
+
+  useEffect(() => {
+    if (yourTurn && youSeat >= 0) setTab(youSeat)
   }, [yourTurn, youSeat])
 
   const selected = useMemo(
@@ -444,20 +440,14 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
     )
   }, [canDraft, selected, commit, youSeat, isMultiplayer, isHost, config.roomId])
 
-  useEffect(() => {
-    if (!isMultiplayer || !isHost || !config.roomId) return
-    const actionsRef = ref(database, `rooms/${config.roomId}/spinActions`)
-    return onChildAdded(actionsRef, (snapshot) => {
-      const { seat, action } = snapshot.val()
-      if (action.type === 'draft') {
-        commit(seat, (squad, already) => {
-          const remoteSelected = entityPoolRef.current.find((p) => p.id === action.playerId)
-          if (!remoteSelected) return null
-          return isEligible(remoteSelected, squad, 'none', already) ? remoteSelected : null
-        })
-      }
+  useActionQueue(config.roomId, 'spinActions', isMultiplayer && isHost, (payload) => {
+    if (typeof payload.seat !== 'number' || payload.action?.type !== 'draft') return
+    commit(payload.seat, (squad, already) => {
+      const remoteSelected = entityPoolRef.current.find((p) => p.id === payload.action.playerId)
+      if (!remoteSelected) return null
+      return isEligible(remoteSelected, squad, 'none', already) ? remoteSelected : null
     })
-  }, [isMultiplayer, isHost, config.roomId, commit])
+  })
 
   const pendingSlot: FormationSlot | null =
     canDraft && selected
@@ -467,36 +457,49 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   /* ---------------------------------------------------------------- copy ---- */
 
   const status: { text: string; tone: NarratorTone } = complete
-    ? { text: 'The draft is done.', tone: 'settled' }
+    ? { text: t('The draft is done.'), tone: 'settled' }
     : !ready
-      ? { text: 'Reading the board.', tone: 'settled' }
+      ? { text: t('Reading the board.'), tone: 'settled' }
       : !settled
-        ? { text: 'The wheel is spinning.', tone: 'waiting' }
+        ? { text: t('The wheel is spinning.'), tone: 'waiting' }
         : yourTurn
-          ? { text: 'Your pick.', tone: 'you' }
-          : { text: `${drafters[activeSeat].name} is picking.`, tone: 'waiting' }
+          ? { text: t('Your pick.'), tone: 'you' }
+          : {
+              text: t('{name} is picking.', { name: drafters[activeSeat]?.name ?? '' }),
+              tone: 'waiting',
+            }
 
-  const whose = activeSeat < 0 || yourTurn ? 'open slots' : `${drafters[activeSeat].name}'s slots`
+  const whose =
+    activeSeat < 0 || yourTurn
+      ? t('open slots')
+      : t("{name}'s slots", { name: drafters[activeSeat]?.name ?? '' })
   const poolTitle = complete
-    ? 'The board is closed'
+    ? t('The board is closed')
     : !settled
-      ? 'The wheel is turning'
-      : `${landed?.label ?? 'Open board'} · ${whose}`
+      ? t('The wheel is turning')
+      : `${landed ? t(landed.label) : t('Open board')} · ${whose}`
 
   const reason = (() => {
     if (poolError) return poolError
-    if (!ready) return 'Reading the board…'
-    if (complete) return 'Every eleven is full.'
-    if (!settled) return 'The wheel is turning.'
-    if (!yourTurn) return `Waiting on ${drafters[activeSeat].name}.`
-    if (!selected) return 'Nothing on this board fits your eleven.'
-    return `${selected.surname} fills your ${selected.position}.`
+    if (!ready) return t('Reading the board…')
+    if (complete) return t('Every eleven is full.')
+    if (!settled) return t('The wheel is turning.')
+    if (!yourTurn) return t('Waiting on {name}.', { name: drafters[activeSeat]?.name ?? '' })
+    if (!selected) return t('Nothing on this board fits your eleven.')
+    return t('{name} fills your {position}.', {
+      name: selected.surname,
+      position: t(selected.position),
+    })
   })()
 
-  const actionLabel = canDraft && selected ? `Draft ${selected.surname} →` : 'Draft →'
+  const actionLabel =
+    canDraft && selected ? t('Draft {name} →', { name: selected.surname }) : t('Draft →')
 
   const you = drafters[youSeat]
   const lastArrival = picks[picks.length - 1]?.player.id ?? null
+
+  /* Nothing below this line is safe to draw without a seat — see `DraftGate`. */
+  if (!seated || !you) return <DraftGate />
 
   if (complete) {
     return <SquadCompare drafters={drafters} squads={squads} />
@@ -524,7 +527,7 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
         </div>
 
         <span className="shrink-0 text-right font-display text-[10px] font-medium uppercase leading-none tracking-[0.2em] text-muted">
-          Round {round} of {SQUAD_SIZE}
+          {t('Round {n} of {total}', { n: round, total: SQUAD_SIZE })}
         </span>
       </header>
 

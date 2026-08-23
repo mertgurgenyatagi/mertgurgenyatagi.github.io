@@ -12,6 +12,7 @@ interface PositionSelectProps {
 
 const ALL = 'All positions'
 
+
 /**
  * The position filter, as one dropdown rather than a row of chips.
  *
@@ -104,7 +105,7 @@ export function PositionSelect({
           open || value ? 'border-accent-line text-accent' : 'border-line text-muted hover:text-ink',
         ].join(' ')}
       >
-        <span className="truncate">{label}</span>
+        <span className="truncate">{t(label)}</span>
         <span aria-hidden="true" className={`select-caret ${open ? 'select-caret-open' : ''}`} />
       </button>
 
@@ -134,7 +135,7 @@ export function PositionSelect({
                     choice === value ? 'text-accent' : 'text-dim',
                   ].join(' ')}
                 >
-                  {choice ?? 'All'}
+                  {choice ? t(choice) : t('All')}
                 </span>
                 <span
                   className={[
@@ -142,7 +143,7 @@ export function PositionSelect({
                     choice === value ? 'text-ink' : 'text-muted',
                   ].join(' ')}
                 >
-                  {choice ? positionNames[choice] : ALL}
+                  {choice ? t(positionNames[choice]) : t(ALL)}
                 </span>
               </button>
             </li>

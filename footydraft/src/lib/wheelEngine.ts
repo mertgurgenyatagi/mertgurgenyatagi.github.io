@@ -22,6 +22,14 @@ export interface WheelSlice {
   label: string
   /** A crest, where one exists. Nations have no mark and get their letters. */
   mark: string | null
+  /**
+   * Which league this slice belongs to, where it belongs to one. On a league
+   * wheel that is the slice itself; on a **club** wheel it is what keeps sixty
+   * slices from reading as noise — a club is painted in its own league's
+   * colour, so the wheel still has structure at a glance even when no single
+   * wedge is wide enough to carry a crest.
+   */
+  league: string | null
 }
 
 const base = import.meta.env.BASE_URL
@@ -32,15 +40,21 @@ export function leagueMark(id: string): string {
 
 /**
  * Which single category the whole draft's wheel is drawn from. It is decided
- * once, at the start, and never changes between spins.
+ * once, at the start, and never changes between spins *(R5-Q1)*.
  *
- * Scope fixes one axis and the wheel takes another: `All players` and
- * `Top 5 leagues` leave league, club and nationality all open, and league is
- * the one that renders as five legible slices with a real mark in each. A
- * single-league Scope has already fixed league, so the wheel drops to clubs.
+ * **The lobby now chooses between league and club** *(set by Mert,
+ * 2026-08-23)*. Scope still fixes what it fixes: a single-league Scope has
+ * already settled league, so that draft's wheel can only be clubs and the
+ * setting collapses away. `All players` and `Top 5 leagues` leave both open
+ * and the host picks — five wide wedges with a mark in each, or one wedge per
+ * club, which is the same game played at a much finer grain.
+ *
+ * Anything unrecognised falls back to league, which is what an old lobby
+ * config or a pasted link with no preference on it will hand over.
  */
-export function categoryFor(scope: string): WheelCategory {
-  return scope === 'league' ? 'club' : 'league'
+export function categoryFor(scope: string, preference?: string): WheelCategory {
+  if (scope === 'league') return 'club'
+  return preference === 'club' ? 'club' : 'league'
 }
 
 /**
@@ -94,17 +108,31 @@ export function wheelSlices(
     if (!isEligible(player, squad, 'none', taken)) continue
     const key = entityKey(player, category)
     if (found.has(key)) continue
-    found.set(key, { key, label: entityLabel(player, category), mark: entityMark(player, category) })
+    found.set(key, {
+      key,
+      label: entityLabel(player, category),
+      mark: entityMark(player, category),
+      league: player.league,
+    })
   }
 
   const slices = [...found.values()]
 
+  const order = leagues.map((league) => league.id)
+  // `indexOf` returns -1 for anything outside the five, which would put it
+  // first — it belongs last, after the ones that have a mark.
+  const at = (key: string | null) =>
+    !key || order.indexOf(key) < 0 ? order.length : order.indexOf(key)
+
   if (category === 'league') {
-    // `indexOf` returns -1 for the everybody-else slice, which puts it first —
-    // it belongs last, after the five that have a mark.
-    const order = leagues.map((league) => league.id)
-    const at = (key: string) => (order.indexOf(key) < 0 ? order.length : order.indexOf(key))
     return slices.sort((a, b) => at(a.key) - at(b.key))
+  }
+
+  /* Clubs group by league before going A–Z inside it, so a club wheel reads
+     as five bands of colour rather than as a shuffled ring — and so the wedge
+     the pointer is heading for is legible before the hub names it. */
+  if (category === 'club') {
+    return slices.sort((a, b) => at(a.league) - at(b.league) || a.label.localeCompare(b.label))
   }
 
   return slices.sort((a, b) => a.label.localeCompare(b.label))
@@ -182,5 +210,32 @@ export function sliceColours(slices: WheelSlice[], category: WheelCategory): str
     // `--color-league-other`, and there should not be — it is not a league.
     return slices.map((slice) => `var(--color-league-${slice.key}, var(--color-surface-2))`)
   }
+
+  /**
+   * A club wheel is coloured by the club's *league*, with neighbouring clubs
+   * in the same league alternating between the league's colour and a slightly
+   * darker mix of it. That keeps the five bands readable at sixty slices while
+   * still drawing a boundary between one club and the next, which a flat band
+   * would not. A club outside the top five has no league colour to take and
+   * falls back to the neutral ramp.
+   */
+  if (category === 'club') {
+    let run = 0
+    let previous: string | null = null
+    return slices.map((slice, index) => {
+      if (slice.league !== previous) {
+        previous = slice.league
+        run = 0
+      } else {
+        run += 1
+      }
+      if (!slice.league) return NEUTRAL_RAMP[index % NEUTRAL_RAMP.length]
+      const base = `var(--color-league-${slice.league}, var(--color-surface-2))`
+      return run % 2 === 0
+        ? base
+        : `color-mix(in oklab, ${base} 62%, var(--color-ground))`
+    })
+  }
+
   return slices.map((_, index) => NEUTRAL_RAMP[index % NEUTRAL_RAMP.length])
 }

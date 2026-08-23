@@ -48,7 +48,7 @@ export function TurnIndicator({
             yourTurn ? 'text-accent' : 'text-dim',
           ].join(' ')}
         >
-          {yourTurn ? 'Your pick' : reversed ? 'Order reversed' : 'Order as drawn'}
+          {yourTurn ? t('Your pick') : reversed ? t('Order reversed') : t('Order as drawn')}
         </span>
       </div>
 

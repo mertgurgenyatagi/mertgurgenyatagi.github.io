@@ -50,7 +50,7 @@ export function SoldRecord({ sales, drafters, youSeat, show = 4 }: SoldRecordPro
         <ul className="auction-sold">
           {recent.map((sale) => {
             const mine = sale.seat === youSeat
-            const buyer = sale.seat === null ? null : drafters[sale.seat]
+            const buyer = sale.seat === null ? null : (drafters[sale.seat] ?? null)
 
             return (
               <li
@@ -82,7 +82,7 @@ export function SoldRecord({ sales, drafters, youSeat, show = 4 }: SoldRecordPro
                       mine ? 'text-accent' : buyer === null ? 'text-dim' : 'text-muted',
                     ].join(' ')}
                   >
-                    {buyer === null ? 'Unsold' : buyer.name}
+                    {buyer === null ? t('Unsold') : buyer.name}
                   </span>
                 </span>
               </li>

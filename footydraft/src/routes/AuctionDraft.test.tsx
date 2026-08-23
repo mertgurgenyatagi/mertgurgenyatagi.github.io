@@ -66,8 +66,9 @@ describe('AuctionDraft', () => {
     expect(screen.getByText('Opening')).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Open the bidding/ })).toHaveLength(1)
 
-    // There is no Pass: a seat that stops bidding has passed.
-    expect(screen.queryByRole('button', { name: /^Pass$/ })).not.toBeInTheDocument()
+    // Passing is a real move again (2026-08-23): a lot closes early once
+    // everybody but the holder has stood down, which needs a way to say so.
+    expect(screen.getByRole('button', { name: /^Pass$/ })).toBeEnabled()
   })
 
   it('holds bidding shut for the first seconds of a lot, then takes yours', async () => {
@@ -88,8 +89,13 @@ describe('AuctionDraft', () => {
     expect(screen.getByText('+25')).toBeInTheDocument()
 
     // Nobody bids against themselves — and the lockout has just restarted on
-    // the bid that was placed, which disables them for a second reason.
-    expect(screen.getByRole('button', { name: /\+5/ })).toBeDisabled()
+    // the bid that was placed, which disables them for a second reason. The
+    // step's own label is the bare figure; its accessible name spells the
+    // action out, since `+5` read aloud is not one.
+    expect(screen.getByRole('button', { name: /Raise by 5/ })).toBeDisabled()
+
+    // Holding the lot is the one state with no way out of it.
+    expect(screen.getByRole('button', { name: /^Pass$/ })).toBeDisabled()
   })
 
   it('keeps every drafter on screen', async () => {

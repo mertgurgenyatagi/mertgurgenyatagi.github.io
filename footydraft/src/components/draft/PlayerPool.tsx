@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef } from 'react'
 import { type PositionCode, positionCodes, positionNames } from '../../data/formation'
+import type { Blocked } from '../../lib/draftEngine'
 import type { Player } from '../../lib/players'
 import { Crest } from '../ui/Crest'
 import { useI18n } from '../../lib/i18n'
@@ -7,7 +8,7 @@ import { useI18n } from '../../lib/i18n'
 export interface PoolRow {
   player: Player
   /** Null when they are yours to take. Otherwise the reason, printed on the row. */
-  blocked: string | null
+  blocked: Blocked | null
 }
 
 interface PlayerPoolProps {
@@ -116,7 +117,7 @@ export function PlayerPool({
               spent={filled.has(code)}
               onClick={() => onFilter(filter === code ? null : code)}
             >
-              {code}
+              {t(code)}
             </FilterChip>
           ))}
         </div>
@@ -161,11 +162,13 @@ export function PlayerPool({
                       >
                         {player.name}
                       </span>
-                      <span className="truncate text-[13px] leading-none text-dim">{blocked}</span>
+                      <span className="truncate text-[13px] leading-none text-dim">
+                        {blocked ? t(blocked.key, blocked.vars) : ''}
+                      </span>
                     </span>
 
                     <span className="max-w-[128px] shrink-0 truncate text-right font-display text-[12.75px] font-medium uppercase tracking-[0.06em] text-muted">
-                      {positionNames[player.position]}
+                      {t(positionNames[player.position])}
                     </span>
                   </button>
                 </li>

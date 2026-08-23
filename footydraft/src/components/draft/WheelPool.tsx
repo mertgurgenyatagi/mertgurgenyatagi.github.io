@@ -161,7 +161,7 @@ export function WheelPool({
                           telling you which hole it fills rather than what the
                           footballer is. */}
                       <span className="w-[32px] shrink-0 font-display text-[11px] font-semibold uppercase leading-none tracking-[0.11em] text-accent">
-                        {player.position}
+                        {t(player.position)}
                       </span>
                       <Crest className="h-[21px] w-[21px] shrink-0" src={player.crest} alt="" />
                       <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium leading-none text-ink">

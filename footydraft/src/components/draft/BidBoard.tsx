@@ -10,7 +10,7 @@ interface BidBoardProps {
   price: number
   /** The last figure each seat put up on this lot. */
   bids: Record<number, number>
-  /** Seats the price has already climbed past. */
+  /** Seats that are out of this lot — priced out, or passed by hand. */
   out: number[]
   budgets: number[]
   seconds: number
@@ -24,27 +24,32 @@ interface BidBoardProps {
    */
   armed: boolean
   onBid: (step: number) => void
+  /** Standing down from this lot. See the pass rule in `auctionEngine`. */
+  onPass: () => void
 }
 
 /**
  * Everything under the displayer: the countdown, the table's bids side by
- * side, and the steps.
+ * side with your budget beside them, and the controls.
  *
- * **Stripped back to those three things.** It used to open with a holder chip
- * naming who had the lot and at what price — which is now the headline across
- * the top of the whole screen, set four times the size, so repeating it here
- * was costing the row that carried it and telling nobody anything. The bid
- * cards lost their budget meters for the same reason the figure beside them
- * survived: the number is the fact, the bar was decoration.
+ * **The steps say only what they are.** They used to carry a second line
+ * naming the price the raise lands on, which was a defensible thing to want
+ * and an indefensible thing to read: two figures on one button, the smaller of
+ * them in ten-pixel type, against a clock. `+5`, `+10`, `+25`, at size, and
+ * nothing else *(2026-08-23)*.
  *
- * What that bought is **the steps**, which are the only controls on this
- * screen and were the smallest type on it. Each one is now a real button with
- * a real label: the step at reading size on top, what it lands on underneath.
- * A button that names only its step makes you do arithmetic against a clock,
- * and a button that names it in ten-pixel type makes you squint first.
+ * **Your budget takes the room the bid cards do not.** Below five drafters the
+ * row of bids left a third of the screen's width empty, next to a screen whose
+ * every decision is "can I afford this". The figure is sized off its own cell,
+ * so it is enormous at two drafters and merely large at five rather than
+ * needing a different layout for each.
  *
- * There is no Pass. A seat that stops bidding has passed; saying so out loud
- * was a control for a rule the auction does not have.
+ * **Pass is a control again** *(set by Mert, 2026-08-23)*. It was cut on
+ * 2026-08-22 on the reasoning that a seat which stops bidding has already
+ * passed — true, but it left no way to *say so*, and therefore no way for a
+ * lot to close early when the room had plainly finished with it. Passing is
+ * final for the lot: that is what lets the hammer fall the moment everybody
+ * but the holder has stood down.
  */
 export function BidBoard({
   drafters,
@@ -60,11 +65,13 @@ export function BidBoard({
   live,
   armed,
   onBid,
+  onPass,
 }: BidBoardProps) {
   const { t } = useI18n();
 
   const held = holder !== null
   const youHold = holder === youSeat
+  const youOut = out.includes(youSeat)
   const yourBudget = budgets[youSeat] ?? 0
 
   /* The first bid on a lot is exactly at the opening price, so the three steps
@@ -73,9 +80,20 @@ export function BidBoard({
     ? BID_STEPS.map((step) => ({ step, lands: price + step }))
     : [{ step: 0, lands: price }]
 
-  const canRaise = live && armed && !youHold
+  const canRaise = live && armed && !youHold && !youOut
+  const canPass = live && !youHold && !youOut
   /** Whole seconds still to run on the lockout, for the line that names it. */
   const opensIn = Math.max(0, Math.ceil(seconds - (limit - LOCKOUT)))
+
+  const note = !live
+    ? ''
+    : youHold
+      ? t('You hold this lot.')
+      : youOut
+        ? t('You have passed on this lot.')
+        : !armed
+          ? t('Bidding opens in {seconds}', { seconds: opensIn })
+          : ''
 
   return (
     <div className="flex shrink-0 flex-col">
@@ -99,55 +117,79 @@ export function BidBoard({
         </span>
       </div>
 
-      {/* ---- The table, side by side, with what each of them has said. ---- */}
-      <ul className="auction-bids mt-[clamp(9px,1.7cqh,14px)]">
-        {drafters.map((drafter, seat) => {
-          const high = seat === holder
-          const passed = out.includes(seat)
-          const bid = bids[seat]
+      {/* ---- The table, side by side, with what each of them has said — and
+              your own budget filling whatever they leave over. ---- */}
+      <div
+        className="auction-bidrow mt-[clamp(9px,1.7cqh,14px)]"
+        style={{ '--auction-seats': drafters.length } as React.CSSProperties}
+      >
+        <ul className="auction-bids">
+          {drafters.map((drafter, seat) => {
+            const high = seat === holder
+            const passed = out.includes(seat)
+            const bid = bids[seat]
 
-          return (
-            <li
-              key={drafter.id}
-              className={[
-                'auction-bid-card relative flex min-w-0 flex-col gap-[5px] rounded-md border px-[10px] pb-[8px] pt-[9px] transition-colors duration-300 ease-out',
-                high
-                  ? 'border-accent bg-accent-soft'
-                  : seat === youSeat
-                    ? 'border-line-strong bg-surface'
-                    : 'border-line bg-surface',
-                passed && !high ? 'opacity-40' : '',
-              ].join(' ')}
-            >
-              <span
+            return (
+              <li
+                key={drafter.id}
                 className={[
-                  'flex items-center gap-[6px] truncate whitespace-nowrap text-[11.5px] font-medium leading-none',
-                  high || seat === youSeat ? 'text-ink' : 'text-muted',
+                  'auction-bid-card relative flex min-w-0 flex-col gap-[5px] rounded-md border px-[10px] pb-[8px] pt-[9px] transition-colors duration-300 ease-out',
+                  high
+                    ? 'border-accent bg-accent-soft'
+                    : seat === youSeat
+                      ? 'border-line-strong bg-surface'
+                      : 'border-line bg-surface',
+                  passed && !high ? 'opacity-40' : '',
                 ].join(' ')}
               >
-                <Disc drafter={drafter} tone={high ? 'lead' : seat === youSeat ? 'you' : 'plain'} />
-                <span className="truncate">{drafter.name}</span>
-              </span>
+                <span
+                  className={[
+                    'flex items-center gap-[6px] truncate whitespace-nowrap text-[11.5px] font-medium leading-none',
+                    high || seat === youSeat ? 'text-ink' : 'text-muted',
+                  ].join(' ')}
+                >
+                  <Disc drafter={drafter} tone={high ? 'lead' : seat === youSeat ? 'you' : 'plain'} />
+                  <span className="truncate">{drafter.name}</span>
+                </span>
 
-              <span
-                key={`${bid ?? 'none'}-${resetKey}`}
-                className={[
-                  'tabular auction-bid fx fx-soft font-display font-semibold leading-[0.85]',
-                  bid === undefined ? 'text-faint' : high ? 'money text-accent' : 'money text-dim',
-                ].join(' ')}
-              >
-                {bid === undefined ? '—' : bid}
-              </span>
+                <span
+                  key={`${bid ?? 'none'}-${resetKey}`}
+                  className={[
+                    'tabular auction-bid fx fx-soft font-display font-semibold leading-[0.85]',
+                    bid === undefined ? 'text-faint' : high ? 'money text-accent' : 'money text-dim',
+                  ].join(' ')}
+                >
+                  {bid === undefined ? '—' : bid}
+                </span>
 
-              <span className="money tabular truncate font-display text-[11px] font-medium leading-none text-muted">
-                {budgets[seat] ?? 0}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
+                <span
+                  className={[
+                    'truncate font-display text-[10px] font-medium uppercase leading-none tracking-[0.1em]',
+                    passed && !high ? 'text-dim' : 'text-faint',
+                  ].join(' ')}
+                >
+                  {passed && !high ? t('Passed') : ' '}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
 
-      {/* ---- The steps. The only controls on the screen, drawn like it. ---- */}
+        {/* The one number every decision on this screen is measured against. */}
+        <div className="auction-budget rounded-md border border-line bg-surface px-[12px] py-[9px]">
+          <span className="auction-budget-label font-display font-medium uppercase tracking-[0.18em] text-dim">
+            {t('Your budget')}
+          </span>
+          <span
+            key={yourBudget}
+            className="money tabular auction-budget-figure fx fx-soft font-display font-semibold leading-[0.82] text-ink"
+          >
+            {yourBudget}
+          </span>
+        </div>
+      </div>
+
+      {/* ---- The controls. The steps, and the way out of a lot. ---- */}
       <div className="mt-[clamp(9px,1.7cqh,14px)] flex items-stretch gap-[9px]">
         {offers.map((offer) => {
           const affordable = offer.lands <= yourBudget
@@ -159,39 +201,48 @@ export function BidBoard({
               type="button"
               disabled={!enabled}
               onClick={() => onBid(offer.step)}
+              aria-label={
+                held ? t('Raise by {amount}', { amount: offer.step }) : t('Open the bidding')
+              }
               className={[
-                'auction-step flex min-w-0 flex-1 flex-col items-center justify-center gap-[5px] rounded-sm border-2 px-[8px] py-[clamp(9px,2.1cqh,17px)] font-display font-semibold uppercase leading-none tracking-[0.04em] transition-[background-color,border-color,color,transform] duration-150 ease-out active:translate-y-px',
+                'auction-step flex min-w-0 flex-1 items-center justify-center rounded-sm border-2 px-[8px] py-[clamp(10px,2.4cqh,19px)] font-display font-semibold uppercase leading-none tracking-[0.04em] transition-[background-color,border-color,color,transform] duration-150 ease-out active:translate-y-px',
                 enabled
                   ? 'border-accent bg-accent text-accent-ink hover:bg-transparent hover:text-accent'
                   : 'border-line bg-transparent text-faint',
               ].join(' ')}
             >
-              <span className="money tabular auction-step-figure">
+              <span className={`tabular auction-step-figure ${held ? '' : 'money'}`}>
                 {held ? `+${offer.step}` : offer.lands}
-              </span>
-              <span
-                className={[
-                  'auction-step-note font-medium tracking-[0.12em]',
-                  enabled ? 'text-accent-ink/70' : 'text-faint',
-                ].join(' ')}
-              >
-                {held ? <>{t("to")}<span className="money tabular">{offer.lands}</span></> : 'Open the bidding'}
               </span>
             </button>
           )
         })}
+
+        <button
+          type="button"
+          disabled={!canPass}
+          onClick={onPass}
+          className={[
+            'auction-pass shrink-0 rounded-sm border-2 px-[clamp(12px,2.4cqw,22px)] font-display font-semibold uppercase leading-none tracking-[0.12em] transition-[border-color,color,transform] duration-150 ease-out active:translate-y-px',
+            canPass
+              ? 'border-line-strong bg-transparent text-muted hover:border-ink hover:text-ink'
+              : 'border-line bg-transparent text-faint',
+          ].join(' ')}
+        >
+          {t('Pass')}
+        </button>
       </div>
 
-      {/* One line under the steps, and only when there is something to say —
+      {/* One line under the controls, and only when there is something to say —
           why they are off, rather than a permanently reserved caption. */}
       <p
         className={[
           'mt-[7px] shrink-0 truncate font-display text-[10.5px] font-medium uppercase tracking-[0.16em] transition-opacity duration-200 ease-out',
-          live && !armed ? 'text-muted opacity-100' : 'text-dim opacity-0',
+          note ? 'text-muted opacity-100' : 'text-dim opacity-0',
         ].join(' ')}
         aria-live="polite"
       >
-        {live && !armed ? `Bidding opens in ${opensIn}` : ' '}
+        {note || ' '}
       </p>
     </div>
   )

@@ -8,7 +8,7 @@ import { SeatList, type Seat } from '../components/lobby/SeatList'
 import { BackHome } from '../components/ui/BackHome'
 import { Button } from '../components/ui/Button'
 import { formats } from '../data/formats'
-import { MAX_SEATS, constraints, scopes, timers } from '../data/lobbyOptions'
+import { MAX_SEATS, constraints, scopes, wheels } from '../data/lobbyOptions'
 import { useI18n } from '../lib/i18n'
 import {
   effectiveSize,
@@ -36,7 +36,7 @@ const GROUP_GAP = 'pt-[var(--lobby-gap)]'
  * to any of them — the four are equals.
  *
  * Kicking off opens the draft on exactly this table: the scope, the league,
- * the constraint, the bid timer and the seat list all travel over as router
+ * the constraint, the wheel's category and the seat list all travel over as router
  * state, so the draft starts on the configuration in front of you.
  */
 export function SoloLobby() {
@@ -59,7 +59,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
   const [scope, setScope] = useState('top-5')
   const [league, setLeague] = useState('premier-league')
   const [constraint, setConstraint] = useState('club-1')
-  const [timer, setTimer] = useState('15')
+  const [wheel, setWheel] = useState('league')
 
   /** Ids rather than a count, so adding a seat animates only the row that arrived. */
   const nextBotId = useRef(4)
@@ -70,7 +70,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
      says what has happened in it is a room, and an empty panel is furniture. */
   const messageId = useRef(1)
   const [messages, setMessages] = useState<Message[]>([
-    { id: 0, kind: 'system', author: '', body: 'Table opened — three bots seated.' },
+    { id: 0, kind: 'system', author: '', body: t('Table opened — three bots seated.') },
   ])
   const say = (message: Omit<Message, 'id'>) =>
     setMessages((current) => [...current, { ...message, id: messageId.current++ }])
@@ -79,7 +79,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
     {
       id: 'you',
       kind: 'you',
-      name: 'You',
+      name: t('You'),
       mark: 'Y',
       note: 'Host — sets the draft on the right',
       tag: 'Seat 1',
@@ -87,7 +87,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
     ...bots.map((id, index) => ({
       id: String(id),
       kind: 'bot' as const,
-      name: `Bot ${index + 1}`,
+      name: t('Bot {n}', { n: index + 1 }),
       mark: String(index + 1),
       note: 'Default style',
     })),
@@ -95,8 +95,12 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
 
   /** Constraints exist for Free Pick and are not offered anywhere else. */
   const takesConstraint = format === 'free-pick'
-  /** A bid timer exists for the Auction, and is not offered anywhere else. */
-  const takesTimer = format === 'auction'
+  /**
+   * The wheel's category is a Spin the Wheel setting, and only an open
+   * question while Scope has left both axes open — a single-league Scope has
+   * already fixed league, so the wheel there can only be clubs.
+   */
+  const takesWheel = format === 'spin-the-wheel' && scope !== 'league'
 
   /**
    * How many drafters the settings have to seat. Every option below is
@@ -104,24 +108,24 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
    */
   const size = effectiveSize(seats.length)
   const key = scopeKeyOf(scope, league)
-  const seatsHint = seatsPhrase(size)
+  const seatsHint = seatsPhrase(size, t)
 
   const viable = isConfigViable(format, scope, league, constraint, size)
-  const reason = unavailableReason(format, scope, league, constraint, size)
+  const reason = unavailableReason(format, scope, league, constraint, size, t)
   const dimmed = hasDimmedOptions(format, scope, league, size)
 
   const resting = !format
-    ? 'Pick a format to start.'
+    ? t('Pick a format to start.')
     : reason
       ? reason
       : dimmed
-        ? `Dimmed options don’t support ${seatsHint}.`
+        ? t('Dimmed options don’t support {phrase}.', { phrase: seatsHint })
         : ''
 
   return (
     <LobbyLayout
       leftHeadingId="table-heading"
-      seatCountLabel={`${seats.length} / ${MAX_SEATS} seats`}
+      seatCountLabel={t('{n} / {max} seats', { n: seats.length, max: MAX_SEATS })}
       seatCountKey={seats.length}
       leftHeaderContent={
         <h1
@@ -137,25 +141,25 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
             const id = nextBotId.current
             nextBotId.current += 1
             setBots((current) => [...current, id])
-            say({ kind: 'system', author: '', body: `Bot ${bots.length + 1} seated.` })
+            say({ kind: 'system', author: '', body: t('Bot {n} seated.', { n: bots.length + 1 }) })
           }}
           onRemove={(id) => {
             setBots((current) => current.filter((entry) => String(entry) !== id))
-            say({ kind: 'system', author: '', body: 'A bot left the table.' })
+            say({ kind: 'system', author: '', body: t('A bot left the table.') })
           }}
         />
       }
       leftFooterContent={
         <LobbyChat
-          you="You"
+          you={t('You')}
           messages={messages}
-          onSend={(body) => say({ kind: 'said', author: 'You', body })}
+          onSend={(body) => say({ kind: 'said', author: t('You'), body })}
         />
       }
       settingsContent={
         <>
           <ChipGroup
-            label="Format"
+            label={t('Format')}
             options={formats}
             value={format}
             onChange={setFormat}
@@ -166,7 +170,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
 
           <div className={GROUP_GAP}>
             <ChipGroup
-              label="Scope"
+              label={t('Scope')}
               options={scopes}
               value={scope}
               onChange={setScope}
@@ -187,30 +191,28 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
           <Collapse open={takesConstraint}>
             <div className={GROUP_GAP}>
               <ChipGroup
-                label="Constraint"
+                label={t('Constraint')}
                 options={constraints}
                 value={constraint}
                 onChange={setConstraint}
                 isUnavailable={(id) => !isConstraintAvailable(format, key, id, size)}
                 unavailableHint={seatsHint}
-                note="One per draft — constraints don't stack."
+                note={t('One per draft — constraints don’t stack, and they are shared by the table.')}
                 delayMs={420}
               />
             </div>
           </Collapse>
 
-          {/* The bid timer is the Auction's own closing mechanism and has no
-              counterpart anywhere else, so it collapses away with the rest of
-              the formats rather than sitting there naming a rule they don't
-              have. Same collapsing wrapper the Constraint group uses. */}
-          <Collapse open={takesTimer}>
+          {/* Spin the Wheel only, and only while Scope has left both axes
+              open. Same collapsing wrapper the Constraint group uses. */}
+          <Collapse open={takesWheel}>
             <div className={GROUP_GAP}>
               <ChipGroup
-                label="Bid timer"
-                options={timers}
-                value={timer}
-                onChange={setTimer}
-                note="How long a lot can sit without a bid. Any bid sends it back to full."
+                label={t('The wheel')}
+                options={wheels}
+                value={wheel}
+                onChange={setWheel}
+                note={t('What the wheel is cut into. Every spin uses the same one.')}
                 delayMs={500}
               />
             </div>
@@ -231,7 +233,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
                 scope,
                 league,
                 constraint,
-                timer,
+                wheel,
                 drafters: seats.map(({ id, kind, name, mark }) => ({ id, kind, name, mark })),
               },
             })

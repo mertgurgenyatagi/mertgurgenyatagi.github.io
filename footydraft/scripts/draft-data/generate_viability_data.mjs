@@ -135,7 +135,11 @@ const out = `// GENERATED FILE — do not edit by hand.
 // whether it can actually seat a full 4-2-3-1 for everyone at the table. Since
 // the position reform gave each footballer exactly one slot, supply at the
 // scarcest position — not headcount — decides whether a config works, and a
-// per-squad constraint can additionally deadlock a drafter mid-draft.
+// shared constraint can additionally deadlock a drafter mid-draft.
+//
+// Re-run 2026-08-23, and it had to be: constraints became a table-wide tally
+// rather than a per-squad one, and the pool grew from 546 rows to 694. Either
+// change on its own invalidates every number below.
 //
 // Viability is monotonic in lobby size (verified at generation time), so each
 // entry is the LARGEST lobby size that configuration still completes at.

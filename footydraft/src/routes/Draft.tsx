@@ -21,9 +21,14 @@ import {
   roundAt,
   seatAt,
   slotFor,
+  tableSpend,
+  type TableSpend,
 } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
-import { useMultiplayerRoom, useHostBotTakeover, makePick as remoteMakePick, sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
+import { useSeats } from '../lib/seats'
+import { useMultiplayerRoom, useHostBotTakeover, makePick as remoteMakePick, sendSystemMessage } from '../lib/multiplayer'
+import { sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
+import { DraftGate } from '../components/draft/DraftGate'
 import { AuctionDraft } from './AuctionDraft'
 import { DondDraft } from './DondDraft'
 import { SpinDraft } from './SpinDraft'
@@ -35,7 +40,8 @@ export interface DraftConfig {
   scope?: string
   league?: string
   constraint?: string
-  timer?: string
+  /** Spin the Wheel only: `league` or `club`. See `wheels` in lobbyOptions. */
+  wheel?: string
   drafters?: Drafter[]
   roomId?: string
 }
@@ -52,19 +58,20 @@ const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
+/** Number words, as translation keys — see `reason` below. */
 const WORDS = [
-  'No',
-  'One',
-  'Two',
-  'Three',
-  'Four',
-  'Five',
-  'Six',
-  'Seven',
-  'Eight',
-  'Nine',
-  'Ten',
-  'Eleven',
+  'no',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+  'eleven',
 ]
 
 /** Bots pace at a human's reading speed, not at a machine's. */
@@ -117,45 +124,9 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
-  const drafters = useMemo(() => {
-    if (!isMultiplayer || !room?.drafters) return baseDrafters
-    
-    const computedSeats: Drafter[] = []
-    const drafterEntries = Object.entries(room.drafters)
-    const hostEntry = drafterEntries.find(([id]) => id === room.host)
-    if (hostEntry) {
-      computedSeats.push({
-        id: hostEntry[0],
-        kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
-        name: hostEntry[1].name,
-        mark: hostEntry[1].mark,
-      })
-    }
-    
-    const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
-    for (const [id, drafter] of humanEntries) {
-      computedSeats.push({
-        id,
-        kind: id === uid ? 'you' : drafter.kind as any,
-        name: drafter.name,
-        mark: drafter.mark,
-      })
-    }
-    
-    const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
-    for (const [id, drafter] of botEntries) {
-      computedSeats.push({
-        id,
-        kind: 'bot',
-        name: drafter.name,
-        mark: drafter.mark,
-      })
-    }
-    return computedSeats
-  }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
+  const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
 
   const seatCount = drafters.length
-  const youSeat = Math.max(0, drafters.findIndex((drafter) => drafter.kind === 'you'))
   const totalPicks = seatCount * SQUAD_SIZE
 
   const [pool, setPool] = useState<Player[]>([])
@@ -168,7 +139,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const [tab, setTab] = useState(youSeat)
   const [pane, setPane] = useState<'pool' | 'board'>('pool')
   const [narration, setNarration] = useState<{ text: string; tone: NarratorTone; beat: number }>({
-    text: 'Waiting for the board.',
+    text: t('Waiting for the board.'),
     tone: 'settled',
     beat: 0,
   })
@@ -209,7 +180,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
       .then(setPool)
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
-        setPoolError(error instanceof Error ? error.message : 'The player pool would not load.')
+        setPoolError(error instanceof Error ? error.message : t('The player pool would not load.'))
       })
     return () => controller.abort()
   }, [])
@@ -234,6 +205,15 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const taken = useMemo(() => new Set(picks.map((pick) => pick.player.id)), [picks])
   const yourSquad = squads[youSeat] ?? {}
 
+  /**
+   * **Constraints are shared across the table** *(2026-08-23)*, so what a
+   * constraint counts is every pick anybody has made rather than only your
+   * own. One tally, derived from the same `picks` everything else on the
+   * screen reads, which is what keeps the pool row, the footer line and the
+   * `Draft` button from ever disagreeing about what is still available.
+   */
+  const spend = useMemo(() => tableSpend(picks), [picks])
+
   /* ------------------------------------------------------------- picking -- */
 
   /**
@@ -242,20 +222,34 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
    * a timer that fires twice, or a click that races a timeout, cannot produce
    * two picks from one turn.
    */
+  type Chooser = (
+    squad: Squad,
+    taken: ReadonlySet<string>,
+    spend: TableSpend,
+  ) => Player | null
+
+  /* The squad, the taken set *and* the table's constraint tally are all
+     derived from the same snapshot of picks the update is landing on, so a
+     shared constraint can never be checked against a stale count. */
+  const readBoard = (from: readonly Pick[], seat: number) => {
+    const squad: Squad = {}
+    const already = new Set<string>()
+    for (const pick of from) {
+      already.add(pick.player.id)
+      if (pick.seat === seat) squad[pick.slot] = pick.player
+    }
+    return { squad, already, spent: tableSpend(from) }
+  }
+
   const commit = useCallback(
-    (seat: number, choose: (squad: Squad, taken: ReadonlySet<string>) => Player | null) => {
+    (seat: number, choose: Chooser) => {
       if (isMultiplayer && config.roomId) {
         if (picks.length >= totalPicks) return
         if (seatAt(picks.length, seatCount) !== seat) return
 
-        const squad: Squad = {}
-        const already = new Set<string>()
-        for (const pick of picks) {
-          already.add(pick.player.id)
-          if (pick.seat === seat) squad[pick.slot] = pick.player
-        }
+        const { squad, already, spent } = readBoard(picks, seat)
 
-        const player = choose(squad, already)
+        const player = choose(squad, already, spent)
         if (!player) return
         const slot = slotFor(player, squad)
         if (!slot) return
@@ -266,14 +260,9 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
           if (previous.length >= totalPicks) return previous
           if (seatAt(previous.length, seatCount) !== seat) return previous
 
-          const squad: Squad = {}
-          const already = new Set<string>()
-          for (const pick of previous) {
-            already.add(pick.player.id)
-            if (pick.seat === seat) squad[pick.slot] = pick.player
-          }
+          const { squad, already, spent } = readBoard(previous, seat)
 
-          const player = choose(squad, already)
+          const player = choose(squad, already, spent)
           if (!player) return previous
           const slot = slotFor(player, squad)
           if (!slot) return previous
@@ -287,10 +276,10 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   const draftSelected = useCallback(() => {
     if (!yourTurn || !selectedId) return
-    commit(youSeat, (squad, already) => {
+    commit(youSeat, (squad, already, spent) => {
       const player = scoped.find((entry) => entry.id === selectedId)
       if (!player) return null
-      return blockedReason(player, squad, constraint, already) === null ? player : null
+      return blockedReason(player, squad, constraint, already, spent) === null ? player : null
     })
   }, [yourTurn, selectedId, commit, youSeat, scoped, constraint])
 
@@ -310,8 +299,8 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     const wait = low + Math.random() * (high - low)
 
     const timer = window.setTimeout(() => {
-      commit(activeSeat, (squad, already) =>
-        botChoice(scoped, squad, constraint, already, SQUAD_SIZE - round + 1),
+      commit(activeSeat, (squad, already, spent) =>
+        botChoice(scoped, squad, constraint, already, SQUAD_SIZE - round + 1, Math.random, spent),
       )
     }, wait)
 
@@ -324,9 +313,12 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     if (scoped.length === 0) return
 
     const turnLine = (): { text: string; tone: NarratorTone } => {
-      if (complete) return { text: 'Every eleven is full. The draft is done.', tone: 'settled' }
-      if (activeSeat === youSeat) return { text: 'Your pick.', tone: 'you' }
-      return { text: `${drafters[activeSeat].name} is picking.`, tone: 'waiting' }
+      if (complete) return { text: t('Every eleven is full. The draft is done.'), tone: 'settled' }
+      if (activeSeat === youSeat) return { text: t('Your pick.'), tone: 'you' }
+      return {
+        text: t('{name} is picking.', { name: drafters[activeSeat]?.name ?? '' }),
+        tone: 'waiting',
+      }
     }
 
     const last = picks[picks.length - 1]
@@ -337,7 +329,12 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     }
 
     setNarration({
-      text: `${drafters[last.seat].name} took ${last.player.name} — ${last.player.position}, ${last.player.club}.`,
+      text: t('{name} took {player} — {position}, {club}.', {
+        name: drafters[last.seat]?.name ?? '',
+        player: last.player.name,
+        position: t(last.player.position),
+        club: last.player.club,
+      }),
       tone: 'settled',
       beat: last.overall * 2 + 1,
     })
@@ -358,7 +355,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
     previousRound.current = round
     if (isMultiplayer && isHost && config.roomId) {
       // Only host writes the system message
-      remoteSendChatMessage(config.roomId, '', `Round ${round} — the order reverses`)
+      sendSystemMessage(config.roomId, t('Round {n} — the order reverses', { n: round }))
     } else if (!isMultiplayer) {
       setLocalMessages((current) => [
         ...current,
@@ -366,7 +363,7 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
           id: messageId.current++,
           kind: 'system',
           author: '',
-          body: `Round ${round} — the order reverses`,
+          body: t('Round {n} — the order reverses', { n: round }),
         },
       ])
     }
@@ -389,11 +386,14 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
       ) {
         continue
       }
-      result.push({ player, blocked: blockedReason(player, yourSquad, constraint, taken) })
+      result.push({
+        player,
+        blocked: blockedReason(player, yourSquad, constraint, taken, spend),
+      })
     }
 
     return result
-  }, [scoped, taken, filter, query, yourSquad, constraint])
+  }, [scoped, taken, filter, query, yourSquad, constraint, spend])
 
   const byId = useMemo(() => new Map(scoped.map((player) => [player.id, player])), [scoped])
 
@@ -433,7 +433,9 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   const selected = selectedId ? (byId.get(selectedId) ?? null) : null
 
-  const selectedBlocked = selected ? blockedReason(selected, yourSquad, constraint, taken) : null
+  const selectedBlocked = selected
+    ? blockedReason(selected, yourSquad, constraint, taken, spend)
+    : null
   const canDraft = Boolean(yourTurn && selected && !selectedBlocked)
 
   const openSlots = formation.filter((slot) => !yourSquad[slot.id]).length
@@ -454,28 +456,47 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
 
   const reason = (() => {
     if (poolError) return poolError
-    if (scoped.length === 0) return 'Reading the board…'
-    if (complete) return 'Every eleven is full.'
-    if (!yourTurn) return `Waiting on ${drafters[activeSeat].name}.`
-    if (!selected) return `${WORDS[openSlots] ?? openSlots} positions open to you.`
-    if (selectedBlocked) return selectedBlocked
-    return `${selected.surname} fills your ${selected.position}.`
+    if (scoped.length === 0) return t('Reading the board…')
+    if (complete) return t('Every eleven is full.')
+    if (!yourTurn) return t('Waiting on {name}.', { name: drafters[activeSeat]?.name ?? '' })
+    if (!selected) {
+      return t('{count} positions open to you.', {
+        count: t(WORDS[openSlots] ?? String(openSlots)),
+      })
+    }
+    if (selectedBlocked) return t(selectedBlocked.key, selectedBlocked.vars)
+    return t('{name} fills your {position}.', {
+      name: selected.surname,
+      position: t(selected.position),
+    })
   })()
 
-  const actionLabel = canDraft && selected ? `Draft ${selected.surname} →` : 'Draft →'
+  const actionLabel =
+    canDraft && selected ? t('Draft {name} →', { name: selected.surname }) : t('Draft →')
 
   /* -------------------------------------------------------------- spent --- */
 
+  /* **The whole table's, not only yours.** A shared constraint is spent by
+     whoever spends it, so a rail that only listed your own clubs would be
+     showing you a fraction of what is actually gone — and the one thing this
+     panel exists to answer is what is left. Your own are drawn at full weight
+     inside it; see `SpentCrests`. */
+  const tablePlayers = picks.map((pick) => pick.player)
   const yourPlayers = formation
     .map((slot) => yourSquad[slot.id])
     .filter((player): player is Player => Boolean(player))
 
-  const spentClubs = [...new Set(yourPlayers.map((player) => player.clubSlug))]
-  const clubNames = Object.fromEntries(yourPlayers.map((player) => [player.clubSlug, player.club]))
-  const spentNations = [...new Set(yourPlayers.map((player) => player.nation))]
+  const spentClubs = [...new Set(tablePlayers.map((player) => player.clubSlug))]
+  const clubNames = Object.fromEntries(tablePlayers.map((player) => [player.clubSlug, player.club]))
+  const spentNations = [...new Set(tablePlayers.map((player) => player.nation))]
+  const yoursClubs = new Set(yourPlayers.map((player) => player.clubSlug))
+  const yoursNations = new Set(yourPlayers.map((player) => player.nation))
 
   const you = drafters[youSeat]
   const lastArrival = picks[picks.length - 1]?.player.id ?? null
+
+  /* Nothing below this line is safe to draw without a seat — see `DraftGate`. */
+  if (!seated) return <DraftGate />
 
   if (complete) {
     return <SquadCompare drafters={drafters} squads={squads} />
@@ -515,6 +536,8 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
             clubs={spentClubs}
             clubNames={clubNames}
             nations={spentNations}
+            yoursClubs={yoursClubs}
+            yoursNations={yoursNations}
           />
 
           <DraftChat

@@ -1,5 +1,6 @@
 import { Collapse } from './ChipGroup'
 import { leagues } from '../../data/lobbyOptions'
+import { useI18n } from '../../lib/i18n'
 
 interface ScopeDetailProps {
   scope: string
@@ -40,6 +41,7 @@ export function ScopeDetail({
   isLeagueUnavailable,
   unavailableHint,
 }: ScopeDetailProps) {
+  const { t } = useI18n()
   const showLeagues = scope === 'league'
   const selected = leagues.find((entry) => entry.id === league)
 
@@ -58,7 +60,7 @@ export function ScopeDetail({
               />
             </span>
             <span className="ml-1 truncate font-display text-[10px] font-medium uppercase tracking-[0.16em] text-dim">
-              {selected?.name}
+              {selected ? t(selected.name) : ''}
             </span>
           </div>
         ) : (
@@ -83,8 +85,11 @@ export function ScopeDetail({
                   type="button"
                   aria-label={
                     unavailable && unavailableHint
-                      ? `${entry.name} — not available with ${unavailableHint}`
-                      : entry.name
+                      ? t('{name} — not available with {hint}', {
+                          name: t(entry.name),
+                          hint: unavailableHint,
+                        })
+                      : t(entry.name)
                   }
                   aria-pressed={entry.id === league}
                   disabled={unavailable}
@@ -113,7 +118,7 @@ export function ScopeDetail({
             })}
 
             <span className="ml-1 truncate font-display text-[10px] font-medium uppercase tracking-[0.16em] text-dim">
-              {selected?.name}
+              {selected ? t(selected.name) : ''}
             </span>
           </div>
         )}

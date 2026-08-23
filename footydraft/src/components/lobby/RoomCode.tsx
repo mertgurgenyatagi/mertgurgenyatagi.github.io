@@ -67,7 +67,7 @@ export function RoomCode({ code }: RoomCodeProps) {
             className="fx fx-fade block"
             style={{ animationDuration: '260ms' }}
           >
-            {copied ? 'Link copied' : 'Copy link'}
+            {copied ? t('Link copied') : t('Copy link')}
           </span>
         </button>
       </div>

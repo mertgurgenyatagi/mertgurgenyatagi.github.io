@@ -25,8 +25,9 @@
 //   model, and this script doesn't invent one.
 // - Free Pick: an actual randomized snake draft. Each turn the current
 //   drafter picks uniformly at random among players who (a) fill a slot they
-//   still need and (b) satisfy their own per-squad constraint (checked only
-//   against their own picks, per R6-Q3). This is the one format where pick
+//   still need and (b) satisfy the TABLE'S shared constraint (2026-08-23:
+//   constraints are shared, overturning R6-Q3's per-squad reading). This is
+//   the one format where pick
 //   order genuinely matters — a drafter can lock themselves out of their own
 //   needed slot under "1/3 per club/nationality" even when raw supply at
 //   that position exists elsewhere in the pool.
@@ -51,7 +52,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const ROOT = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
-const MAX_SIMULATIONS = 50000;
+const MAX_SIMULATIONS = 5000;
 
 const SLOT_NEEDS = {
   GK: 1, CB: 2, LB: 1, RB: 1, CDM: 1, CM: 1, AMF: 1, LW: 1, RW: 1, ST: 1,
@@ -136,11 +137,18 @@ function shuffle(arr, rng) {
   return arr;
 }
 
-function constraintOk(squad, player, constraint) {
-  if (constraint === "1 per club") return (squad.clubCounts.get(player.club) || 0) < 1;
-  if (constraint === "3 per club") return (squad.clubCounts.get(player.club) || 0) < 3;
-  if (constraint === "1 per nationality") return (squad.nationCounts.get(player.nation) || 0) < 1;
-  if (constraint === "3 per nationality") return (squad.nationCounts.get(player.nation) || 0) < 3;
+// Constraints are counted against the WHOLE TABLE, not one squad (set by
+// Mert, 2026-08-23, overturning R6-Q3). Under "1 per club", one Real Madrid
+// footballer going anywhere at the table takes Real Madrid off everybody's
+// board. `counts` is therefore a single shared tally rather than the picking
+// drafter's own -- which makes every constrained configuration dramatically
+// tighter than it was when this script last ran, and is the whole reason it
+// had to be re-run.
+function constraintOk(counts, player, constraint) {
+  if (constraint === "1 per club") return (counts.clubCounts.get(player.club) || 0) < 1;
+  if (constraint === "3 per club") return (counts.clubCounts.get(player.club) || 0) < 3;
+  if (constraint === "1 per nationality") return (counts.nationCounts.get(player.nation) || 0) < 1;
+  if (constraint === "3 per nationality") return (counts.nationCounts.get(player.nation) || 0) < 3;
   return true; // "No constraints" / "Not applicable"
 }
 
@@ -167,6 +175,8 @@ function isSquadFull(squad) {
 function simulateFreePick(pool, lobbySize, constraint, rng) {
   const remaining = pool.slice();
   const squads = Array.from({ length: lobbySize }, makeSquad);
+  // The table's shared constraint tally -- see constraintOk above.
+  const table = { clubCounts: new Map(), nationCounts: new Map() };
   const order = shuffle([...Array(lobbySize).keys()], rng);
 
   for (let round = 0; round < 11; round++) {
@@ -177,13 +187,16 @@ function simulateFreePick(pool, lobbySize, constraint, rng) {
       const legal = [];
       for (let i = 0; i < remaining.length; i++) {
         const p = remaining[i];
-        if (needsSlot(squad, p.pos) && constraintOk(squad, p, constraint)) legal.push(i);
+        if (needsSlot(squad, p.pos) && constraintOk(table, p, constraint)) legal.push(i);
       }
       if (legal.length === 0) {
         return { shortage: true, detail: `Free Pick: drafter ${drafter} had no legal pick in round ${round + 1}` };
       }
       const idx = legal[Math.floor(rng() * legal.length)];
-      assign(squad, remaining[idx]);
+      const chosen = remaining[idx];
+      assign(squad, chosen);
+      table.clubCounts.set(chosen.club, (table.clubCounts.get(chosen.club) || 0) + 1);
+      table.nationCounts.set(chosen.nation, (table.nationCounts.get(chosen.nation) || 0) + 1);
       remaining.splice(idx, 1);
     }
   }

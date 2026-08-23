@@ -42,10 +42,10 @@ export function AuctionBlock({ lot, left, total, result }: AuctionBlockProps) {
       {/* The count, at the top of the displayer. */}
       <div className="auction-block-top absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-3 px-[14px] py-[10px]">
         <span className="tabular font-display text-[11px] font-medium uppercase tracking-[0.14em] text-ink">
-          Lot {lot.number} / {total}
+          {t('Lot')} {lot.number} / {total}
         </span>
         <span className="tabular font-display text-[11px] font-medium uppercase tracking-[0.14em] text-accent">
-          {left} left
+          {t('{count} left', { count: left })}
         </span>
       </div>
 
@@ -66,7 +66,7 @@ export function AuctionBlock({ lot, left, total, result }: AuctionBlockProps) {
           <span className="flex min-w-0 items-center gap-[9px]">
             <Crest className="h-[19px] w-[19px] shrink-0" src={lot.player.crest} alt="" />
             <span className="shrink-0 font-display text-[9.5px] font-semibold uppercase tracking-[0.13em] text-accent">
-              {lot.player.position}
+              {t(lot.player.position)}
             </span>
             <span className="truncate text-[12.5px] leading-none text-muted">
               {lot.player.club} · {lot.player.nation} · {lot.player.age}
@@ -124,6 +124,7 @@ function BlockPhoto({ player }: { player: Player }) {
  * photograph at display size and holds there while the room reads it.
  */
 function Stamp({ result }: { result: BlockResult }) {
+  const { t } = useI18n()
 
   return (
     <div className="fx fx-fade absolute inset-0 z-40 grid place-items-center bg-ground/78">
@@ -134,7 +135,7 @@ function Stamp({ result }: { result: BlockResult }) {
             result.buyer === null ? 'text-dim' : result.yours ? 'text-accent' : 'text-ink',
           ].join(' ')}
         >
-          {result.buyer === null ? 'Unsold' : 'Sold'}
+          {result.buyer === null ? t('Unsold') : t('Sold')}
         </span>
 
         {result.buyer !== null ? (

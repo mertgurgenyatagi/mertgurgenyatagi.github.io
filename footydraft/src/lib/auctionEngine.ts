@@ -15,6 +15,16 @@ import type { Player } from './players'
 /** At most `15 × N` footballers go on the block for an `N`-drafter table. */
 export const LOTS_PER_DRAFTER = 15
 
+/**
+ * How long a lot may sit without a bid before the hammer falls.
+ *
+ * Not a setting any more — see the note where `timers` used to be in
+ * `lobbyOptions`. The clock is this format's own closing mechanism rather than
+ * a courtesy to a slow drafter: with no turns, it is the only thing that ends
+ * a lot, so there was never a coherent "off" for it to have.
+ */
+export const AUCTION_BID_SECONDS = 15
+
 /** Flat, stepped, and live at every price point — they don't scale with price. */
 export const BID_STEPS = [5, 10, 25] as const
 
@@ -165,18 +175,29 @@ export function landingSlot(player: Player, squad: Squad) {
   return slotFor(player, squad)
 }
 
-/** The cheapest footballer left who could fill this position. Backfill's pick. */
-export function cheapestFor(
+/**
+ * Backfill's pick: the **lowest-rated** footballer left who could fill this
+ * position, drawn from the whole scoped pool.
+ *
+ * *(Set by Mert, 2026-08-23.)* It used to take the cheapest, which is nearly
+ * the same ordering — derived price is an exponential function of ability —
+ * but not quite, and not the one that was asked for. The pool it reads is the
+ * scoped pool minus everything already spoken for, **not the lot list**: the
+ * `15 × N` cap and its high-ability skew decide who goes on the block, and
+ * neither has any business deciding who fills a slot nobody bid for. Running
+ * out of money gets you the worst player available, never fewer players.
+ */
+export function weakestFor(
   position: PositionCode,
   pool: Player[],
   taken: ReadonlySet<string>,
 ): Player | null {
-  let cheapest: Player | null = null
+  let weakest: Player | null = null
   for (const player of pool) {
     if (player.position !== position || taken.has(player.id)) continue
-    if (!cheapest || player.price < cheapest.price) cheapest = player
+    if (!weakest || player.ability < weakest.ability) weakest = player
   }
-  return cheapest
+  return weakest
 }
 
 /* --------------------------------------------------------- what a seat pays -- */
@@ -224,6 +245,33 @@ export function stepFor(price: number, ceiling: number, random: () => number): n
   if (room >= 60 && roll > 0.74 && affordable.includes(25)) return 25
   if (room >= 25 && roll > 0.58 && affordable.includes(10)) return 10
   return affordable[0]
+}
+
+/* ------------------------------------------------------------- passing ---- */
+
+/**
+ * **A lot closes the moment everybody but the holder has passed** *(set by
+ * Mert, 2026-08-23)*.
+ *
+ * Passing is now a real move rather than a description of what a seat that
+ * stopped bidding had done. The clock is still the auction's closing mechanism
+ * in the ordinary case; this is the shortcut for the case where waiting it out
+ * decides nothing, because there is nobody left who could raise. A seat that
+ * has passed is out of *this lot* for good — it does not get to think again at
+ * a higher price, which is the only thing that makes the shortcut safe.
+ *
+ * With nobody holding the lot, everybody standing down means it draws no bid
+ * at all and goes to the unsold pile *(R8-Q4)* rather than sitting out its
+ * countdown in front of a room that has already decided.
+ */
+export function lotIsDecided(
+  holder: number | null,
+  out: readonly number[],
+  seatCount: number,
+): boolean {
+  const standing = seatCount - out.length
+  if (holder === null) return standing <= 0
+  return standing <= 1
 }
 
 /**

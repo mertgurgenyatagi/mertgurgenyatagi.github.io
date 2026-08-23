@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useI18n } from '../lib/i18n'
 import { formation } from '../data/formation'
 import type { Drafter, Squad } from '../lib/draftEngine'
 import type { Player } from '../lib/players'
 import { Crest } from '../components/ui/Crest'
+import { Dotgrid } from '../components/draft/Dotgrid'
 import { BackHome } from '../components/ui/BackHome'
 import { LanguageSwitch } from '../components/ui/LanguageSwitch'
 
@@ -53,6 +55,8 @@ export function SquadCompare({ drafters, squads }: SquadCompareProps) {
 }
 
 function Pitch({ drafter, squad }: { drafter: Drafter; squad: Squad }) {
+  const { t } = useI18n()
+
   return (
     <div className="squad-pitch flex min-h-0 flex-col items-center gap-[8px]">
       {/* Drafter name above the pitch */}
@@ -62,24 +66,31 @@ function Pitch({ drafter, squad }: { drafter: Drafter; squad: Squad }) {
           drafter.kind === 'you' ? 'text-accent' : 'text-muted',
         ].join(' ')}
       >
-        {drafter.name}
+        {drafter.kind === 'you' ? t('You') : drafter.name}
       </p>
 
-      {/* The pitch itself, at real proportions */}
-      <div className="relative min-h-0 flex-1" style={{ aspectRatio: '68 / 105' }}>
-        <PitchMarkings />
-        {formation.map((slot) => {
-          const player = squad[slot.id] ?? null
-          return (
-            <CompareNode
-              key={slot.id}
-              x={slot.x}
-              y={slot.y}
-              position={slot.position}
-              player={player}
-            />
-          )
-        })}
+      {/* The pitch itself, at real proportions. `.squad-pitch-stage` is what
+          decides how big that can be: the box is sized off both axes of its
+          own cell, and deliberately narrower than the cell, because a node
+          sits astride the touchline it is drawn on and its name plate is
+          wider still — at three times the old node size the left back would
+          otherwise hang into the next drafter's half of the screen. */}
+      <div className="squad-pitch-stage">
+        <div className="squad-pitch-box relative">
+          <PitchMarkings />
+          {formation.map((slot) => {
+            const player = squad[slot.id] ?? null
+            return (
+              <CompareNode
+                key={slot.id}
+                x={slot.x}
+                y={slot.y}
+                position={slot.position}
+                player={player}
+              />
+            )
+          })}
+        </div>
       </div>
     </div>
   )
@@ -123,6 +134,8 @@ function CompareNode({
   position: string
   player: Player | null
 }) {
+  const { t } = useI18n()
+
   return (
     <div
       className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-[3px]"
@@ -138,14 +151,14 @@ function CompareNode({
         ].join(' ')}
       >
         {player ? (
-          <Crest
-            className="h-[62%] w-[62%]"
-            src={player.crest}
-            alt={player.club}
-          />
+          /* At three times the old size a node has room for the footballer
+             rather than for their badge — the same dot-grid portrait the
+             draft pitches use, with the crest as the fallback it already
+             was. A crest at 100px is a logo; a face is a squad. */
+          <CompareFace player={player} />
         ) : (
           <span className="font-display text-[length:var(--compare-pos-size)] font-medium uppercase leading-none tracking-[0.06em] text-dim">
-            {position}
+            {t(position)}
           </span>
         )}
       </span>
@@ -159,5 +172,23 @@ function CompareNode({
         </span>
       ) : null}
     </div>
+  )
+}
+
+/** The portrait, with the crest behind it exactly as the pitch nodes have it. */
+function CompareFace({ player }: { player: Player }) {
+  const [failed, setFailed] = useState(false)
+
+  if (failed) {
+    return <Crest className="h-[62%] w-[62%]" src={player.crest} alt={player.club} />
+  }
+
+  return (
+    <Dotgrid
+      player={player}
+      frame="pitch-node"
+      className="h-full w-full"
+      onError={() => setFailed(true)}
+    />
   )
 }

@@ -1,4 +1,5 @@
 import { type WheelCategory, type WheelSlice, sliceColours, sliceGradient } from '../../lib/wheelEngine'
+import { useI18n } from '../../lib/i18n'
 
 interface SpinWheelProps {
   slices: WheelSlice[]
@@ -35,6 +36,7 @@ export function SpinWheel({
   durationMs,
   done,
 }: SpinWheelProps) {
+  const { t } = useI18n()
   const count = slices.length
   const step = count > 0 ? 360 / count : 360
   const gradient = sliceGradient(sliceColours(slices, category))
@@ -83,9 +85,13 @@ export function SpinWheel({
             key={done ? 'done' : spinning ? 'spinning' : (landed?.key ?? 'open')}
             className="fx fx-fade"
           >
-            <b>{done ? 'The draft' : spinning ? 'The wheel' : 'Landed'}</b>
+            <b>{done ? t('The draft') : spinning ? t('The wheel') : t('Landed')}</b>
             <em>
-              {done ? 'Complete' : spinning ? 'Spinning' : (landed?.label ?? 'Open board')}
+              {done
+                ? t('Complete')
+                : spinning
+                  ? t('Spinning')
+                  : (landed ? t(landed.label) : t('Open board'))}
             </em>
           </span>
         </div>

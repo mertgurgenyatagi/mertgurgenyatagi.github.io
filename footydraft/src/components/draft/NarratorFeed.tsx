@@ -54,7 +54,7 @@ export function NarratorFeed({ lines }: NarratorFeedProps) {
             latest?.tone === 'you' ? 'text-accent' : 'text-ink',
           ].join(' ')}
         >
-          {latest?.text ?? 'Waiting for the board.'}
+          {latest?.text ?? t('Waiting for the board.')}
         </span>
       </p>
 

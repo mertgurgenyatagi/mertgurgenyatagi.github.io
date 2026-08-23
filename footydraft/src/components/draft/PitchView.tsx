@@ -149,6 +149,7 @@ function Node({
   arrived: boolean
 }) {
 
+  const { t } = useI18n()
   const shown = player ?? preview
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [player?.id])
@@ -190,7 +191,7 @@ function Node({
               pending ? 'text-accent' : 'text-dim',
             ].join(' ')}
           >
-            {slot.position}
+            {t(slot.position)}
           </span>
         )}
       </span>

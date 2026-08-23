@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AuctionBlock, type BlockResult } from '../components/draft/AuctionBlock'
 import { BidBoard } from '../components/draft/BidBoard'
 import { DraftChat } from '../components/draft/DraftChat'
+import { DraftGate } from '../components/draft/DraftGate'
 import { Dotgrid } from '../components/draft/Dotgrid'
 import { PitchView } from '../components/draft/PitchView'
 import { SoldRecord } from '../components/draft/SoldRecord'
@@ -13,18 +14,27 @@ import { LanguageSwitch } from '../components/ui/LanguageSwitch'
 import { SectionLabel } from '../components/ui/SectionLabel'
 import { SQUAD_SIZE, formation } from '../data/formation'
 import {
+  AUCTION_BID_SECONDS,
   type Lot,
   type Sale,
   auctionExhausted,
   buildLotList,
-  cheapestFor,
   landingSlot,
+  lotIsDecided,
   startingBudget,
+  weakestFor,
 } from '../lib/auctionEngine'
 import { evaluateAuctionBot } from '../lib/auctionBot'
-import { useMultiplayerRoom, useHostBotTakeover, updateAuctionState, placeAuctionBid, sendChatMessage } from '../lib/multiplayer'
-import { ref, onChildAdded } from 'firebase/database'
-import { database } from '../lib/firebase'
+import {
+  useMultiplayerRoom,
+  useHostBotTakeover,
+  useActionQueue,
+  updateAuctionState,
+  placeAuctionBid,
+  placeAuctionPass,
+  sendChatMessage,
+} from '../lib/multiplayer'
+import { useSeats } from '../lib/seats'
 import type { Drafter, Pick, Squad } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import type { DraftConfig } from './Draft'
@@ -40,17 +50,8 @@ const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
-/**
- * The countdown is this format's own closing mechanism rather than a courtesy
- * to a slow drafter — with no turns, it is the only thing that ends a lot. So
- * a lobby that switched timers off still gets one here, at the default length.
- */
-const FALLBACK_TIMER = 15
-
 /** How long the hammer holds on screen before the next lot comes up. */
 const RESULT_HOLD = 1900
-
-
 
 /**
  * **Nobody may bid for the first three seconds of a countdown** — and the
@@ -65,7 +66,6 @@ const RESULT_HOLD = 1900
  */
 const LOCKOUT_MS = 3000
 
-
 type Phase = 'live' | 'sold' | 'unsold'
 
 export interface Block {
@@ -74,7 +74,7 @@ export interface Block {
   price: number
   holder: number | null
   bids: Record<number, number>
-  /** Seats that have passed on this lot. */
+  /** Seats out of this lot — priced out, or passed by hand. Final either way. */
   out: number[]
   phase: Phase
   /** Bumped by every bid, which is what sends the countdown back to full. */
@@ -82,11 +82,60 @@ export interface Block {
 }
 
 /**
+ * Firebase drops every null and every empty container on the way in, so what
+ * a non-host reads back is not the object the host wrote: `holder: null`
+ * arrives as *absent*, `bids: {}` and `out: []` arrive as absent, and
+ * `crest: null` on the footballer arrives as absent too.
+ *
+ * That is not a cosmetic difference. `holder !== null` is what the whole
+ * screen keys off — it decides whether the steps read `+5 / +10 / +25` or
+ * collapse to the single opening bid, and whether the headline says `OPENING`
+ * or names a holder. With `holder` undefined it is *always* true on a
+ * non-host, which is exactly the pair of faults reported: a guest never got
+ * the `Open the bidding` control, and the headline read `HIGHEST BIDDER: SEAT
+ * UNDEFINED` before anybody had bid.
+ *
+ * Every read of the room goes through here, so the shape a client holds is
+ * the shape the host wrote rather than the shape the wire allowed.
+ */
+function normaliseBlock(raw: any): Block | null {
+  if (!raw || !raw.lot) return null
+  return {
+    lot: raw.lot,
+    price: raw.price ?? raw.lot.opening ?? 0,
+    holder: typeof raw.holder === 'number' ? raw.holder : null,
+    bids: raw.bids ?? {},
+    out: raw.out ?? [],
+    phase: raw.phase ?? 'live',
+    resets: raw.resets ?? 0,
+  }
+}
+
+/**
+ * Same treatment for the sold record. An unsold lot is `seat: null`, which
+ * comes back absent — and `sale.seat !== null` then passed `undefined`
+ * straight into `award()` and `drafters[...]`, which is one of the ways a
+ * non-host's screen went black mid-auction.
+ */
+function normaliseSales(raw: any): Sale[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .filter(Boolean)
+    .map((sale: any) => ({
+      lot: sale.lot,
+      player: sale.player,
+      seat: typeof sale.seat === 'number' ? sale.seat : null,
+      price: sale.price ?? 0,
+    }))
+    .filter((sale) => Boolean(sale.player))
+}
+
+/**
  * The Auction, drawn as layout 01 of the exhibition — "The block".
  *
  * The lot is the page. One unbroken centre column runs the count, the
- * footballer, the countdown and the five drafters bidding side by side, with
- * what has already gone down the left and the elevens on the right.
+ * footballer, the countdown and the drafters bidding side by side, with what
+ * has already gone down the left and the elevens on the right.
  *
  * What makes it a different screen from the other three, rather than the same
  * screen with money on it: **there is no turn.** Every seat can raise at any
@@ -97,16 +146,17 @@ export interface Block {
  *
  * There is also no narrator. Events are drawn rather than described — the
  * hammer lands across the photograph, the sold record keeps the history, and
- * the holder readout carries the present tense. Nothing on this screen is a
- * sentence.
+ * the headline across the top carries the present tense. Nothing on this
+ * screen is a sentence.
  */
 export function AuctionDraft({ config }: { config: DraftConfig }) {
   const { t } = useI18n();
 
   const scope = config.scope ?? 'top-5'
   const league = config.league ?? 'premier-league'
-  const timerSetting = config.timer ?? '15'
-  const limit = timerSetting === 'off' ? FALLBACK_TIMER : Number(timerSetting) || FALLBACK_TIMER
+  /* The bid timer stopped being a setting on 2026-08-23 — see the note where
+     `timers` used to be in lobbyOptions. It never had a coherent "off". */
+  const limit = AUCTION_BID_SECONDS
 
   const { room, uid } = useMultiplayerRoom(config.roomId)
   const isMultiplayer = Boolean(config.roomId)
@@ -114,48 +164,9 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
-    const drafters = useMemo(() => {
-      if (!isMultiplayer || !room?.drafters) return baseDrafters
-      
-      const computedSeats: Drafter[] = []
-      const drafterEntries = Object.entries(room.drafters)
-      const hostEntry = drafterEntries.find(([id]) => id === room.host)
-      if (hostEntry) {
-        computedSeats.push({
-          id: hostEntry[0],
-          kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
-          name: hostEntry[1].name,
-          mark: hostEntry[1].mark,
-        })
-      }
-      
-      const humanEntries = drafterEntries.filter(([id, d]) => id !== room.host && d.kind !== 'bot').sort(([a], [b]) => a.localeCompare(b))
-      for (const [id, drafter] of humanEntries) {
-        computedSeats.push({
-          id,
-          kind: id === uid ? 'you' : drafter.kind as any,
-          name: drafter.name,
-          mark: drafter.mark,
-        })
-      }
-      
-      const botEntries = drafterEntries.filter(([, d]) => d.kind === 'bot').sort(([a], [b]) => a.localeCompare(b))
-      for (const [id, drafter] of botEntries) {
-        computedSeats.push({
-          id,
-          kind: 'bot',
-          name: drafter.name,
-          mark: drafter.mark,
-        })
-      }
-      return computedSeats
-    }, [baseDrafters, isMultiplayer, room?.drafters, room?.host, uid])
+  const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
 
   const seatCount = drafters.length
-  const youSeat = Math.max(
-    0,
-    drafters.findIndex((drafter) => drafter.kind === 'you'),
-  )
 
   const [pool, setPool] = useState<Player[]>([])
   const [poolError, setPoolError] = useState<string | null>(null)
@@ -167,15 +178,9 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
   // Sync state from host to clients
   useEffect(() => {
-    if (isMultiplayer && !isHost) {
-      if (room?.auctionBlock !== undefined) {
-        const b = room.auctionBlock
-        setBlock(b ? { ...b, bids: b.bids || {}, out: b.out || [] } : null)
-      }
-      if (room?.auctionSales !== undefined) {
-        setSales(room.auctionSales || [])
-      }
-    }
+    if (!isMultiplayer || isHost) return
+    if (room?.auctionBlock !== undefined) setBlock(normaliseBlock(room.auctionBlock))
+    if (room?.auctionSales !== undefined) setSales(normaliseSales(room.auctionSales))
   }, [isMultiplayer, isHost, room?.auctionBlock, room?.auctionSales])
 
   // Sync state from host to firebase
@@ -184,6 +189,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       updateAuctionState(config.roomId, block, sales)
     }
   }, [isMultiplayer, isHost, config.roomId, block, sales])
+
   /**
    * The countdown, stamped with the lot-and-bid it belongs to.
    *
@@ -196,18 +202,32 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const [clock, setClock] = useState<{ key: number; left: number }>({ key: -1, left: limit })
   /** False for the first `LOCKOUT_MS` of every countdown — see the note above. */
   const [armed, setArmed] = useState(false)
-  const [tab, setTab] = useState(youSeat)
+  const [tab, setTab] = useState(0)
   const [pane, setPane] = useState<'block' | 'board'>('block')
   const [localMessages, setMessages] = useState<Message[]>([])
-  const messages = isMultiplayer && room?.chat ? Object.values(room.chat).sort((a, b) => a.id - b.id) : localMessages
+  const messages = useMemo(() => {
+    if (isMultiplayer) {
+      if (!room?.chat) return []
+      return Object.values(room.chat).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0))
+    }
+    return localMessages
+  }, [isMultiplayer, room?.chat, localMessages])
   const [lastArrival, setLastArrival] = useState<string | null>(null)
+
+  /* Your own board opens on your own tab, once there is a seat to open on. */
+  const tabbed = useRef(false)
+  useEffect(() => {
+    if (tabbed.current || youSeat < 0) return
+    tabbed.current = true
+    setTab(youSeat)
+  }, [youSeat])
 
   /* Purchases, and the spares that had nowhere to go. A buy lands straight in
      an open slot; only when every slot for that position is full does it
      overflow *(R7.2-Q1)*. */
   const [board, setBoard] = useState<{ picks: Pick[]; spare: Player[][] }>(() => ({
     picks: [],
-    spare: drafters.map(() => []),
+    spare: [],
   }))
 
   const messageId = useRef(1)
@@ -218,7 +238,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       .then(setPool)
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
-        setPoolError(error instanceof Error ? error.message : 'The player pool would not load.')
+        setPoolError(error instanceof Error ? error.message : t('The player pool would not load.'))
       })
     return () => controller.abort()
   }, [])
@@ -233,14 +253,6 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const startBudget = useMemo(() => startingBudget(scoped), [scoped])
 
   useEffect(() => {
-    const handleError = (e: ErrorEvent) => {
-      console.error("AUCTION DRAFT CRASHED:", e.error);
-    }
-    window.addEventListener('error', handleError)
-    return () => window.removeEventListener('error', handleError)
-  }, [])
-  
-  useEffect(() => {
     if (scoped.length === 0 || lots.length > 0) return
     setLots(buildLotList(scoped, seatCount))
   }, [scoped, seatCount, lots.length])
@@ -249,13 +261,17 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
   const squads = useMemo(() => {
     const built: Squad[] = drafters.map(() => ({}))
-    for (const pick of board.picks) built[pick.seat][pick.slot] = pick.player
+    for (const pick of board.picks) {
+      if (built[pick.seat]) built[pick.seat][pick.slot] = pick.player
+    }
     return built
   }, [board.picks, drafters])
 
   const budgets = useMemo(() => {
     const left = drafters.map(() => startBudget)
-    for (const sale of sales) if (sale.seat !== null) left[sale.seat] -= sale.price
+    for (const sale of sales) {
+      if (sale.seat !== null && left[sale.seat] !== undefined) left[sale.seat] -= sale.price
+    }
     return left
   }, [sales, drafters, startBudget])
 
@@ -263,38 +279,36 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const live = useRef({ squads, budgets, block, armed, sales, drafters })
   live.current = { squads, budgets, block, armed, sales, drafters }
 
-  const award = useCallback(
-    (seat: number, player: Player) => {
-      setBoard((previous) => {
-        const squad: Squad = {}
-        for (const pick of previous.picks) if (pick.seat === seat) squad[pick.slot] = pick.player
+  const award = useCallback((seat: number, player: Player) => {
+    setBoard((previous) => {
+      const squad: Squad = {}
+      for (const pick of previous.picks) if (pick.seat === seat) squad[pick.slot] = pick.player
 
-        const slot = landingSlot(player, squad)
-        if (slot) {
-          return {
-            ...previous,
-            picks: [...previous.picks, { overall: previous.picks.length, seat, slot, player }],
-          }
-        }
-
+      const slot = landingSlot(player, squad)
+      if (slot) {
         return {
           ...previous,
-          spare: previous.spare.map((list, at) => (at === seat ? [...list, player] : list)),
+          picks: [...previous.picks, { overall: previous.picks.length, seat, slot, player }],
         }
-      })
-      setLastArrival(player.id)
-    },
-    [],
-  )
+      }
+
+      /* `spare` is grown to reach the seat rather than mapped over: the seat
+         table can arrive after this state was initialised, and a `map` over a
+         shorter array would silently drop the purchase. */
+      const spare = [...previous.spare]
+      while (spare.length <= seat) spare.push([])
+      spare[seat] = [...spare[seat], player]
+      return { ...previous, spare }
+    })
+    setLastArrival(player.id)
+  }, [])
 
   const salesProcessed = useRef(0)
   useEffect(() => {
     if (sales.length > salesProcessed.current) {
       for (let i = salesProcessed.current; i < sales.length; i++) {
         const sale = sales[i]
-        if (sale.seat !== null) {
-          award(sale.seat, sale.player)
-        }
+        if (sale.seat !== null) award(sale.seat, sale.player)
       }
       salesProcessed.current = sales.length
     }
@@ -340,11 +354,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
   /* ------------------------------------------------------------- the block -- */
 
-  const placeBid = useCallback((seat: number, step: number) => {
-    if (isMultiplayer && !isHost && config.roomId) {
-      placeAuctionBid(config.roomId, seat, step)
-      return
-    }
+  /** The host's own application of a raise, whoever it came from. */
+  const applyBid = useCallback((seat: number, step: number) => {
     setBlock((previous) => {
       if (!previous || previous.phase !== 'live') return previous
       if (previous.holder === seat || previous.out.includes(seat)) return previous
@@ -360,21 +371,57 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         resets: previous.resets + 1,
       }
     })
-  }, [isMultiplayer, isHost, config.roomId])
+  }, [])
 
-  useEffect(() => {
-    if (!isMultiplayer || !isHost || !config.roomId) return
-    const bidsRef = ref(database, `rooms/${config.roomId}/auctionBids`)
-    return onChildAdded(bidsRef, (snapshot) => {
-      const bid = snapshot.val()
-      placeBid(bid.seat, bid.step)
+  /**
+   * A seat standing down. Final for this lot — see `lotIsDecided`, which is
+   * what makes the hammer able to fall early rather than sitting out a
+   * countdown nobody is going to interrupt.
+   */
+  const applyPass = useCallback((seat: number) => {
+    setBlock((previous) => {
+      if (!previous || previous.phase !== 'live') return previous
+      if (previous.holder === seat || previous.out.includes(seat)) return previous
+      return { ...previous, out: [...previous.out, seat] }
     })
-  }, [isMultiplayer, isHost, config.roomId, placeBid])
+  }, [])
+
+  const placeBid = useCallback(
+    (seat: number, step: number) => {
+      if (isMultiplayer && !isHost && config.roomId) {
+        placeAuctionBid(config.roomId, seat, step)
+        return
+      }
+      applyBid(seat, step)
+    },
+    [isMultiplayer, isHost, config.roomId, applyBid],
+  )
+
+  const passLot = useCallback(
+    (seat: number) => {
+      if (isMultiplayer && !isHost && config.roomId) {
+        placeAuctionPass(config.roomId, seat)
+        return
+      }
+      applyPass(seat)
+    },
+    [isMultiplayer, isHost, config.roomId, applyPass],
+  )
+
+  /* The host drains the queue. Each entry is removed as it is handled, so a
+     re-attached listener does not replay the whole auction — see
+     `useActionQueue`. */
+  useActionQueue(config.roomId, 'auctionBids', isMultiplayer && isHost, (payload) => {
+    if (typeof payload.seat !== 'number') return
+    if (payload.pass) applyPass(payload.seat)
+    else applyBid(payload.seat, payload.step ?? 0)
+  })
 
   /** Open whatever the cursor is pointing at, or stop the auction. */
   useEffect(() => {
     if (lots.length === 0 || finished) return
     if (block && block.lot.number === lots[cursor]?.number) return
+    if (!isHost) return
 
     const lot = lots[cursor]
     if (!lot) {
@@ -386,8 +433,6 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       setFinished(true)
       return
     }
-
-    if (!isHost) return
 
     setBlock({
       lot,
@@ -413,7 +458,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     const POS_LIST = ['AMF', 'CB', 'CDM', 'CM', 'GK', 'LB', 'LW', 'RB', 'RW', 'ST']
     const lotsRevealed = new Array(10).fill(0)
     const lotsSold = new Array(10).fill(0)
-    
+
     for (const sale of live.current.sales) {
       const pIdx = POS_LIST.indexOf(sale.player.position)
       if (pIdx >= 0) {
@@ -423,8 +468,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     }
     const currentPIdx = POS_LIST.indexOf(now.lot.player.position)
     if (currentPIdx >= 0) lotsRevealed[currentPIdx]++
-    
-    const lotsRemaining = Math.max(0, (15 * seatCount) - now.lot.number)
+
+    const lotsRemaining = Math.max(0, 15 * seatCount - now.lot.number)
     const fractionElapsed = Math.min(1.0, now.lot.number / Math.max(1, 15 * seatCount))
     const scopedPoolSize = scopedRef.current.length
 
@@ -432,7 +477,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
 
       const drafter = live.current.drafters[seat]
-      if (drafter.kind !== 'bot') continue
+      if (!drafter || drafter.kind !== 'bot') continue
 
       const step = evaluateAuctionBot(
         seat,
@@ -444,7 +489,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         lotsSold,
         lotsRemaining,
         fractionElapsed,
-        scopedPoolSize
+        scopedPoolSize,
       )
 
       if (step !== null) {
@@ -455,7 +500,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
           // Double check it hasn't been locked out by the room in the meantime,
           // though this delay is usually well beyond LOCKOUT_MS.
           if (live.current.armed && live.current.block?.phase === 'live') {
-            placeBid(seat, step)
+            applyBid(seat, step)
           }
         }, delay)
         timers.push(timer)
@@ -467,7 +512,8 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     /* A seat whose line the price has already crossed is out of this lot for
        good — its valuation is fixed for the lot's length and its budget only
        ever falls, so it can never come back in. Saying so is what draws the
-       four dimmed cards next to the one holding it. */
+       dimmed cards next to the one holding it, and it is now also what lets
+       the lot close the moment there is nobody left to raise. */
     if (spent.length > 0) {
       setBlock((previous) =>
         previous && previous.phase === 'live'
@@ -480,9 +526,9 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     }
 
     return () => {
-      timers.forEach(t => window.clearTimeout(t))
+      timers.forEach((timer) => window.clearTimeout(timer))
     }
-  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, placeBid, isHost])
+  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, applyBid, isHost])
 
   /* -------------------------------------------------------------- the clock -- */
 
@@ -521,13 +567,18 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   }, [block?.lot.number, block?.resets, block?.phase])
 
   /**
-   * The clock ran out with no new bid, so the lot closes: to the highest
-   * bidder, or into the unsold pile if nobody ever took the opening price
-   * *(R8-Q4)*.
+   * The lot closes: the clock ran out with no new bid, **or** everybody but
+   * the holder has passed and there is nothing left for the clock to wait for
+   * *(2026-08-23)*. Either way it goes to the highest bidder, or into the
+   * unsold pile if nobody ever took the opening price *(R8-Q4)*.
    */
+  const decided = Boolean(
+    block && block.phase === 'live' && lotIsDecided(block.holder, block.out, seatCount),
+  )
+
   useEffect(() => {
     if (!block || block.phase !== 'live') return
-    if (clock.key !== clockKey || clock.left > 0) return
+    if (!decided && (clock.key !== clockKey || clock.left > 0)) return
     if (!isHost) return
 
     const { holder, price, lot } = block
@@ -537,41 +588,41 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         ? { ...previous, phase: holder !== null ? 'sold' : 'unsold' }
         : previous,
     )
-    setSales((previous) => [
-      ...previous,
-      { lot: lot.number, player: lot.player, seat: holder, price: holder === null ? 0 : price },
-    ])
-    if (holder !== null) {
-      if (isMultiplayer && isHost && config.roomId) {
-        const winner = drafters[holder].name
-        sendChatMessage(config.roomId, '', `Lot ${lot.number} - ${lot.player.name} - €${price}M to ${winner}`)
-      } else if (!isMultiplayer && holder === youSeat) {
-        setMessages((current) => [
-          ...current,
-          {
-            id: messageId.current++,
-            kind: 'system',
-            author: '',
-            body: `Lot ${lot.number} - ${lot.player.name} - €${price}M`,
-          },
-        ])
-      }
-    }
-    }, [clock, clockKey, block, award, youSeat, isHost, isMultiplayer, config.roomId, drafters])
+    /* Guarded on the lot number rather than appended blindly. Two things can
+       now close a lot — the clock reaching zero and the room finishing with it
+       — and either can fire on a render where the phase change from the other
+       has not landed yet. The phase update above is already idempotent; this
+       makes the sale idempotent too, so a lot cannot be sold twice. */
+    setSales((previous) =>
+      previous.some((sale) => sale.lot === lot.number)
+        ? previous
+        : [
+            ...previous,
+            {
+              lot: lot.number,
+              player: lot.player,
+              seat: holder,
+              price: holder === null ? 0 : price,
+            },
+          ],
+    )
+  }, [clock, clockKey, block, decided, isHost, seatCount])
 
   /** The hammer holds, then the next lot comes up. */
   useEffect(() => {
     if (!block || block.phase === 'live') return
+    if (!isHost) return
     const timer = window.setTimeout(() => setCursor((at) => at + 1), RESULT_HOLD)
     return () => window.clearTimeout(timer)
-  }, [block?.lot.number, block?.phase])
+  }, [block?.lot.number, block?.phase, isHost])
 
   /**
    * The auction has run its course. Anybody left with empty slots has them
-   * filled with the cheapest still-eligible footballers — running out of money
-   * gets you worse players, never fewer. Backfill draws first from what the lot
-   * cap kept off the block and only then from the unsold pile, which is what
-   * taking it from the scoped pool minus everything sold amounts to.
+   * filled with the **lowest-rated** footballers still available, drawn from
+   * the whole scoped pool rather than from the lot list — the `15 × N` cap and
+   * its high-ability skew decide who goes on the block and have no business
+   * deciding who fills a slot nobody bid for. Running out of money gets you
+   * worse players, never fewer.
    */
   useEffect(() => {
     if (!finished) return
@@ -589,7 +640,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
         for (const slot of formation) {
           if (squad[slot.id]) continue
-          const player = cheapestFor(slot.position, scopedRef.current, taken)
+          const player = weakestFor(slot.position, scopedRef.current, taken)
           if (!player) continue
           taken.add(player.id)
           squad[slot.id] = player
@@ -601,13 +652,9 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     })
   }, [finished, seatCount])
 
-  /* ------------------------------------------------------------- the room --- */
-
-
-
   /* --------------------------------------------------------------- render --- */
 
-const you = drafters[youSeat]
+  const you = drafters[youSeat]
   const yourSquad = squads[youSeat] ?? {}
   const shownSquad = squads[tab] ?? {}
   const shownFilled = formation.filter((slot) => shownSquad[slot.id]).length
@@ -615,7 +662,7 @@ const you = drafters[youSeat]
   const result: BlockResult | null =
     block && block.phase !== 'live'
       ? {
-          buyer: block.holder === null ? null : drafters[block.holder]?.name ?? `Seat ${block.holder}`,
+          buyer: block.holder === null ? null : (drafters[block.holder]?.name ?? '—'),
           price: block.price,
           yours: block.holder === youSeat,
         }
@@ -631,22 +678,8 @@ const you = drafters[youSeat]
 
   const yourSpare = board.spare[youSeat] ?? []
 
-  console.log("AUCTION_DRAFT_RENDER", {
-    isMultiplayer,
-    isHost,
-    roomId: config.roomId,
-    roomBlock: room?.auctionBlock,
-    roomSales: room?.auctionSales,
-    baseDrafters,
-    drafters,
-    youSeat,
-    lotsLength: lots.length,
-    cursor,
-    block,
-    sales,
-    squads,
-    budgets,
-  })
+  /* Nothing below this line is safe to draw without a seat — see `DraftGate`. */
+  if (!seated || !you) return <DraftGate />
 
   /* Once the auction is done and the block has been cleared (backfill has run),
      swap to the comparison screen. */
@@ -668,7 +701,7 @@ const you = drafters[youSeat]
               sentence, which non-negotiable 7 rules out on this screen. ---- */}
       <div className="fx fx-soft flex shrink-0 flex-col items-stretch gap-[10px] border-b border-line-strong py-[12px] sm:flex-row sm:items-center sm:gap-5">
         <div className="flex shrink-0 items-center gap-3">
-          <BackHome confirm confirmNote="The auction ends here. Nothing about it is saved." />
+          <BackHome confirm confirmNote={t('The auction ends here. Nothing about it is saved.')} />
           <LanguageSwitch className="hidden sm:flex" />
         </div>
 
@@ -676,7 +709,7 @@ const you = drafters[youSeat]
           {block ? (
             <Headline
               player={block.lot.player}
-              holder={block.holder === null ? null : drafters[block.holder]?.name ?? `Seat ${block.holder}`}
+              holder={block.holder === null ? null : (drafters[block.holder]?.name ?? null)}
               yours={block.holder === youSeat}
               price={block.price}
             />
@@ -738,12 +771,13 @@ const you = drafters[youSeat]
                 live={block.phase === 'live'}
                 armed={armed}
                 onBid={(step) => placeBid(youSeat, step)}
+                onPass={() => passLot(youSeat)}
               />
             </>
           ) : (
             <div className="grid min-h-0 flex-1 place-items-center rounded-lg border border-line-strong bg-surface">
               <span className="font-display text-[11px] font-medium uppercase tracking-[0.2em] text-dim">
-                {poolError ?? (finished ? 'Closed' : 'Opening')}
+                {poolError ?? (finished ? t('Closed') : t('Opening'))}
               </span>
             </div>
           )}
@@ -761,17 +795,18 @@ const you = drafters[youSeat]
               onTab={setTab}
               squad={shownSquad}
               pending={tab === youSeat ? pendingSlot : null}
-              preview={tab === youSeat && block ? block.lot.player : null}
+              preview={tab === youSeat && block && block.holder === youSeat ? block.lot.player : null}
               lastArrival={lastArrival}
             />
           </div>
 
           <div className="mt-[12px] flex shrink-0 items-baseline justify-between gap-4 border-t border-line pt-[10px]">
-            <SectionLabel>{t("Filled")}<span className="tabular text-[11px] text-accent">{shownFilled}</span>{' '}
+            <SectionLabel>{t('Filled')}{' '}
+              <span className="tabular text-[11px] text-accent">{shownFilled}</span>{' '}
               <span className="text-faint">/ {SQUAD_SIZE}</span>
             </SectionLabel>
             <SectionLabel>
-              Left{' '}
+              {t('Left')}{' '}
               <span className="money tabular text-[11px] font-semibold text-ink">
                 {budgets[tab] ?? 0}
               </span>
@@ -783,7 +818,7 @@ const you = drafters[youSeat]
               drafts never reach is furniture. */}
           {tab === youSeat && yourSpare.length > 0 ? (
             <div className="fx fx-soft mt-[10px] flex shrink-0 flex-col gap-[8px] border-t border-line pt-[10px]">
-              <SectionLabel>{t("Unplaced")}</SectionLabel>
+              <SectionLabel>{t('Unplaced')}</SectionLabel>
               <ul className="flex flex-wrap items-center gap-[8px]">
                 {yourSpare.map((player) => (
                   <li key={player.id}>
@@ -805,8 +840,8 @@ const you = drafters[youSeat]
 
       {/* ---- One viewport, one column: the two halves take turns. ---- */}
       <div className="mt-[12px] flex shrink-0 items-center gap-[2px] border-t border-line pt-[10px] md:hidden">
-        <PaneTab active={pane === 'block'} onClick={() => setPane('block')}>{t("The block")}</PaneTab>
-        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t("The elevens")}</PaneTab>
+        <PaneTab active={pane === 'block'} onClick={() => setPane('block')}>{t('The block')}</PaneTab>
+        <PaneTab active={pane === 'board'} onClick={() => setPane('board')}>{t('The elevens')}</PaneTab>
       </div>
     </div>
   )
@@ -843,13 +878,13 @@ function Headline({
 
       {holder === null ? (
         <>
-          <span className="shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim">{t("Opening")}</span>
+          <span className="shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim">{t('Opening')}</span>
           <Dot />
           <span className="money tabular shrink-0 text-muted">{price}</span>
         </>
       ) : (
         <>
-          <span className="hidden shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim lg:inline">{t("Highest bidder:")}</span>
+          <span className="hidden shrink-0 text-[0.52em] font-medium tracking-[0.2em] text-dim lg:inline">{t('Highest bidder:')}</span>
           <span className="max-w-[8ch] shrink truncate text-ink">{holder}</span>
           <Dot />
           <span

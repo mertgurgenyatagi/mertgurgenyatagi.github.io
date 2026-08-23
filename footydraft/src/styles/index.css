@@ -729,11 +729,44 @@
   height: 100%;
 }
 
+/* The cell the pitch is drawn inside, and its own size container. */
+.squad-pitch-stage {
+  container-type: size;
+  min-height: 0;
+  flex: 1 1 0;
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* The pitch, sized off **both** axes of that cell rather than off height
+   alone. `aspect-ratio` on a flex child takes its height from the flex line
+   and derives a width from it, with nothing stopping that width running past
+   the column — which is fine while the nodes are small and is not once they
+   are the size of the penalty spot. `min()` of the two candidates keeps the
+   68:105 proportions exactly and guarantees the box fits.
+
+   The `82cqw` rather than `100cqw` is the overhang allowance: a node is
+   centred *on* the touchline it stands at, and its name plate is wider than
+   it is, so the left back and right back extend past the box on both sides.
+   Nine per cent a side covers both at the sizes below. */
+.squad-pitch-box {
+  --pitch-fit: 82cqw;
+  width: min(var(--pitch-fit), calc(100cqh * 68 / 105));
+  height: min(100cqh, calc(var(--pitch-fit) * 105 / 68));
+}
+
+/* The nodes run at **three times** the size they shipped at *(2026-08-23)*.
+   The comparison screen is the one place in the app where the squads are the
+   whole content and there is nothing else competing for the height — a crest
+   at 34px on a 900px screen was drawing the pitch markings at full size and
+   the eleven players on them as punctuation. The name plate and the position
+   code come up with them so the node keeps its proportions. */
 .squad-compare {
-  --compare-node: clamp(18px, 3.8cqh, 34px);
-  --compare-name: clamp(40px, 9cqw, 100px);
-  --compare-name-size: clamp(6px, 1.1cqh, 10px);
-  --compare-pos-size: clamp(5px, 0.9cqh, 8px);
+  --compare-node: clamp(54px, 11.4cqh, 102px);
+  --compare-name: clamp(64px, 14cqw, 150px);
+  --compare-name-size: clamp(9px, 1.9cqh, 15px);
+  --compare-pos-size: clamp(8px, 1.6cqh, 14px);
 }
 
 /* ============================================================================
@@ -1508,11 +1541,11 @@
      who holds them and at what. It is the present tense of the whole format,
      so it is set at display weight rather than as a status line. */
   --auction-head: clamp(15px, 3.25cqh, 26px);
-  /* The three steps. They were the only controls on the screen and the
-     smallest type on it; the figure now reads at a glance and the line
-     underneath says where it lands. */
-  --auction-step: clamp(17px, 3.125cqh, 25px);
-  --auction-step-note: clamp(10px, 1.5cqh, 12px);
+  /* The steps. They are the only controls on the screen and were once the
+     smallest type on it. They carry the raise and nothing else now — the
+     second line naming where it lands went on 2026-08-23 — so the figure gets
+     the whole button. */
+  --auction-step: clamp(20px, 3.9cqh, 32px);
 
   /* The pitch gets a narrower column here than on Free Pick, so the nodes and
      the plates come down with it. */
@@ -1541,9 +1574,6 @@
 }
 .auction-step-figure {
   font-size: var(--auction-step);
-}
-.auction-step-note {
-  font-size: var(--auction-step-note);
 }
 
 /* ---- The columns. One, then two, then three — same three shapes as the
@@ -1657,13 +1687,54 @@
    the sold record: `24 · ?`, a hatched box drawing attention to the absence of
    information. The absence needed no monument; the record simply ends. */
 
-/* ---- The bidders, side by side. Five across on a desktop column; on a phone
-        they wrap rather than compress to an unreadable 60px. ---- */
+/* ---- The bidders, side by side, and your budget in the space they leave.
+
+   The bid cards used to be `repeat(auto-fit, minmax(84px, 1fr))`, which spread
+   however many drafters there were across the whole column — so at two or
+   three seats the row was two fat cards and a third of the screen of nothing,
+   on a screen whose only decision is whether you can afford the next raise.
+   The cards take a bounded width now and the budget takes the remainder.
+
+   The figure is sized against its own cell (`cqw`, on a container the budget
+   panel declares) rather than against the frame, which is what lets one rule
+   cover both ends of it: enormous beside two bid cards, merely large beside
+   five, with no breakpoint in between. ---- */
+
+.auction-bidrow {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(92px, 1fr);
+  gap: 10px;
+  align-items: stretch;
+}
 
 .auction-bids {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  grid-template-columns: repeat(var(--auction-seats, 5), minmax(0, 118px));
   gap: 8px;
+}
+
+.auction-budget {
+  container-type: inline-size;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.auction-budget-label {
+  font-size: clamp(8px, 4.4cqw, 11px);
+  white-space: nowrap;
+}
+
+.auction-budget-figure {
+  font-size: clamp(22px, 30cqw, 96px);
+}
+
+.auction-pass {
+  font-size: clamp(11px, 1.9cqh, 15px);
 }
 
 /* ---- The displayer. ---- */
@@ -1698,9 +1769,33 @@
         about ninety pixels of height. ---- */
 
 @media (max-width: 767px) {
+  /* One column at this width: the bids across the top, the budget on its own
+     row underneath at full width. Squeezing both onto one line here would
+     make the budget the narrowest thing on the screen, which is the opposite
+     of the point of it. */
+  .auction-bidrow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
   .auction-bids {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--auction-seats, 5), minmax(0, 1fr));
     gap: 5px;
+  }
+
+  .auction-budget {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 6px 10px;
+  }
+
+  .auction-budget-label {
+    font-size: 9px;
+  }
+
+  .auction-budget-figure {
+    font-size: 26px;
   }
 
   .auction-bid-card {
@@ -1709,13 +1804,6 @@
   }
 
   .auction-bid-disc {
-    display: none;
-  }
-
-  /* At this width three steps side by side are three narrow columns; the
-     figure keeps its size and the "to €170M" line under it goes, since the
-     bid it lands on is the number on the button next to the holder anyway. */
-  .auction-step-note {
     display: none;
   }
 }

@@ -53,21 +53,28 @@ export const constraints: Choice[] = [
 ]
 
 /**
- * **Auction only, and two values.**
+ * **The bid timer is no longer a setting** *(removed by Mert, 2026-08-23)*.
  *
- * It was once a turn timer offered in every format; it is a *bid* timer now,
- * and a bid timer is a thing only one of the four formats has. What it
- * measures there is inactivity rather than anybody's window — any bid from any
- * seat sends it back to full — so it is the auction's own closing mechanism
- * and has no counterpart in a format where turns simply pass to the next
- * person. The other three no longer run a clock at all.
- *
- * Fifteen seconds or none. The intermediate lengths were never a decision
- * anybody was making; they were a slider drawn as chips.
+ * It had already narrowed from five values to two, and the surviving `Off`
+ * never switched anything off: with no turns, a lot that runs no clock stays
+ * open forever, so the Auction screen fell back to fifteen seconds either way.
+ * A control whose two positions do the same thing is not a setting, so the
+ * group is gone from both lobbies and the Auction simply runs at the default.
+ * `AUCTION_BID_SECONDS` in `auctionEngine` is where that number lives now.
  */
-export const timers: Choice[] = [
-  { id: '15', name: '15 s' },
-  { id: 'off', name: 'Off' },
+
+/**
+ * **Spin the Wheel only.** What the wheel's slices are: the five leagues, or
+ * one wedge per club *(added 2026-08-23)*.
+ *
+ * The category is still fixed once, at the start, and still never changes
+ * between spins *(R5-Q1)* — this only chooses which of the two open axes it
+ * gets fixed to. A single-league Scope has already fixed league, so the group
+ * collapses away there and the wheel is clubs by construction.
+ */
+export const wheels: Choice[] = [
+  { id: 'league', name: 'By league' },
+  { id: 'club', name: 'By club' },
 ]
 
 /** Humans plus bots. The empty seats stay on screen either way. */

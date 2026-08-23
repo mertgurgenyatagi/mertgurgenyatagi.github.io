@@ -53,7 +53,7 @@ export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
   return (
     <dialog
       ref={ref}
-      aria-label={mode === 'create' ? 'Open a lobby' : 'Join a lobby'}
+      aria-label={mode === 'create' ? t('Open a lobby') : t('Join a lobby')}
       onCancel={(event) => {
         event.preventDefault()
         onCancel()
@@ -72,7 +72,7 @@ export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
         >
           <div className="flex items-baseline justify-between gap-4">
             <SectionLabel>
-              {mode === 'create' ? 'New lobby' : 'Joining'}
+              {mode === 'create' ? t('New lobby') : t('Joining')}
             </SectionLabel>
             <span className="tabular shrink-0 font-display text-[13px] font-medium uppercase tracking-[0.26em] text-accent">
               {code}
@@ -111,7 +111,7 @@ export function NameGate({ mode, code, onSubmit, onCancel }: NameGateProps) {
               size="lg"
               disabled={!ready}
             >
-              {mode === 'create' ? 'Open lobby →' : 'Join lobby →'}
+              {mode === 'create' ? t('Open lobby →') : t('Join lobby →')}
             </Button>
           </div>
         </form>

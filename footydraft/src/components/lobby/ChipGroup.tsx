@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Choice } from '../../data/lobbyOptions'
 import { SectionLabel } from '../ui/SectionLabel'
+import { useI18n } from '../../lib/i18n'
 
 /**
  * The workhorse of the settings half: one settable value, drawn as a row of
@@ -84,6 +85,8 @@ export function ChipGroup({
   unavailableHint,
   delayMs,
 }: ChipGroupProps) {
+  const { t } = useI18n()
+
   return (
     <div className="fx fx-soft" style={{ animationDelay: `${delayMs}ms` }}>
       <SectionLabel>{label}</SectionLabel>
@@ -91,8 +94,9 @@ export function ChipGroup({
       <div className="mt-[var(--lobby-chip-mt)] flex flex-wrap gap-[clamp(0.25rem,0.7vw,0.5rem)]">
         {options.map((option) => {
           const unavailable = isUnavailable?.(option.id) ?? false
+          const name = t(option.name)
           const label = unavailable && unavailableHint
-            ? `${option.name} — not available with ${unavailableHint}`
+            ? t('{name} — not available with {hint}', { name, hint: unavailableHint })
             : undefined
 
           return readOnly ? (
@@ -102,7 +106,7 @@ export function ChipGroup({
               aria-label={label}
               className={chipClass(option.id === value, true, unavailable)}
             >
-              {option.name}
+              {name}
             </span>
           ) : (
             <button
@@ -114,7 +118,7 @@ export function ChipGroup({
               onClick={() => onChange(option.id)}
               className={chipClass(option.id === value, false, unavailable)}
             >
-              {option.name}
+              {name}
             </button>
           )
         })}

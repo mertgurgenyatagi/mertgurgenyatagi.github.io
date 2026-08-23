@@ -174,7 +174,16 @@ export async function loadPool(signal?: AbortSignal): Promise<Player[]> {
   const abilityAt = column('Current Ability')
   const priceAt = column('Derived Price (EURm)')
 
-  const players: Player[] = []
+  interface Row {
+    name: string
+    club: string
+    clubSlug: string
+    nameSlug: string
+    position: string
+    cells: string[]
+  }
+
+  const rows: Row[] = []
   const seen = new Set<string>()
 
   for (let index = 1; index < lines.length; index += 1) {
@@ -185,28 +194,53 @@ export async function loadPool(signal?: AbortSignal): Promise<Player[]> {
     if (!name || !club || !POSITIONS.has(position)) continue
 
     const clubSlug = slugify(club)
-    const league = clubLeagues[clubSlug] ?? null
+    const nameSlug = slugify(name)
 
-    const id = `${slugify(name)}|${clubSlug}`
+    const id = `${nameSlug}|${clubSlug}`
     if (seen.has(id)) continue
     seen.add(id)
 
-    players.push({
-      id,
-      name,
-      surname: teamsheetName(name),
-      nation: cells[nationAt]?.trim() ?? '',
-      age: Number(cells[ageAt]) || 0,
-      club,
-      clubSlug,
-      league,
-      position: position as PositionCode,
-      ability: Number(cells[abilityAt]) || 0,
-      price: Number(cells[priceAt]) || 0,
-      crest: league ? crestUrl(clubSlug) : null,
-      portraitBase: `${base}players-cells/${slugify(name)}`,
-    })
+    rows.push({ name, club, clubSlug, nameSlug, position, cells })
   }
+
+  /**
+   * Portrait files are keyed by the name slug, which is not unique: the pool
+   * holds two footballers called Ederson. The photo fetched for the
+   * Fenerbahçe keeper is on disk as `ederson-fenerbahce`, so a lookup on the
+   * bare name slug found *neither* of them and both fell through to the crest
+   * ring — including the one whose picture was sitting right there.
+   *
+   * So a name that appears once is filed under itself, and a name that
+   * appears more than once carries its club. That is a rule rather than a
+   * special case for Ederson: the next pair of namesakes the pool picks up
+   * behaves the same way, and nothing has to be renamed by hand.
+   */
+  const nameCounts = new Map<string, number>()
+  for (const row of rows) {
+    nameCounts.set(row.nameSlug, (nameCounts.get(row.nameSlug) ?? 0) + 1)
+  }
+
+  const players: Player[] = rows.map((row) => {
+    const league = clubLeagues[row.clubSlug] ?? null
+    const ambiguous = (nameCounts.get(row.nameSlug) ?? 0) > 1
+    const portraitSlug = ambiguous ? `${row.nameSlug}-${row.clubSlug}` : row.nameSlug
+
+    return {
+      id: `${row.nameSlug}|${row.clubSlug}`,
+      name: row.name,
+      surname: teamsheetName(row.name),
+      nation: row.cells[nationAt]?.trim() ?? '',
+      age: Number(row.cells[ageAt]) || 0,
+      club: row.club,
+      clubSlug: row.clubSlug,
+      league,
+      position: row.position as PositionCode,
+      ability: Number(row.cells[abilityAt]) || 0,
+      price: Number(row.cells[priceAt]) || 0,
+      crest: league ? crestUrl(row.clubSlug) : null,
+      portraitBase: `${base}players-cells/${portraitSlug}`,
+    }
+  })
 
   // A–Z, and by club after that so the two Edersons keep a stable order.
   // Deliberately *not* by ability: hiding the number while sorting by it is a

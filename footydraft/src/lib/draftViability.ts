@@ -139,16 +139,26 @@ const NUMBER_WORDS: Record<number, string> = {
   5: 'five',
 }
 
-export function seatsPhrase(size: number): string {
-  return `${NUMBER_WORDS[size] ?? size} at the table`
+/**
+ * Both phrase builders below take the translator rather than returning
+ * English. A sentence assembled out of translated fragments comes out in
+ * English word order whatever language its pieces are in, so the whole phrase
+ * is one key with placeholders — see the note in `i18n`.
+ */
+export type Translate = (key: string, vars?: Record<string, string | number>) => string
+
+export function seatsPhrase(size: number, t: Translate): string {
+  return t('{count} at the table', { count: t(NUMBER_WORDS[size] ?? String(size)) })
 }
 
 /** What the chosen scope is called in a sentence. */
-function scopeLabel(scope: string, league: string): string {
+function scopeLabel(scope: string, league: string, t: Translate): string {
   if (scope === NARROWING_LEAGUE) {
-    return leagues.find((entry) => entry.id === league)?.name ?? 'That league'
+    const found = leagues.find((entry) => entry.id === league)
+    return found ? t(found.name) : t('That league')
   }
-  return scopes.find((entry) => entry.id === scope)?.name ?? 'That scope'
+  const found = scopes.find((entry) => entry.id === scope)
+  return found ? t(found.name) : t('That scope')
 }
 
 /**
@@ -164,22 +174,27 @@ export function unavailableReason(
   league: string,
   constraint: string,
   size: number,
+  t: Translate,
 ): string {
   if (!format) return ''
   if (isConfigViable(format, scope, league, constraint, size)) return ''
 
   const key = scopeKeyOf(scope, league)
-  const phrase = seatsPhrase(size)
+  const phrase = seatsPhrase(size, t)
 
   // Purely descriptive: the friends lobby fills with people the host can't
   // remove, so telling anyone to free a seat isn't always advice they can take.
   // The chips already show what a table this size can play.
   if (takesConstraint(format) && maxSizeForScope(format, key) >= size) {
-    const name = constraints.find((entry) => entry.id === constraint)?.name ?? 'That constraint'
-    return `${name} doesn’t support ${phrase}.`
+    const found = constraints.find((entry) => entry.id === constraint)
+    const name = found ? t(found.name) : t('That constraint')
+    return t('{name} doesn’t support {phrase}.', { name, phrase })
   }
 
-  return `${scopeLabel(scope, league)} doesn’t support ${phrase}.`
+  return t('{name} doesn’t support {phrase}.', {
+    name: scopeLabel(scope, league, t),
+    phrase,
+  })
 }
 
 /** True when anything currently on screen is dimmed for want of seats. */

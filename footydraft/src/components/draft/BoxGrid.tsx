@@ -3,6 +3,7 @@ import type { Box } from '../../lib/dondEngine'
 import type { Drafter } from '../../lib/draftEngine'
 import { Crest } from '../ui/Crest'
 import { Dotgrid } from './Dotgrid'
+import { useI18n } from '../../lib/i18n'
 
 interface BoxGridProps {
   boxes: Box[]
@@ -61,6 +62,7 @@ function BoxFace({
   opener: string | null
   onOpen: ((index: number) => void) | null
 }) {
+  const { t } = useI18n()
   const [failed, setFailed] = useState(false)
   useEffect(() => setFailed(false), [box.player.id])
 
@@ -71,7 +73,11 @@ function BoxFace({
           'dond-box dond-box-open fx fx-soft flex h-full flex-col overflow-hidden',
           mine ? 'border-accent' : 'border-line-strong',
         ].join(' ')}
-        title={`${box.player.name} — box ${box.number}, opened by ${opener}`}
+        title={t('{player} — box {number}, opened by {opener}', {
+          player: box.player.name,
+          number: box.number,
+          opener: opener ?? '',
+        })}
       >
         <div className="min-h-0 flex-1 overflow-hidden">
           {failed ? (
@@ -112,7 +118,7 @@ function BoxFace({
     <button
       type="button"
       onClick={() => onOpen(index)}
-      aria-label={`Open box ${box.number}`}
+      aria-label={t('Open box {number}', { number: box.number })}
       className="dond-box dond-box-shut dond-box-live grid h-full w-full place-items-center border-accent-line transition-[border-color,transform] duration-150 ease-out hover:border-accent active:translate-y-px"
     >
       <span className="dond-number text-accent">{String(box.number).padStart(2, '0')}</span>

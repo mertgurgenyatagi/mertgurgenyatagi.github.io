@@ -27,7 +27,7 @@ export function BackHome({
   confirm = false,
   confirmNote = 'The draft ends here. Nothing about it is saved.',
 }: BackHomeProps) {
-
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [asking, setAsking] = useState(false)
 
@@ -46,7 +46,7 @@ export function BackHome({
         >
           ←
         </span>
-        {label}
+        {t(label)}
       </button>
 
       {asking ? (
@@ -106,7 +106,7 @@ function LeaveGate({
 
           <h2 className="mt-[clamp(0.5rem,2vh,0.875rem)] font-display text-[clamp(1.375rem,3.6vw,1.875rem)] font-bold uppercase leading-[0.95] tracking-[0.02em]">{t("Back to home?")}</h2>
 
-          <p className="mt-[7px] text-[11.5px] leading-[1.5] text-dim">{note}</p>
+          <p className="mt-[7px] text-[11.5px] leading-[1.5] text-dim">{t(note)}</p>
 
           <div className="mt-[clamp(0.875rem,3vh,1.375rem)] flex items-center justify-between gap-4">
             <Button type="button" variant="ghost" onClick={onCancel} autoFocus>{t("Stay")}</Button>

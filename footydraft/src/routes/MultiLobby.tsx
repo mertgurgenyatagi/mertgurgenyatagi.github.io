@@ -10,8 +10,9 @@ import { SeatList, type Seat } from '../components/lobby/SeatList'
 import { BackHome } from '../components/ui/BackHome'
 import { Button } from '../components/ui/Button'
 import { formats } from '../data/formats'
-import { MAX_SEATS, MIN_SEATS, constraints, scopes, timers } from '../data/lobbyOptions'
+import { MAX_SEATS, MIN_SEATS, constraints, scopes, wheels } from '../data/lobbyOptions'
 import { normaliseRoomCode } from '../lib/roomCode'
+import { useI18n } from '../lib/i18n'
 import { readSession, writeSession, type LobbySession } from '../lib/lobbySession'
 import { useMultiplayerRoom, joinRoom, updateRoomConfig, setRoomStatus, sendChatMessage, addBot, removeBot } from '../lib/multiplayer'
 import type { DraftConfig } from '../routes/Draft'
@@ -80,6 +81,7 @@ export function MultiLobby() {
 }
 
 function Room({ code, session }: { code: string; session: LobbySession }) {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const { room, uid } = useMultiplayerRoom(code)
 
@@ -90,7 +92,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
       scope: 'top-5',
       league: 'premier-league',
       constraint: 'club-1',
-      timer: '15'
+      wheel: 'league'
     }
     // We pass format null initially, host selects it
     joinRoom(
@@ -101,49 +103,20 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
     )
   }, [uid, code, session])
 
+  /* The draft screens build their own seat table off the room — see
+     `useSeats`, which is the single definition of who sits where and is the
+     only thing allowed to decide it. This used to hand a second, differently
+     ordered copy over as router state, which meant the table could be drawn
+     one way for a render and another way once the room arrived. Only the room
+     id and the configuration travel now. */
   useEffect(() => {
-    if (room?.status === 'drafting' && room.config && room.drafters) {
-      // Build seats array to pass as the initial config.drafters
-      const computedSeats: Seat[] = []
-      const drafterEntries = Object.entries(room.drafters)
-      const hostEntry = drafterEntries.find(([id]) => id === room.host)
-      if (hostEntry) {
-        computedSeats.push({
-          id: hostEntry[0],
-          kind: hostEntry[0] === uid ? 'you' : hostEntry[1].kind as any,
-          name: hostEntry[1].name,
-          mark: hostEntry[1].mark,
-          note: ''
-        })
-      }
-      for (const [id, drafter] of drafterEntries) {
-        if (id === room.host || drafter.kind === 'bot') continue
-        computedSeats.push({
-          id,
-          kind: id === uid ? 'you' : drafter.kind as any,
-          name: drafter.name,
-          mark: drafter.mark,
-          note: ''
-        })
-      }
-      for (const [id, drafter] of drafterEntries) {
-        if (drafter.kind === 'bot') {
-          computedSeats.push({
-            id,
-            kind: 'bot',
-            name: drafter.name,
-            mark: drafter.mark,
-            note: ''
-          })
-        }
-      }
+    if (room?.status !== 'drafting' || !room.config || !room.drafters) return
 
-      navigate(`/draft/${room.config.format || 'free-pick'}`, {
-        state: { ...room.config, drafters: computedSeats, roomId: code },
-        replace: true
-      })
-    }
-  }, [room?.status, room?.config, room?.drafters, room?.host, uid, navigate, code])
+    navigate(`/draft/${room.config.format || 'free-pick'}`, {
+      state: { ...room.config, roomId: code },
+      replace: true,
+    })
+  }, [room?.status, room?.config, room?.drafters, navigate, code])
 
   // Derive UI state from room
   const config = room?.config || {}
@@ -151,10 +124,10 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
   const scope = config.scope || 'top-5'
   const league = config.league || 'premier-league'
   const constraint = config.constraint || 'club-1'
-  const timer = config.timer || '15'
+  const wheel = config.wheel || 'league'
 
   const hostUid = room?.host || uid
-  const hostName = (hostUid && room?.drafters?.[hostUid]?.name) || 'The host'
+  const hostName = (hostUid && room?.drafters?.[hostUid]?.name) || t('the host')
 
   const messages = room?.chat ? Object.values(room.chat).sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)) : []
 
@@ -198,7 +171,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
   const setScope = (s: string) => setConfig({ scope: s })
   const setLeague = (l: string) => setConfig({ league: l })
   const setConstraint = (c: string) => setConfig({ constraint: c })
-  const setTimer = (t: string) => setConfig({ timer: t })
+  const setWheel = (w: string) => setConfig({ wheel: w })
 
   const say = (body: string) => {
     if (uid) sendChatMessage(code, session.name, body)
@@ -206,8 +179,8 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
 
   /** Constraints exist for Free Pick and are not offered anywhere else. */
   const takesConstraint = format === 'free-pick'
-  /** A bid timer exists for the Auction, and is not offered anywhere else. */
-  const takesTimer = format === 'auction'
+  /** Spin the Wheel only, and only while Scope has left both axes open. */
+  const takesWheel = format === 'spin-the-wheel' && scope !== 'league'
   const enoughSeats = seats.length >= MIN_SEATS
 
   /**
@@ -217,35 +190,35 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
    */
   const size = effectiveSize(seats.length)
   const key = scopeKeyOf(scope, league)
-  const seatsHint = seatsPhrase(size)
+  const seatsHint = seatsPhrase(size, t)
 
   const viable = isConfigViable(format, scope, league, constraint, size)
-  const reason = unavailableReason(format, scope, league, constraint, size)
+  const reason = unavailableReason(format, scope, league, constraint, size, t)
   const dimmed = hasDimmedOptions(format, scope, league, size)
 
   const canStart = session.host && enoughSeats && viable
 
   const resting = session.host
     ? !format
-      ? 'Pick a format to start.'
+      ? t('Pick a format to start.')
       : !enoughSeats
-        ? 'Two at the table to start — invite someone, or add a bot.'
+        ? t('Two at the table to start — invite someone, or add a bot.')
         : reason
           ? reason
           : dimmed
-            ? `Dimmed options don’t support ${seatsHint}.`
+            ? t('Dimmed options don’t support {phrase}.', { phrase: seatsHint })
             : ''
-    : `Only ${hostName} can change the draft or start it.`
+    : t('Only {host} can change the draft or start it.', { host: hostName })
 
   return (
     <LobbyLayout
       leftHeadingId="room-heading"
-      seatCountLabel={`${seats.length} / ${MAX_SEATS} seats`}
+      seatCountLabel={t('{n} / {max} seats', { n: seats.length, max: MAX_SEATS })}
       seatCountKey={seats.length}
       leftHeaderContent={
         <>
           <h1 id="room-heading" className="sr-only">
-            Lobby {code}
+            {t('Lobby {code}', { code })}
           </h1>
           <RoomCode code={code} />
         </>
@@ -279,7 +252,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
       settingsContent={
         <>
           <ChipGroup
-            label="Format"
+            label={t('Format')}
             options={formats}
             value={format}
             onChange={setFormat}
@@ -291,7 +264,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
 
           <div className={GROUP_GAP}>
             <ChipGroup
-              label="Scope"
+              label={t('Scope')}
               options={scopes}
               value={scope}
               onChange={setScope}
@@ -314,29 +287,29 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
           <Collapse open={takesConstraint}>
             <div className={GROUP_GAP}>
               <ChipGroup
-                label="Constraint"
+                label={t('Constraint')}
                 options={constraints}
                 value={constraint}
                 onChange={setConstraint}
                 readOnly={!session.host}
                 isUnavailable={(id) => !isConstraintAvailable(format, key, id, size)}
                 unavailableHint={seatsHint}
-                note="One per draft — constraints don't stack."
+                note={t('One per draft — constraints don’t stack, and they are shared by the table.')}
                 delayMs={420}
               />
             </div>
           </Collapse>
 
-          {/* Auction only — see the note on `timers` in lobbyOptions. */}
-          <Collapse open={takesTimer}>
+          {/* Spin the Wheel only — see `wheels` in lobbyOptions. */}
+          <Collapse open={takesWheel}>
             <div className={GROUP_GAP}>
               <ChipGroup
-                label="Bid timer"
-                options={timers}
-                value={timer}
-                onChange={setTimer}
+                label={t('The wheel')}
+                options={wheels}
+                value={wheel}
+                onChange={setWheel}
                 readOnly={!session.host}
-                note="How long a lot can sit without a bid. Any bid sends it back to full."
+                note={t('What the wheel is cut into. Every spin uses the same one.')}
                 delayMs={500}
               />
             </div>
@@ -354,7 +327,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
             if (format) setRoomStatus(code, 'drafting')
           }}
         >
-          {session.host ? 'Kick off →' : 'Waiting for the host'}
+          {session.host ? t('Kick off →') : t('Waiting for the host')}
         </Button>
       }
     />
