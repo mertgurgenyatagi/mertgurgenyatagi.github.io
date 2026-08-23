@@ -62,7 +62,7 @@ import pyautogui
 import pyperclip
 from pynput import mouse
 
-CSV_PATH = Path(__file__).with_name("player_data.csv")
+CSV_PATH = Path(__file__).parent / "data" / "player_data.csv"
 
 # tbs: isz:lt,islt:6mp filters to images under 6MP, ift:jpg restricts the
 # file type to JPEG (Google's tbs token for that -- itp:photo would restrict
@@ -102,14 +102,14 @@ DOWN_INTERVAL = 0.04
 BEFORE_SAVE_ENTER = 0.04
 AFTER_SAVE_ENTER = 1.5
 AFTER_NAME_PASTE = 0.04
-AFTER_FINAL_ENTER = 0.3
+AFTER_FINAL_ENTER = 0.8
 
 TAB_COUNT = 5
 TAB_COUNT_TOPLEFT = 4      # used when the click lands in the region below
 TOPLEFT_MAX_X = 0.10       # left 10% of the screen width
 TOPLEFT_MAX_Y = 0.50       # top half of the screen height
 
-DOWN_PRESSES = 9
+DOWN_PRESSES = 10
 
 COUNTDOWN = 5  # seconds to go focus the browser before the loop starts
 

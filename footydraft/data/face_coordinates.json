@@ -4358,5 +4358,1181 @@
     "height": 967,
     "imageWidth": 4332,
     "imageHeight": 2437
+  },
+  "aaron-wan-bissaka": {
+    "x": 835,
+    "y": 276,
+    "width": 530,
+    "height": 530,
+    "imageWidth": 3000,
+    "imageHeight": 2220
+  },
+  "abde-ezzalzouli": {
+    "x": 1503,
+    "y": 195,
+    "width": 426,
+    "height": 426,
+    "imageWidth": 3632,
+    "imageHeight": 2043
+  },
+  "adam-wharton": {
+    "x": 1784,
+    "y": 294,
+    "width": 274,
+    "height": 274,
+    "imageWidth": 3000,
+    "imageHeight": 2302
+  },
+  "aitor-paredes": {
+    "x": 180,
+    "y": 35,
+    "width": 100,
+    "height": 100,
+    "imageWidth": 398,
+    "imageHeight": 502
+  },
+  "alan-varela": {
+    "x": 287,
+    "y": 34,
+    "width": 65,
+    "height": 65,
+    "imageWidth": 678,
+    "imageHeight": 452
+  },
+  "aleksandar-pavlovic": {
+    "x": 1946,
+    "y": 317,
+    "width": 556,
+    "height": 556,
+    "imageWidth": 5000,
+    "imageHeight": 2812
+  },
+  "amad-diallo": {
+    "x": 2387,
+    "y": 1059,
+    "width": 132,
+    "height": 132,
+    "imageWidth": 4696,
+    "imageHeight": 3128
+  },
+  "amadou-onana": {
+    "x": 766,
+    "y": 777,
+    "width": 559,
+    "height": 559,
+    "imageWidth": 4704,
+    "imageHeight": 3127
+  },
+  "anatoliy-trubin": {
+    "x": 2395,
+    "y": 354,
+    "width": 650,
+    "height": 650,
+    "imageWidth": 4500,
+    "imageHeight": 3000
+  },
+  "angelo-stiller": {
+    "x": 1610,
+    "y": 145,
+    "width": 215,
+    "height": 215,
+    "imageWidth": 3513,
+    "imageHeight": 1976
+  },
+  "anthony-elanga": {
+    "x": 1981,
+    "y": 82,
+    "width": 506,
+    "height": 506,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "antonio-nusa": {
+    "x": 2958,
+    "y": 465,
+    "width": 575,
+    "height": 575,
+    "imageWidth": 5439,
+    "imageHeight": 3063
+  },
+  "archie-gray": {
+    "x": 1285,
+    "y": 379,
+    "width": 383,
+    "height": 383,
+    "imageWidth": 3507,
+    "imageHeight": 2338
+  },
+  "arda-guler": {
+    "x": 2478,
+    "y": 481,
+    "width": 670,
+    "height": 670,
+    "imageWidth": 5606,
+    "imageHeight": 3737
+  },
+  "arthur-vermeeren": {
+    "x": 1643,
+    "y": 349,
+    "width": 300,
+    "height": 300,
+    "imageWidth": 3840,
+    "imageHeight": 2876
+  },
+  "ayyoub-bouaddi": {
+    "x": 2292,
+    "y": 438,
+    "width": 267,
+    "height": 267,
+    "imageWidth": 5362,
+    "imageHeight": 3575
+  },
+  "baris-alper-yilmaz": {
+    "x": 454,
+    "y": 1153,
+    "width": 847,
+    "height": 847,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "benat-prados": {
+    "x": 1516,
+    "y": 465,
+    "width": 234,
+    "height": 234,
+    "imageWidth": 4096,
+    "imageHeight": 2304
+  },
+  "benjamin-sesko": {
+    "x": 2562,
+    "y": 282,
+    "width": 633,
+    "height": 633,
+    "imageWidth": 4905,
+    "imageHeight": 3198
+  },
+  "brian-brobbey": {
+    "x": 2207,
+    "y": 230,
+    "width": 101,
+    "height": 101,
+    "imageWidth": 3587,
+    "imageHeight": 2018
+  },
+  "caglar-soyuncu": {
+    "x": 4035,
+    "y": 578,
+    "width": 216,
+    "height": 216,
+    "imageWidth": 6802,
+    "imageHeight": 4453
+  },
+  "can-uzun": {
+    "x": 1522,
+    "y": 93,
+    "width": 624,
+    "height": 624,
+    "imageWidth": 3822,
+    "imageHeight": 2150
+  },
+  "carlos-baleba": {
+    "x": 1622,
+    "y": 1763,
+    "width": 188,
+    "height": 188,
+    "imageWidth": 3556,
+    "imageHeight": 2555
+  },
+  "castello-lukeba": {
+    "x": 1874,
+    "y": 377,
+    "width": 628,
+    "height": 628,
+    "imageWidth": 4392,
+    "imageHeight": 2927
+  },
+  "claudio-echeverri": {
+    "x": 1326,
+    "y": 391,
+    "width": 293,
+    "height": 293,
+    "imageWidth": 2772,
+    "imageHeight": 3270
+  },
+  "conor-bradley": {
+    "x": 3940,
+    "y": 1717,
+    "width": 199,
+    "height": 199,
+    "imageWidth": 4345,
+    "imageHeight": 2897
+  },
+  "crysencio-summerville": {
+    "x": 3495,
+    "y": 1326,
+    "width": 308,
+    "height": 308,
+    "imageWidth": 4530,
+    "imageHeight": 2924
+  },
+  "davinson-sanchez": {
+    "x": 1735,
+    "y": 489,
+    "width": 467,
+    "height": 467,
+    "imageWidth": 3840,
+    "imageHeight": 2688
+  },
+  "desire-doue": {
+    "x": 2766,
+    "y": 568,
+    "width": 560,
+    "height": 560,
+    "imageWidth": 4656,
+    "imageHeight": 3104
+  },
+  "eliesse-ben-seghir": {
+    "x": 1466,
+    "y": 256,
+    "width": 393,
+    "height": 393,
+    "imageWidth": 3580,
+    "imageHeight": 2010
+  },
+  "elye-wahi": {
+    "x": 2408,
+    "y": 331,
+    "width": 523,
+    "height": 523,
+    "imageWidth": 3065,
+    "imageHeight": 2038
+  },
+  "endrick": {
+    "x": 1441,
+    "y": 186,
+    "width": 543,
+    "height": 543,
+    "imageWidth": 3500,
+    "imageHeight": 2267
+  },
+  "enzo-millot": {
+    "x": 2474,
+    "y": 392,
+    "width": 453,
+    "height": 453,
+    "imageWidth": 5316,
+    "imageHeight": 2990
+  },
+  "ernest-muci": {
+    "x": 1098,
+    "y": 2534,
+    "width": 337,
+    "height": 337,
+    "imageWidth": 2400,
+    "imageHeight": 3200
+  },
+  "estevao": {
+    "x": 2357,
+    "y": 2506,
+    "width": 117,
+    "height": 117,
+    "imageWidth": 4184,
+    "imageHeight": 2841
+  },
+  "ethan-nwaneri": {
+    "x": 1529,
+    "y": 213,
+    "width": 382,
+    "height": 382,
+    "imageWidth": 3500,
+    "imageHeight": 1969
+  },
+  "fermin-lopez": {
+    "x": 1689,
+    "y": 198,
+    "width": 609,
+    "height": 609,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "fran-garcia": {
+    "x": 4513,
+    "y": 1248,
+    "width": 609,
+    "height": 609,
+    "imageWidth": 6016,
+    "imageHeight": 4011
+  },
+  "francesco-camarda": {
+    "x": 1101,
+    "y": 360,
+    "width": 402,
+    "height": 402,
+    "imageWidth": 3000,
+    "imageHeight": 1999
+  },
+  "francisco-conceicao": {
+    "x": 1478,
+    "y": 447,
+    "width": 702,
+    "height": 702,
+    "imageWidth": 3840,
+    "imageHeight": 2560
+  },
+  "franco-mastantuono": {
+    "x": 1367,
+    "y": 139,
+    "width": 753,
+    "height": 753,
+    "imageWidth": 3648,
+    "imageHeight": 2052
+  },
+  "gabriel-sara": {
+    "x": 1432,
+    "y": 627,
+    "width": 246,
+    "height": 246,
+    "imageWidth": 3000,
+    "imageHeight": 2000
+  },
+  "george-ilenikhena": {
+    "x": 468,
+    "y": 511,
+    "width": 375,
+    "height": 375,
+    "imageWidth": 4261,
+    "imageHeight": 2946
+  },
+  "georginio-rutter": {
+    "x": 214,
+    "y": 1839,
+    "width": 185,
+    "height": 185,
+    "imageWidth": 3380,
+    "imageHeight": 2253
+  },
+  "geovany-quenda": {
+    "x": 280,
+    "y": 759,
+    "width": 262,
+    "height": 262,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "gerson": {
+    "x": 1615,
+    "y": 367,
+    "width": 513,
+    "height": 513,
+    "imageWidth": 4233,
+    "imageHeight": 2822
+  },
+  "gianluca-prestianni": {
+    "x": 194,
+    "y": 72,
+    "width": 74,
+    "height": 74,
+    "imageWidth": 465,
+    "imageHeight": 372
+  },
+  "giuliano-simeone": {
+    "x": 1601,
+    "y": 362,
+    "width": 371,
+    "height": 371,
+    "imageWidth": 3465,
+    "imageHeight": 2333
+  },
+  "guillaume-restes": {
+    "x": 1207,
+    "y": 1379,
+    "width": 382,
+    "height": 382,
+    "imageWidth": 3373,
+    "imageHeight": 2249
+  },
+  "hector-fort": {
+    "x": 509,
+    "y": 1093,
+    "width": 628,
+    "height": 628,
+    "imageWidth": 2946,
+    "imageHeight": 4417
+  },
+  "hiroki-ito": {
+    "x": 2052,
+    "y": 361,
+    "width": 763,
+    "height": 763,
+    "imageWidth": 5000,
+    "imageHeight": 2812
+  },
+  "hugo-ekitike": {
+    "x": 1374,
+    "y": 60,
+    "width": 869,
+    "height": 869,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "hugo-larsson": {
+    "x": 350,
+    "y": 49,
+    "width": 72,
+    "height": 72,
+    "imageWidth": 739,
+    "imageHeight": 415
+  },
+  "ian-maatsen": {
+    "x": 2145,
+    "y": 337,
+    "width": 348,
+    "height": 348,
+    "imageWidth": 4466,
+    "imageHeight": 3193
+  },
+  "igor-paixao": {
+    "x": 1801,
+    "y": 588,
+    "width": 263,
+    "height": 263,
+    "imageWidth": 3840,
+    "imageHeight": 2880
+  },
+  "inaki-pena": {
+    "x": 1884,
+    "y": 230,
+    "width": 498,
+    "height": 498,
+    "imageWidth": 4500,
+    "imageHeight": 3000
+  },
+  "inigo-martinez": {
+    "x": 1822,
+    "y": 643,
+    "width": 447,
+    "height": 447,
+    "imageWidth": 4096,
+    "imageHeight": 2794
+  },
+  "irfan-can-kahveci": {
+    "x": 1697,
+    "y": 176,
+    "width": 713,
+    "height": 713,
+    "imageWidth": 3906,
+    "imageHeight": 2605
+  },
+  "ismail-yuksek": {
+    "x": 286,
+    "y": 46,
+    "width": 78,
+    "height": 78,
+    "imageWidth": 678,
+    "imageHeight": 452
+  },
+  "jamie-gittens": {
+    "x": 2818,
+    "y": 2542,
+    "width": 934,
+    "height": 934,
+    "imageWidth": 6000,
+    "imageHeight": 4000
+  },
+  "jarell-quansah": {
+    "x": 2273,
+    "y": 774,
+    "width": 296,
+    "height": 296,
+    "imageWidth": 4356,
+    "imageHeight": 4095
+  },
+  "jarrad-branthwaite": {
+    "x": 2752,
+    "y": 764,
+    "width": 540,
+    "height": 540,
+    "imageWidth": 5472,
+    "imageHeight": 3648
+  },
+  "jayden-oosterwolde": {
+    "x": 1730,
+    "y": 929,
+    "width": 75,
+    "height": 75,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "jerdy-schouten": {
+    "x": 2316,
+    "y": 458,
+    "width": 638,
+    "height": 638,
+    "imageWidth": 3879,
+    "imageHeight": 2586
+  },
+  "jhon-duran": {
+    "x": 2137,
+    "y": 812,
+    "width": 117,
+    "height": 117,
+    "imageWidth": 4490,
+    "imageHeight": 2526
+  },
+  "joan-garcia": {
+    "x": 1679,
+    "y": 441,
+    "width": 648,
+    "height": 648,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "joao-neves": {
+    "x": 2031,
+    "y": 522,
+    "width": 266,
+    "height": 266,
+    "imageWidth": 4310,
+    "imageHeight": 2874
+  },
+  "joey-veerman": {
+    "x": 1538,
+    "y": 357,
+    "width": 458,
+    "height": 458,
+    "imageWidth": 3776,
+    "imageHeight": 2124
+  },
+  "johan-bakayoko": {
+    "x": 2347,
+    "y": 451,
+    "width": 678,
+    "height": 678,
+    "imageWidth": 5346,
+    "imageHeight": 3007
+  },
+  "jon-aramburu": {
+    "x": 2964,
+    "y": 1583,
+    "width": 198,
+    "height": 198,
+    "imageWidth": 3347,
+    "imageHeight": 4184
+  },
+  "jorrel-hato": {
+    "x": 1680,
+    "y": 200,
+    "width": 795,
+    "height": 795,
+    "imageWidth": 3536,
+    "imageHeight": 1989
+  },
+  "julien-duranville": {
+    "x": 2934,
+    "y": 1811,
+    "width": 263,
+    "height": 263,
+    "imageWidth": 4920,
+    "imageHeight": 2767
+  },
+  "karim-konate": {
+    "x": 274,
+    "y": 430,
+    "width": 423,
+    "height": 423,
+    "imageWidth": 999,
+    "imageHeight": 968
+  },
+  "kenan-yildiz": {
+    "x": 2093,
+    "y": 241,
+    "width": 502,
+    "height": 502,
+    "imageWidth": 4252,
+    "imageHeight": 2835
+  },
+  "kerem-akturkoglu": {
+    "x": 300,
+    "y": 52,
+    "width": 50,
+    "height": 50,
+    "imageWidth": 650,
+    "imageHeight": 344
+  },
+  "kiernan-dewsbury-hall": {
+    "x": 2177,
+    "y": 508,
+    "width": 697,
+    "height": 697,
+    "imageWidth": 5752,
+    "imageHeight": 3835
+  },
+  "kobbie-mainoo": {
+    "x": 1589,
+    "y": 405,
+    "width": 725,
+    "height": 725,
+    "imageWidth": 4688,
+    "imageHeight": 3126
+  },
+  "lamine-yamal": {
+    "x": 1672,
+    "y": 253,
+    "width": 577,
+    "height": 577,
+    "imageWidth": 3840,
+    "imageHeight": 2159
+  },
+  "leny-yoro": {
+    "x": 1508,
+    "y": 478,
+    "width": 634,
+    "height": 634,
+    "imageWidth": 3797,
+    "imageHeight": 2448
+  },
+  "lewis-hall": {
+    "x": 1381,
+    "y": 1101,
+    "width": 410,
+    "height": 410,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "lewis-miley": {
+    "x": 1786,
+    "y": 1049,
+    "width": 334,
+    "height": 334,
+    "imageWidth": 3446,
+    "imageHeight": 3413
+  },
+  "liam-delap": {
+    "x": 1448,
+    "y": 195,
+    "width": 471,
+    "height": 471,
+    "imageWidth": 3264,
+    "imageHeight": 1836
+  },
+  "lucas-beraldo": {
+    "x": 2006,
+    "y": 347,
+    "width": 460,
+    "height": 460,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "lucas-bergvall": {
+    "x": 1627,
+    "y": 291,
+    "width": 402,
+    "height": 402,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "lucas-chevalier": {
+    "x": 1520,
+    "y": 248,
+    "width": 454,
+    "height": 454,
+    "imageWidth": 3968,
+    "imageHeight": 2232
+  },
+  "luka-sucic": {
+    "x": 1756,
+    "y": 152,
+    "width": 348,
+    "height": 348,
+    "imageWidth": 4004,
+    "imageHeight": 2252
+  },
+  "magne-akliouche": {
+    "x": 2373,
+    "y": 267,
+    "width": 268,
+    "height": 268,
+    "imageWidth": 4928,
+    "imageHeight": 3286
+  },
+  "malick-fofana": {
+    "x": 634,
+    "y": 1350,
+    "width": 530,
+    "height": 530,
+    "imageWidth": 5838,
+    "imageHeight": 3892
+  },
+  "malik-tillman": {
+    "x": 1850,
+    "y": 193,
+    "width": 461,
+    "height": 461,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "malo-gusto": {
+    "x": 1243,
+    "y": 500,
+    "width": 465,
+    "height": 465,
+    "imageWidth": 2880,
+    "imageHeight": 4003
+  },
+  "manu-kone": {
+    "x": 1005,
+    "y": 196,
+    "width": 402,
+    "height": 402,
+    "imageWidth": 3000,
+    "imageHeight": 2004
+  },
+  "marc-bernal": {
+    "x": 1469,
+    "y": 257,
+    "width": 584,
+    "height": 584,
+    "imageWidth": 3600,
+    "imageHeight": 2025
+  },
+  "marc-casado": {
+    "x": 1689,
+    "y": 264,
+    "width": 248,
+    "height": 248,
+    "imageWidth": 3500,
+    "imageHeight": 2333
+  },
+  "marco-brescianini": {
+    "x": 702,
+    "y": 1435,
+    "width": 454,
+    "height": 454,
+    "imageWidth": 4000,
+    "imageHeight": 2666
+  },
+  "marco-carnesecchi": {
+    "x": 1409,
+    "y": 172,
+    "width": 434,
+    "height": 434,
+    "imageWidth": 3396,
+    "imageHeight": 2184
+  },
+  "mason-greenwood": {
+    "x": 181,
+    "y": 18,
+    "width": 66,
+    "height": 66,
+    "imageWidth": 387,
+    "imageHeight": 516
+  },
+  "mateo-retegui": {
+    "x": 1499,
+    "y": 247,
+    "width": 600,
+    "height": 600,
+    "imageWidth": 3462,
+    "imageHeight": 1947
+  },
+  "mathys-tel": {
+    "x": 1306,
+    "y": 729,
+    "width": 383,
+    "height": 383,
+    "imageWidth": 5469,
+    "imageHeight": 3646
+  },
+  "matias-soule": {
+    "x": 1792,
+    "y": 308,
+    "width": 522,
+    "height": 522,
+    "imageWidth": 4105,
+    "imageHeight": 2735
+  },
+  "max-kilman": {
+    "x": 2202,
+    "y": 283,
+    "width": 636,
+    "height": 636,
+    "imageWidth": 4986,
+    "imageHeight": 3324
+  },
+  "maximilian-beier": {
+    "x": 1547,
+    "y": 238,
+    "width": 669,
+    "height": 669,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "morgan-gibbs-white": {
+    "x": 1517,
+    "y": 292,
+    "width": 623,
+    "height": 623,
+    "imageWidth": 3840,
+    "imageHeight": 2559
+  },
+  "morgan-rogers": {
+    "x": 1769,
+    "y": 1260,
+    "width": 425,
+    "height": 425,
+    "imageWidth": 3000,
+    "imageHeight": 2034
+  },
+  "murillo": {
+    "x": 2558,
+    "y": 1476,
+    "width": 126,
+    "height": 126,
+    "imageWidth": 3936,
+    "imageHeight": 2624
+  },
+  "niccolo-pisilli": {
+    "x": 384,
+    "y": 1256,
+    "width": 286,
+    "height": 286,
+    "imageWidth": 3543,
+    "imageHeight": 2362
+  },
+  "niclas-fullkrug": {
+    "x": 1659,
+    "y": 426,
+    "width": 435,
+    "height": 435,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "nico-paz": {
+    "x": 3796,
+    "y": 740,
+    "width": 937,
+    "height": 937,
+    "imageWidth": 6325,
+    "imageHeight": 3954
+  },
+  "nicolo-savona": {
+    "x": 1944,
+    "y": 1083,
+    "width": 859,
+    "height": 859,
+    "imageWidth": 5678,
+    "imageHeight": 3785
+  },
+  "noni-madueke": {
+    "x": 446,
+    "y": 756,
+    "width": 147,
+    "height": 147,
+    "imageWidth": 3370,
+    "imageHeight": 2247
+  },
+  "omar-marmoush": {
+    "x": 1593,
+    "y": 128,
+    "width": 506,
+    "height": 506,
+    "imageWidth": 3645,
+    "imageHeight": 2050
+  },
+  "orkun-kokcu": {
+    "x": 137,
+    "y": 85,
+    "width": 109,
+    "height": 109,
+    "imageWidth": 447,
+    "imageHeight": 447
+  },
+  "oscar-bobb": {
+    "x": 1344,
+    "y": 341,
+    "width": 612,
+    "height": 612,
+    "imageWidth": 3376,
+    "imageHeight": 2251
+  },
+  "oscar-gloukh": {
+    "x": 1643,
+    "y": 257,
+    "width": 675,
+    "height": 675,
+    "imageWidth": 4069,
+    "imageHeight": 2713
+  },
+  "pablo-barrios": {
+    "x": 215,
+    "y": 39,
+    "width": 103,
+    "height": 103,
+    "imageWidth": 739,
+    "imageHeight": 415
+  },
+  "patrick-dorgu": {
+    "x": 1629,
+    "y": 241,
+    "width": 356,
+    "height": 356,
+    "imageWidth": 3156,
+    "imageHeight": 2211
+  },
+  "pau-cubarsi": {
+    "x": 1892,
+    "y": 518,
+    "width": 378,
+    "height": 378,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "paul-wanner": {
+    "x": 2170,
+    "y": 294,
+    "width": 321,
+    "height": 321,
+    "imageWidth": 5005,
+    "imageHeight": 2815
+  },
+  "pedro": {
+    "x": 1150,
+    "y": 276,
+    "width": 608,
+    "height": 608,
+    "imageWidth": 4000,
+    "imageHeight": 2667
+  },
+  "piero-hincapie": {
+    "x": 1551,
+    "y": 164,
+    "width": 285,
+    "height": 285,
+    "imageWidth": 3504,
+    "imageHeight": 1971
+  },
+  "quinten-timber": {
+    "x": 1258,
+    "y": 132,
+    "width": 732,
+    "height": 732,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "rafa-silva": {
+    "x": 220,
+    "y": 164,
+    "width": 68,
+    "height": 68,
+    "imageWidth": 600,
+    "imageHeight": 398
+  },
+  "raoul-bellanova": {
+    "x": 3121,
+    "y": 442,
+    "width": 904,
+    "height": 904,
+    "imageWidth": 7705,
+    "imageHeight": 5135
+  },
+  "raul-asencio": {
+    "x": 1596,
+    "y": 330,
+    "width": 160,
+    "height": 160,
+    "imageWidth": 3072,
+    "imageHeight": 2047
+  },
+  "rayan-cherki": {
+    "x": 2416,
+    "y": 469,
+    "width": 837,
+    "height": 837,
+    "imageWidth": 5866,
+    "imageHeight": 3911
+  },
+  "renato-veiga": {
+    "x": 1712,
+    "y": 233,
+    "width": 303,
+    "height": 303,
+    "imageWidth": 3524,
+    "imageHeight": 2902
+  },
+  "riccardo-calafiori": {
+    "x": 2018,
+    "y": 468,
+    "width": 434,
+    "height": 434,
+    "imageWidth": 5127,
+    "imageHeight": 3418
+  },
+  "rodrigo-mora": {
+    "x": 2307,
+    "y": 1012,
+    "width": 112,
+    "height": 112,
+    "imageWidth": 3953,
+    "imageHeight": 3784
+  },
+  "romeo-lavia": {
+    "x": 1512,
+    "y": 107,
+    "width": 576,
+    "height": 576,
+    "imageWidth": 3906,
+    "imageHeight": 2197
+  },
+  "samu-aghehowa": {
+    "x": 1893,
+    "y": 949,
+    "width": 122,
+    "height": 122,
+    "imageWidth": 3110,
+    "imageHeight": 2074
+  },
+  "samuel-lino": {
+    "x": 1473,
+    "y": 2605,
+    "width": 65,
+    "height": 65,
+    "imageWidth": 4950,
+    "imageHeight": 3333
+  },
+  "samuel-mbangula": {
+    "x": 1588,
+    "y": 2731,
+    "width": 51,
+    "height": 51,
+    "imageWidth": 4380,
+    "imageHeight": 3111
+  },
+  "semih-kilicsoy": {
+    "x": 723,
+    "y": 473,
+    "width": 474,
+    "height": 474,
+    "imageWidth": 2000,
+    "imageHeight": 3001
+  },
+  "senny-mayulu": {
+    "x": 2088,
+    "y": 468,
+    "width": 338,
+    "height": 338,
+    "imageWidth": 3644,
+    "imageHeight": 2429
+  },
+  "sofyan-amrabat": {
+    "x": 1552,
+    "y": 258,
+    "width": 690,
+    "height": 690,
+    "imageWidth": 3840,
+    "imageHeight": 2648
+  },
+  "thiago-almada": {
+    "x": 2805,
+    "y": 382,
+    "width": 349,
+    "height": 349,
+    "imageWidth": 4500,
+    "imageHeight": 3000
+  },
+  "thierno-barry": {
+    "x": 740,
+    "y": 1565,
+    "width": 181,
+    "height": 181,
+    "imageWidth": 3551,
+    "imageHeight": 2446
+  },
+  "tiago-santos": {
+    "x": 112,
+    "y": 51,
+    "width": 33,
+    "height": 33,
+    "imageWidth": 194,
+    "imageHeight": 259
+  },
+  "unai-gomez": {
+    "x": 2845,
+    "y": 1338,
+    "width": 170,
+    "height": 170,
+    "imageWidth": 5000,
+    "imageHeight": 3333
+  },
+  "vangelis-pavlidis": {
+    "x": 873,
+    "y": 56,
+    "width": 200,
+    "height": 200,
+    "imageWidth": 1920,
+    "imageHeight": 1080
+  },
+  "vasije-adzic": {
+    "x": 166,
+    "y": 68,
+    "width": 84,
+    "height": 84,
+    "imageWidth": 465,
+    "imageHeight": 372
+  },
+  "viktor-tsygankov": {
+    "x": 1918,
+    "y": 340,
+    "width": 533,
+    "height": 533,
+    "imageWidth": 4380,
+    "imageHeight": 2920
+  },
+  "waldemar-anton": {
+    "x": 1816,
+    "y": 187,
+    "width": 265,
+    "height": 265,
+    "imageWidth": 3632,
+    "imageHeight": 2043
+  },
+  "willian-pacho": {
+    "x": 1847,
+    "y": 225,
+    "width": 297,
+    "height": 297,
+    "imageWidth": 3840,
+    "imageHeight": 2160
+  },
+  "yann-bisseck": {
+    "x": 1327,
+    "y": 1468,
+    "width": 401,
+    "height": 401,
+    "imageWidth": 4452,
+    "imageHeight": 3150
+  },
+  "yaser-asprilla": {
+    "x": 308,
+    "y": 33,
+    "width": 114,
+    "height": 114,
+    "imageWidth": 757,
+    "imageHeight": 416
+  },
+  "yasin-ayari": {
+    "x": 2681,
+    "y": 1584,
+    "width": 699,
+    "height": 699,
+    "imageWidth": 5660,
+    "imageHeight": 3773
+  },
+  "yunus-akgun": {
+    "x": 1562,
+    "y": 157,
+    "width": 425,
+    "height": 425,
+    "imageWidth": 3840,
+    "imageHeight": 2160
   }
 }
