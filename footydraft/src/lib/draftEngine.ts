@@ -7,7 +7,7 @@ export interface Drafter {
   id: string
   /** Set in Oswald, uppercase, on the strip and on the board tabs. */
   name: string
-  kind: 'you' | 'human'
+  kind: 'you' | 'human' | 'bot'
   mark: string
 }
 

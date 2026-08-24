@@ -48,12 +48,23 @@ describe('SoloLobby', () => {
     expect(constraint.closest('[inert]')).toBeNull()
   })
 
-  it('seats just you, with nothing to add or remove', () => {
+  it('allows adding and removing bots', async () => {
+    const user = userEvent.setup()
     renderLobby('/solo/auction')
 
     expect(screen.getByText('1 / 5 seats')).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /add a bot/i })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
+    
+    const addBotBtn = screen.getByRole('button', { name: /add a bot/i })
+    expect(addBotBtn).toBeInTheDocument()
+    
+    await user.click(addBotBtn)
+    expect(screen.getByText('2 / 5 seats')).toBeInTheDocument()
+    
+    const removeBtn = screen.getByRole('button', { name: 'Remove' })
+    expect(removeBtn).toBeInTheDocument()
+    
+    await user.click(removeBtn)
+    expect(screen.getByText('1 / 5 seats')).toBeInTheDocument()
   })
 
   it('kicks off into the draft it was configured for', async () => {

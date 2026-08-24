@@ -442,6 +442,47 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const actionLabel =
     canDraft && selected ? t('Draft {name} →', { name: selected.surname }) : t('Draft →')
 
+  /* ------------------------------------------------------------- bot logic --- */
+  const botArmedFor = useRef(-1)
+  useEffect(() => {
+    if (complete || !isHost || scoped.length === 0) return
+    if (drafters[activeSeat]?.kind !== 'bot') return
+    if (botArmedFor.current === overall) return
+    
+    botArmedFor.current = overall
+    
+    const runBot = async () => {
+      const { encodeContext, encodeCandidates, CONTEXT_LEN, CANDIDATE_FEATURE_LEN } = await import('../lib/bot/encoders')
+      const { evaluateCandidateScorer, botDelay } = await import('../lib/bot/inference')
+      const { isEligible } = await import('../lib/draftEngine')
+      
+      const squad = squads[activeSeat]
+      const eligible = scoped.filter(p => isEligible(p, squad, constraint, taken, spend))
+      if (eligible.length === 0) return // Dead end, engine skips or stalls
+      
+      const context = encodeContext(activeSeat, squads, seatCount, overall, totalPicks, constraint)
+      const candidates = encodeCandidates(eligible, constraint, spend)
+      
+      const actionIdx = await evaluateCandidateScorer(
+        'free_pick',
+        context,
+        CONTEXT_LEN,
+        candidates,
+        CANDIDATE_FEATURE_LEN,
+        eligible.length
+      )
+      
+      await botDelay()
+      
+      const chosenPlayer = eligible[actionIdx]
+      if (chosenPlayer) {
+        commit(activeSeat, () => chosenPlayer)
+      }
+    }
+    
+    runBot().catch(console.error)
+  }, [complete, activeSeat, isHost, drafters, overall, scoped, squads, seatCount, totalPicks, constraint, taken, spend, commit])
+
   /* -------------------------------------------------------------- spent --- */
 
   /* **The whole table's, not only yours.** A shared constraint is spent by

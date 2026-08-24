@@ -3,7 +3,7 @@ import { useI18n } from '../../lib/i18n'
 
 export interface Seat {
   id: string
-  kind: 'you' | 'human'
+  kind: 'you' | 'human' | 'bot'
   /** Set in Oswald, uppercase, on the row. */
   name: string
   /** One or two characters in the disc. A letter for people. */

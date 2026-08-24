@@ -425,6 +425,45 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
       ? (formation.find((slot) => slot.id === slotFor(selected, yourSquad)) ?? null)
       : null
 
+  /* ------------------------------------------------------------- bot logic --- */
+  const botArmedFor = useRef(-1)
+  useEffect(() => {
+    if (complete || !isHost || !settled || !ready) return
+    if (drafters[activeSeat]?.kind !== 'bot') return
+    if (botArmedFor.current === overall) return
+    
+    botArmedFor.current = overall
+    
+    const runBot = async () => {
+      const { encodeContext, encodeCandidates, CONTEXT_LEN, CANDIDATE_FEATURE_LEN } = await import('../lib/bot/encoders')
+      const { evaluateCandidateScorer, botDelay } = await import('../lib/bot/inference')
+      
+      const eligible = rows // rows are already filtered by the landed entity and eligibility in SpinDraft!
+      if (eligible.length === 0) return // Engine skips or stalls
+      
+      const context = encodeContext(activeSeat, squads, seatCount, overall, totalPicks, 'none')
+      const candidates = encodeCandidates(eligible, 'none', null) // Spin doesn't use table constraints
+      
+      const actionIdx = await evaluateCandidateScorer(
+        'spin_wheel',
+        context,
+        CONTEXT_LEN,
+        candidates,
+        CANDIDATE_FEATURE_LEN,
+        eligible.length
+      )
+      
+      await botDelay()
+      
+      const chosenPlayer = eligible[actionIdx]
+      if (chosenPlayer) {
+        commit(activeSeat, () => chosenPlayer)
+      }
+    }
+    
+    runBot().catch(console.error)
+  }, [complete, isHost, settled, ready, activeSeat, drafters, overall, squads, seatCount, totalPicks, rows, commit])
+
   /* ---------------------------------------------------------------- copy ---- */
 
   const status: { text: string; tone: NarratorTone } = complete

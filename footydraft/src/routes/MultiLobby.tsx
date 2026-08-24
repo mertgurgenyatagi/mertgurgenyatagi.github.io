@@ -154,10 +154,39 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
         kind: d.kind as any,
         name: d.name,
         mark: d.mark,
-        note: d.online ? 'At the table' : 'Offline',
-        tag: id === uid ? 'You' : undefined
+        note: d.kind === 'bot' ? 'AI agent' : (id === uid ? 'You' : (d.online ? 'At the table' : 'Offline')),
+        tag: id === uid ? 'You' : (d.kind === 'bot' ? 'Bot' : undefined)
       })
     })
+  }
+
+  const isHost = hostUid === uid
+
+  const addBot = async () => {
+    if (!isHost || seats.length >= MAX_SEATS) return
+    const { ref, set } = await import('firebase/database')
+    const { database } = await import('../lib/firebase')
+    const botNum = seats.filter(s => s.kind === 'bot').length + 1
+    const botId = `bot-${Date.now()}`
+    const botRef = ref(database, `rooms/${code}/drafters/${botId}`)
+    await set(botRef, {
+      id: botId,
+      kind: 'bot',
+      name: t(`Bot ${botNum}`),
+      mark: 'B',
+      online: true,
+      offlineAt: null
+    })
+  }
+
+  const removeBot = async () => {
+    if (!isHost) return
+    const botSeats = seats.filter(s => s.kind === 'bot')
+    if (botSeats.length === 0) return
+    const lastBot = botSeats[botSeats.length - 1]
+    const { ref, remove } = await import('firebase/database')
+    const { database } = await import('../lib/firebase')
+    await remove(ref(database, `rooms/${code}/drafters/${lastBot.id}`))
   }
 
   const setConfig = (updates: Partial<DraftConfig>) => {
@@ -215,12 +244,26 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
       seatCountLabel={t('{n} / {max} seats', { n: seats.length, max: MAX_SEATS })}
       seatCountKey={seats.length}
       leftHeaderContent={
-        <>
-          <h1 id="room-heading" className="sr-only">
-            {t('Lobby {code}', { code })}
-          </h1>
-          <RoomCode code={code} />
-        </>
+        <div className="flex items-center justify-between mt-[clamp(0.4rem,1.6vh,1rem)] fx fx-soft" style={{ animationDelay: '140ms' }}>
+          <div className="flex items-center gap-4">
+            <h1 id="room-heading" className="sr-only">
+              {t('Lobby {code}', { code })}
+            </h1>
+            <RoomCode code={code} />
+          </div>
+          {isHost && (
+            <div className="flex gap-2">
+              {seats.filter(s => s.kind === 'bot').length > 0 && (
+                <Button variant="surface" onClick={removeBot} aria-label="Remove">
+                  -
+                </Button>
+              )}
+              <Button variant="surface" onClick={addBot} disabled={seats.length >= MAX_SEATS}>
+                {t("Add a bot")}
+              </Button>
+            </div>
+          )}
+        </div>
       }
       seatList={<SeatList seats={seats} />}
       leftFooterContent={

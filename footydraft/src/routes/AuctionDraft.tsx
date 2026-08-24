@@ -60,7 +60,7 @@ const RESULT_HOLD = 1900
  * footballer and at what they are being held at before deciding, which is the
  * only decision this format has.
  */
-const LOCKOUT_MS = 3000
+const LOCKOUT_MS = 500
 
 type Phase = 'live' | 'sold' | 'unsold'
 
@@ -316,10 +316,10 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
    * of post-draft editing under a hard position gate.
    */
   const swapIn = useCallback(
-    (player: Player) => {
+    (seat: number, player: Player) => {
       setBoard((previous) => {
         const squad: Squad = {}
-        for (const pick of previous.picks) if (pick.seat === youSeat) squad[pick.slot] = pick.player
+        for (const pick of previous.picks) if (pick.seat === seat) squad[pick.slot] = pick.player
 
         const open = formation.find(
           (slot) => slot.position === player.position && !squad[slot.id],
@@ -329,14 +329,14 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
 
         const occupant = squad[target.id] ?? null
         const picks = previous.picks.filter(
-          (pick) => !(pick.seat === youSeat && pick.slot === target.id),
+          (pick) => !(pick.seat === seat && pick.slot === target.id),
         )
-        picks.push({ overall: picks.length, seat: youSeat, slot: target.id, player })
+        picks.push({ overall: picks.length, seat, slot: target.id, player })
 
         return {
           picks,
           spare: previous.spare.map((list, at) =>
-            at === youSeat
+            at === seat
               ? [...list.filter((entry) => entry.id !== player.id), ...(occupant ? [occupant] : [])]
               : list,
           ),
@@ -344,7 +344,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       })
       setLastArrival(player.id)
     },
-    [youSeat],
+    [],
   )
 
   /* ------------------------------------------------------------- the block -- */
@@ -562,6 +562,135 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
     })
   }, [finished, seatCount])
 
+  /* ------------------------------------------------------------- bot bidding --- */
+  const botBiddingLocks = useRef<Record<number, boolean>>({})
+  
+  useEffect(() => {
+    if (!block || block.phase !== 'live' || !isHost) {
+      botBiddingLocks.current = {}
+      return
+    }
+
+    const runBotBid = async (seat: number) => {
+      if (botBiddingLocks.current[seat]) return
+      botBiddingLocks.current[seat] = true
+
+      try {
+        const { botDelay, evaluateDiscreteHead } = await import('../lib/bot/inference')
+        const { encodeBiddingContext, BIDDING_OBS_LEN } = await import('../lib/bot/encoders')
+        
+        await botDelay()
+        
+        // Re-read current state after delay
+        // We use the live refs so we don't act on stale state
+        // We can't access state from the future easily without a ref, but `block` from closure might be slightly stale if another bid landed.
+        // Actually it's better to just proceed with the closure state; if it's invalid, applyBid will ignore it.
+        
+        const legalActionMask = [
+          true, // PASS
+          block.holder === null, // OPEN_OR_MIN (only if no holder)
+          block.holder !== null && (block.price + 5) <= budgets[seat], // PLUS_5 (wait, BID_STEPS are 5, 10, 25)
+          block.holder !== null && (block.price + 10) <= budgets[seat], // PLUS_10
+          true // HOLD
+        ]
+        
+        // The discrete head output maps to: 0=PASS, 1=OPEN_OR_MIN, 2=PLUS_10, 3=PLUS_25, 4=HOLD
+        // Actually, Python env maps them as:
+        // PASS, OPEN_OR_MIN, PLUS_10, PLUS_25, HOLD = range(5)
+        // Let's accurately set the mask based on env_auction.py
+        legalActionMask[0] = true
+        legalActionMask[1] = block.holder === null && block.lot.opening <= budgets[seat]
+        legalActionMask[2] = block.holder !== null && (block.price + 10) <= budgets[seat]
+        legalActionMask[3] = block.holder !== null && (block.price + 25) <= budgets[seat]
+        legalActionMask[4] = true // HOLD
+        
+        const context = encodeBiddingContext(
+          seat, squads, seatCount, cursor, lots.length,
+          block.lot.player, block.lot.opening, block.price,
+          block.holder, block.out.length, armed, budgets
+        )
+        
+        const actionIdx = await evaluateDiscreteHead('auction_bid', context, BIDDING_OBS_LEN, legalActionMask)
+        
+        if (actionIdx === 0) applyPass(seat)
+        else if (actionIdx === 1) applyBid(seat, 0)
+        else if (actionIdx === 2) applyBid(seat, 10)
+        else if (actionIdx === 3) applyBid(seat, 25)
+        // If 4 (HOLD), do nothing
+        
+      } catch (e) {
+        console.error(e)
+      } finally {
+        botBiddingLocks.current[seat] = false
+      }
+    }
+
+    drafters.forEach((d, seat) => {
+      if (d.kind === 'bot' && !block.out.includes(seat) && block.holder !== seat) {
+        runBotBid(seat)
+      }
+    })
+  }, [block, isHost, cursor, lots.length, squads, seatCount, armed, budgets, applyBid, applyPass, drafters])
+
+  /* ------------------------------------------------------------- bot swapping --- */
+  const botSwapLocks = useRef<Record<number, boolean>>({})
+  
+  useEffect(() => {
+    if (!finished || block || !isHost) return
+
+    const runBotSwap = async (seat: number) => {
+      if (botSwapLocks.current[seat]) return
+      botSwapLocks.current[seat] = true
+
+      try {
+        const spare = board.spare[seat] || []
+        if (spare.length === 0) return // Done
+
+        const { evaluateCandidateScorer, botDelay } = await import('../lib/bot/inference')
+        const { encodeContext, encodeCandidates, CONTEXT_LEN, CANDIDATE_FEATURE_LEN } = await import('../lib/bot/encoders')
+        
+        await botDelay()
+        
+        const context = encodeContext(seat, squads, seatCount, lots.length, lots.length, null)
+        const candFeatures = encodeCandidates(spare, null, null)
+        
+        // Append all-zero vector for "PASS"
+        const finalCandFeatures = new Float32Array(candFeatures.length + CANDIDATE_FEATURE_LEN)
+        finalCandFeatures.set(candFeatures, 0) // zero-filled at the end automatically
+        
+        const actionIdx = await evaluateCandidateScorer(
+          'auction_swap',
+          context,
+          CONTEXT_LEN,
+          finalCandFeatures,
+          CANDIDATE_FEATURE_LEN,
+          spare.length + 1
+        )
+        
+        if (actionIdx === spare.length) {
+          // Passed, bot is happy with squad
+          return
+        }
+        
+        const chosen = spare[actionIdx]
+        if (chosen) swapIn(seat, chosen)
+        
+      } catch (e) {
+        console.error(e)
+      } finally {
+        // We unlock so the effect can re-run and evaluate the next swap, but we need
+        // a small delay to avoid React render cycles locking up immediately.
+        setTimeout(() => { botSwapLocks.current[seat] = false }, 100)
+      }
+    }
+
+    drafters.forEach((d, seat) => {
+      if (d.kind === 'bot' && (board.spare[seat] || []).length > 0) {
+        runBotSwap(seat)
+      }
+    })
+  }, [finished, block, isHost, board.spare, squads, seatCount, lots.length, swapIn, drafters])
+
   /* --------------------------------------------------------------- render --- */
 
   const you = drafters[youSeat]
@@ -734,7 +863,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
                   <li key={player.id}>
                     <button
                       type="button"
-                      onClick={() => swapIn(player)}
+                      onClick={() => swapIn(youSeat, player)}
                       title={player.name}
                       className="grid h-[34px] w-[34px] place-items-center overflow-hidden rounded-full border border-line-strong bg-surface-2 transition-colors duration-150 ease-out hover:border-accent"
                     >

@@ -481,6 +481,88 @@ export function DondDraft({ config }: { config: DraftConfig }) {
     [advance, keepFor, report, writeRound, drafters, youSeat, t],
   )
 
+  /* ------------------------------------------------------------- bot logic --- */
+  const botStateKey = roundRef.current
+    ? `${roundRef.current.index}:${roundRef.current.cursor}:${roundRef.current.step}:${roundRef.current.openedIndex}`
+    : ''
+    
+  useEffect(() => {
+    const state = roundRef.current
+    if (!state || state.step === 'done' || !isHost) return
+    const activeSeat = activeSeatOf(state)
+    if (activeSeat < 0 || drafters[activeSeat]?.kind !== 'bot') return
+    
+    // Use the step and cursor as a dependency block so the effect only runs once per state
+    const runBot = async () => {
+      const { evaluateDiscreteHead, botDelay } = await import('../lib/bot/inference')
+      const { encodeDondContext, DOND_OBS_LEN } = await import('../lib/bot/encoders')
+      
+      await botDelay()
+      
+      // Re-read state in case it changed during delay
+      const currentState = roundRef.current
+      if (!currentState || activeSeatOf(currentState) !== activeSeat || currentState.step !== state.step) return
+
+      if (currentState.step === 'choosing') {
+        const firstSealed = currentState.boxes.findIndex(b => b.openedBy === null)
+        if (firstSealed >= 0) commit(activeSeat, { type: 'openBox', index: firstSealed })
+        return
+      }
+
+      if (currentState.step === 'deciding' || currentState.step === 'weighing') {
+        let originalPlayer: Player | null = null
+        let currentPlayer: Player | null = null
+        let stage: 'opening' | 'offer' = 'opening'
+        const numSealed = currentState.boxes.filter(b => b.openedBy === null).length
+        
+        const legalActionMask = [false, false, false, false]
+        
+        if (currentState.step === 'deciding') {
+          stage = 'opening'
+          if (currentState.openedIndex === null) return
+          const box = currentState.boxes[currentState.openedIndex]
+          if (!box) return
+          originalPlayer = box.player
+          currentPlayer = box.player
+          legalActionMask[0] = true // STICK
+          legalActionMask[1] = true // HEAR_OFFER
+        } else if (currentState.step === 'weighing') {
+          stage = 'offer'
+          if (currentState.openedIndex === null) return
+          const box = currentState.boxes[currentState.openedIndex]
+          const offer = currentState.offers[activeSeat]
+          if (!box || !offer) return
+          originalPlayer = box.player
+          currentPlayer = offer
+          legalActionMask[2] = true // TAKE_OFFER
+          legalActionMask[3] = numSealed > 0 // GO_BACK
+        }
+        
+        if (!originalPlayer || !currentPlayer) return
+        
+        const context = encodeDondContext(
+          activeSeat, squads, seatCount,
+          picks.length, 11 * seatCount,
+          stage,
+          plan[currentState.index - 1].position,
+          originalPlayer,
+          currentPlayer,
+          numSealed,
+          currentState.index
+        )
+        
+        const actionIdx = await evaluateDiscreteHead('deal_or_no_deal', context, DOND_OBS_LEN, legalActionMask)
+        
+        if (actionIdx === 0) commit(activeSeat, { type: 'stick' })
+        else if (actionIdx === 1) commit(activeSeat, { type: 'hearOffer' })
+        else if (actionIdx === 2) commit(activeSeat, { type: 'takeOffer' })
+        else if (actionIdx === 3) commit(activeSeat, { type: 'backToBoxes' })
+      }
+    }
+    
+    runBot().catch(console.error)
+  }, [botStateKey, isHost, drafters, commit, squads, seatCount, picks.length])
+
   /**
    * What *you* do. In multiplayer everything but the host's own move is a
    * message to the host, which is what keeps one machine authoritative.

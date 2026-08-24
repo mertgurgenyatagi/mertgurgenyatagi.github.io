@@ -23,7 +23,7 @@ export const LOTS_PER_DRAFTER = 15
  * a courtesy to a slow drafter: with no turns, it is the only thing that ends
  * a lot, so there was never a coherent "off" for it to have.
  */
-export const AUCTION_BID_SECONDS = 15
+export const AUCTION_BID_SECONDS = 7
 
 /** Flat, stepped, and live at every price point — they don't scale with price. */
 export const BID_STEPS = [5, 10, 25] as const

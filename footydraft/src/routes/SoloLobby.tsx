@@ -69,6 +69,8 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
   const say = (message: Omit<Message, 'id'>) =>
     setMessages((current) => [...current, { ...message, id: messageId.current++ }])
 
+  const [bots, setBots] = useState<Seat[]>([])
+
   const seats: Seat[] = [
     {
       id: 'you',
@@ -78,7 +80,26 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
       note: 'Host — sets the draft on the right',
       tag: 'Seat 1',
     },
+    ...bots
   ]
+
+  const addBot = () => {
+    if (seats.length >= MAX_SEATS) return
+    const botId = `bot-${bots.length + 1}`
+    setBots([...bots, {
+      id: botId,
+      kind: 'bot',
+      name: t(`Bot ${bots.length + 1}`),
+      mark: 'B',
+      note: 'AI agent',
+      tag: `Seat ${seats.length + 1}`
+    }])
+  }
+
+  const removeBot = () => {
+    if (bots.length === 0) return
+    setBots(bots.slice(0, -1))
+  }
 
   /** Constraints exist for Free Pick and are not offered anywhere else. */
   const takesConstraint = format === 'free-pick'
@@ -111,11 +132,24 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
       seatCountLabel={t('{n} / {max} seats', { n: seats.length, max: MAX_SEATS })}
       seatCountKey={seats.length}
       leftHeaderContent={
-        <h1
-          id="table-heading"
-          className="fx fx-soft mt-[clamp(0.4rem,1.6vh,1rem)] hidden font-display text-[clamp(1.6rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-[0.02em] md:block"
-          style={{ animationDelay: '140ms' }}
-        >{t("Your table")}</h1>
+        <div className="flex items-center justify-between mt-[clamp(0.4rem,1.6vh,1rem)] fx fx-soft" style={{ animationDelay: '140ms' }}>
+          <h1
+            id="table-heading"
+            className="hidden font-display text-[clamp(1.6rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-[0.02em] md:block"
+          >
+            {t("Your table")}
+          </h1>
+          <div className="flex gap-2">
+            {bots.length > 0 && (
+              <Button variant="surface" onClick={removeBot} aria-label="Remove">
+                -
+              </Button>
+            )}
+            <Button variant="surface" onClick={addBot} disabled={seats.length >= MAX_SEATS}>
+              {t("Add a bot")}
+            </Button>
+          </div>
+        </div>
       }
       seatList={<SeatList seats={seats} />}
       leftFooterContent={
