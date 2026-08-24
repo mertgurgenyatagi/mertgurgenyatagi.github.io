@@ -581,43 +581,51 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         
         await botDelay()
         
-        // Re-read current state after delay
-        // We use the live refs so we don't act on stale state
-        // We can't access state from the future easily without a ref, but `block` from closure might be slightly stale if another bid landed.
-        // Actually it's better to just proceed with the closure state; if it's invalid, applyBid will ignore it.
-        
+        const currentBlock = live.current.block
+        if (!currentBlock || currentBlock.phase !== 'live') return
+        if (currentBlock.holder === seat || currentBlock.out.includes(seat)) return
+
+        const budget = live.current.budgets[seat] ?? 0
+        const isLockedOut = !live.current.armed
+
+        // In footydraft_sim/env_auction.py:
+        // 0: PASS, 1: WAIT, 2: RAISE5, 3: RAISE10, 4: RAISE25
         const legalActionMask = [
-          true, // PASS
-          block.holder === null, // OPEN_OR_MIN (only if no holder)
-          block.holder !== null && (block.price + 5) <= budgets[seat], // PLUS_5 (wait, BID_STEPS are 5, 10, 25)
-          block.holder !== null && (block.price + 10) <= budgets[seat], // PLUS_10
-          true // HOLD
+          true, // 0: PASS
+          true, // 1: WAIT
+          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 5) <= budget), // 2: RAISE5
+          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 10) <= budget), // 3: RAISE10
+          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 25) <= budget), // 4: RAISE25
         ]
         
-        // The discrete head output maps to: 0=PASS, 1=OPEN_OR_MIN, 2=PLUS_10, 3=PLUS_25, 4=HOLD
-        // Actually, Python env maps them as:
-        // PASS, OPEN_OR_MIN, PLUS_10, PLUS_25, HOLD = range(5)
-        // Let's accurately set the mask based on env_auction.py
-        legalActionMask[0] = true
-        legalActionMask[1] = block.holder === null && block.lot.opening <= budgets[seat]
-        legalActionMask[2] = block.holder !== null && (block.price + 10) <= budgets[seat]
-        legalActionMask[3] = block.holder !== null && (block.price + 25) <= budgets[seat]
-        legalActionMask[4] = true // HOLD
-        
         const context = encodeBiddingContext(
-          seat, squads, seatCount, cursor, lots.length,
-          block.lot.player, block.lot.opening, block.price,
-          block.holder, block.out.length, armed, budgets
+          seat,
+          live.current.squads,
+          seatCount,
+          cursor,
+          lots.length,
+          currentBlock.lot.player,
+          currentBlock.lot.opening,
+          currentBlock.price,
+          currentBlock.holder,
+          currentBlock.out.length,
+          isLockedOut,
+          live.current.budgets
         )
         
         const actionIdx = await evaluateDiscreteHead('auction_bid', context, BIDDING_OBS_LEN, legalActionMask)
         
-        if (actionIdx === 0) applyPass(seat)
-        else if (actionIdx === 1) applyBid(seat, 0)
-        else if (actionIdx === 2) applyBid(seat, 10)
-        else if (actionIdx === 3) applyBid(seat, 25)
-        // If 4 (HOLD), do nothing
-        
+        if (actionIdx === 0) {
+          applyPass(seat)
+        } else if (actionIdx === 1) {
+          // WAIT: do nothing
+        } else if (actionIdx === 2) {
+          applyBid(seat, 5)
+        } else if (actionIdx === 3) {
+          applyBid(seat, 10)
+        } else if (actionIdx === 4) {
+          applyBid(seat, 25)
+        }
       } catch (e) {
         console.error(e)
       } finally {
@@ -630,7 +638,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         runBotBid(seat)
       }
     })
-  }, [block, isHost, cursor, lots.length, squads, seatCount, armed, budgets, applyBid, applyPass, drafters])
+  }, [block, clock.left, isHost, cursor, lots.length, seatCount, armed, applyBid, applyPass, drafters])
 
   /* ------------------------------------------------------------- bot swapping --- */
   const botSwapLocks = useRef<Record<number, boolean>>({})

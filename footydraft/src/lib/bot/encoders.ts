@@ -1,10 +1,14 @@
-import { positionCodes as POSITION_CODES } from '../../data/formation'
 import { MAX_SEATS } from '../../data/lobbyOptions'
 import type { Player } from '../players'
 import type { Squad, TableSpend } from '../draftEngine'
-import { formation, type SlotId } from '../../data/formation'
+import { formation, type SlotId, type PositionCode } from '../../data/formation'
 
-// Compute SLOTS_FOR_POSITION locally since formation.ts doesn't export it
+// The exact order used during PyTorch RL training in footydraft_sim/formation.py
+export const POSITION_CODES: PositionCode[] = [
+  'GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'AMF', 'LW', 'RW', 'ST'
+]
+
+// Slot ids matching a given position, in formation order
 const SLOTS_FOR_POSITION: Record<string, SlotId[]> = {}
 for (const pc of POSITION_CODES) {
   SLOTS_FOR_POSITION[pc] = formation.filter(s => s.position === pc).map(s => s.id)
@@ -139,7 +143,7 @@ export function encodeDondContext(
   return features
 }
 
-export const BIDDING_OBS_LEN = CONTEXT_LEN + CANDIDATE_FEATURE_LEN + 13
+export const BIDDING_OBS_LEN = CONTEXT_LEN + CANDIDATE_FEATURE_LEN + 11
 const BUDGET_SCALE = 2000.0
 export function encodeBiddingContext(
   seat: number,
