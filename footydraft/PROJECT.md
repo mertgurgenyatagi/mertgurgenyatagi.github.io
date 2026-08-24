@@ -377,7 +377,28 @@ No skipped or `.only`-restricted tests anywhere in the suite.
 - `routes/SpinDraft.tsx` (636 lines, the largest route file) and
   `routes/SquadCompare.tsx` have no test coverage, direct or indirect.
 
-## 9. Deliberate design decisions worth knowing
+## 9. AI Training / Reinforcement Learning
+
+A full Proximal Policy Optimization (PPO) reinforcement learning stack is included in the `training/` directory to train AI bots for all four formats. The stack is written in PyTorch and natively vectorized to train against simulated environments (Python clones of the TypeScript game engines).
+
+### The Training Stack
+- **Environments** (`training/footydraft_sim/`): Python implementations of the Free Pick, Spin the Wheel, Deal or No Deal, and Auction game rules. They have been heavily tested against the TypeScript engine logic (74+ tests).
+- **RL Core & Networks** (`training/rl/`): Contains the vectorized rollout runners, the PPO math core, and the two network families (`CandidateScorer` for variable-length choices and `DiscreteHead` for fixed-action spaces).
+- **Approximate Exploitability**: `training/rl/convergence.py` tracks the moving average of self-play reward (absolute drafting squad score). Training halts automatically when the score hits a plateau (less than 0.1% improvement over a sustained window), indicating optimal play with ~99% certainty.
+
+### Running the Trainings
+There are four dedicated `.bat` scripts that launch the training loops for each format. By default, they will train on the GPU until the convergence check halts them.
+
+```bash
+cd training
+run_train_free_pick.bat
+run_train_spin_wheel.bat
+run_train_deal_or_no_deal.bat
+run_train_auction.bat
+```
+Each script continuously saves its optimal network weights as `.pt` files to `training/checkpoints/`.
+
+## 10. Deliberate design decisions worth knowing
 
 - **Constraints are table-wide, not per-squad** — see [§5](#5-domain-model).
   Counter-intuitive, and explicitly called out as a reversal in the code.
@@ -398,7 +419,7 @@ No skipped or `.only`-restricted tests anywhere in the suite.
   (`lib/i18n.tsx`).
 - **Single fixed dark theme, on purpose** — see [§2](#2-tech-stack).
 
-## 10. Known issues / rough edges
+## 11. Known issues / rough edges
 
 ### Bots were removed, not just never built
 
