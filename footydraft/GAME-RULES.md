@@ -55,26 +55,11 @@ never finish incomplete."* This is **false as of the current tree**. Verified:
   prose in §5 as unreliable for Free Pick specifically; treat this document's
   §4 below as canonical.**
 
-### 0.2 Solo mode is genuinely single-player, not "vs bots"
+### 0.2 Solo mode includes bots
 
-Bots (`Drafter.kind === 'bot'`, `botChoice()`, `useHostBotTakeover`, a trained
-auction policy model) were fully removed in commit `87f42af` ("Purge
-footydraft: strip dev cruft and remove bots entirely"), the commit
-immediately preceding PROJECT.md's own addition. `SoloLobby.tsx` seats
-**exactly one** `Seat` (`id: 'you'`) — `seats: Seat[] = [{ id: 'you', ... }]`,
-hardcoded, no fill logic. That single-element array is passed as
-`drafters` in router state to `/draft/:formatId`, so **`seatCount === 1`**
-for every solo draft in every format. There is no opponent, simulated or
-otherwise. Solo Auction, Solo Deal-or-No-Deal, Solo Spin-the-Wheel, and Solo
-Free Pick are all, structurally, "build one squad against an empty table" —
-the auction still runs (against a budget only you spend), DoND still deals
-2×1=2 boxes/round, Spin the Wheel still spins for a table of one. A 2-seat
-default (`{Priya (human), You}`) only appears if `/draft/:formatId` is opened
-**cold**, i.e. with no router state at all (direct URL hit, not reached via
-the lobby flow) — this is a dev/demo fallback (`DEFAULT_DRAFTERS` per route
-file), not a real game mode. **According to the project owner (relayed via
-PROJECT.md §10), bot-filling is a planned rebuild, not a permanent absence —
-this doc describes current shipped behavior only.**
+Bots are implemented and fully active in Solo Mode. The application uses `onnxruntime-web` to load PyTorch-trained ONNX models directly in the browser via `src/lib/bot/inference.ts`. 
+
+In formats like Deal or No Deal and Auction, bots will actively participate, make decisions, and simulate human latency (randomized between 1s, 2s, or 2.5s). The bots have been observed to exhibit optimal game-theoretic behaviors, such as always sticking in Deal or No Deal, and aggressively exhausting their budgets in Auction.
 
 ### 0.3 Other confirmed-dead code (grep-verified zero callers, beyond §0.1)
 
@@ -201,10 +186,10 @@ matters is *holder* (current high bidder on the open lot) and *out*
 | Name | Value | Location |
 |---|---|---|
 | `LOTS_PER_DRAFTER` | 15 | `auctionEngine.ts:16` |
-| `AUCTION_BID_SECONDS` | 15 | `auctionEngine.ts:26` — the ONLY value; no longer a lobby setting (removed 2026-08-23, see §7.4) |
+| `AUCTION_BID_SECONDS` | 7 | `auctionEngine.ts:26` — the ONLY value; no longer a lobby setting (removed 2026-08-23, see §7.4) |
 | `BID_STEPS` | `[5, 10, 25]` | `auctionEngine.ts:29` — flat increments, do not scale with current price |
 | `SKEW_TEMPERATURE` | 10 | `auctionEngine.ts:32` — see §3.2 |
-| `LOCKOUT_MS` | 3000 | `AuctionDraft.tsx:63` |
+| `LOCKOUT_MS` | 500 | `AuctionDraft.tsx:63` |
 | `RESULT_HOLD` | 1900 ms | `AuctionDraft.tsx:50` — hammer-down hold before the next lot opens |
 
 ### 3.2 Ability-skewed sampling (shared shape with DoND — same formula, independently implemented)
@@ -275,12 +260,12 @@ A lot is `{ lot: Lot, price, holder: number|null, bids: Record<seat,price>, out:
   (silently, state unchanged) if `price > budgets[seat]` or if the bidding
   seat is already `holder` or already in `out`.
 - Every accepted bid: `resets += 1`, which restarts BOTH the 15s countdown
-  and the 3s lockout (see §3.5). `bids[seat] = price` (last figure that seat
+  and the 0.5s lockout (see §3.5). `bids[seat] = price` (last figure that seat
   put up, kept even after being outbid, shown greyed).
 
-### 3.5 The lockout (`LOCKOUT_MS = 3000`)
+### 3.5 The lockout (`LOCKOUT_MS = 500`)
 
-For the first 3 seconds of **every** countdown window (initial lot open, and
+For the first 0.5 seconds of **every** countdown window (initial lot open, and
 after every single bid that resets the clock), **no seat may raise** —
 `armed` is `false`. This is table-wide, not per-seat: it applies identically
 to every bidder including the one who just bid. **Passing is NOT
@@ -298,7 +283,7 @@ if (holder === null) return standing <= 0   // everyone has passed with nobody e
 return standing <= 1                        // holder + everyone else passed → sold instantly, no clock wait
 ```
 
-Trigger A: the 15-second countdown reaches 0 with no new bid.
+Trigger A: the 7-second countdown reaches 0 with no new bid.
 Trigger B: `lotIsDecided()` becomes true — everyone but the (possibly-null)
 holder has explicitly clicked Pass. **A pass is final for that lot only** —
 a passed seat cannot re-enter bidding on the same lot even if the price were

@@ -398,6 +398,22 @@ run_train_auction.bat
 ```
 Each script continuously saves its optimal network weights as `.pt` files to `training/checkpoints/`.
 
+### 9.1 Game Theory & Format Exploits Discovered via RL
+
+During the training and integration of the RL bots, two major game-theory discoveries were made regarding the draft formats:
+
+1. **Deal or No Deal Nash Equilibrium**: The RL agents independently learned that the mathematical optimal strategy is to *always* choose `STICK` and *never* hear the banker's offer. This is because the boxes are drawn using a high-ability skew (`skewedSample`), meaning they are heavily biased towards the best players in the pool. The banker's offer, however, is drawn from the *remaining un-boxed pool*, which has a strictly lower expected ability. Rejecting a box to hear an offer carries a strictly negative expected value.
+2. **Auction "Winner's Curse" / Free-Rider Effect**: In the Auction format, the self-play RL bots learn to be incredibly aggressive, engaging in massive bidding wars over scarce elite positions (like CBs) and burning out their budgets early (e.g., spending €300M+ per player). Because unspent budget has *zero terminal value* at the end of the draft, and failing to secure a player results in a harsh low-ability backfill, the bots are incentivized into a game of chicken. A human player (or a conservative heuristic bot) can easily exploit this by simply passing on the early bidding wars, letting the bots cannibalize their budgets, and then drafting world-class players for cheap once the bots are bankrupt. As a result, the Auction format is currently considered "broken" from a competitive game-theoretic standpoint.
+
+### 9.2 Frontend vs Training Parity (Bug Fixes)
+
+During integration of the trained RL models into the frontend, several critical bugs stemming from environment parity mismatches were discovered and resolved:
+
+1. **Action Space Mapping**: The Python training environment (`env_auction.py`) mapped discrete bidding actions strictly as `0: PASS`, `1: WAIT`, `2: RAISE5`, `3: RAISE10`, `4: RAISE25`. The frontend previously had a mismatch in its `applyBid` logic which caused bots to never bid. This was completely rewritten in `AuctionDraft.tsx` to align with the PyTorch model's discrete action outputs.
+2. **Position Indexing**: The PyTorch neural networks were trained with `POSITION_CODES = ["GK", "CB", "LB", "RB", "CDM", "CM", "AMF", "LW", "RW", "ST"]`. The frontend's `data/formation.ts` had `LB` and `CB` swapped at indices 1 and 2. The TypeScript observation encoder (`encoders.ts`) was updated to explicitly use the Python training order to prevent corrupted observation matrices and nonsensical AI bids.
+3. **Lockout Boolean Inversion**: The `armed` boolean (which dictates if a bid can be placed) was inadvertently inverted when passed into the bot's legal action mask (`!armed`), incorrectly blocking the bots from bidding.
+4. **Observation Vector Length**: Corrected the `BIDDING_OBS_LEN` constant in `encoders.ts` to match the exact dimensionality expected by the ONNX model.
+
 ## 10. Deliberate design decisions worth knowing
 
 - **Constraints are table-wide, not per-squad** — see [§5](#5-domain-model).
@@ -421,20 +437,11 @@ Each script continuously saves its optimal network weights as `.pt` files to `tr
 
 ## 11. Known issues / rough edges
 
-### Bots were removed, not just never built
+### Bots Reintegration
 
-`Drafter.kind` (`lib/draftEngine.ts`) is typed as `'you' | 'human'` — no
-`'bot'` option. Grepping the entire `src/` tree for bot-related identifiers
-(`addBot`, `isBot`, `BotSeat`) turns up nothing in any actual application
-code. The only surviving trace is a single negative test assertion,
-`SoloLobby.test.tsx:55`, which checks that an "Add a bot" button is *absent*
-in solo mode — a button that no longer exists anywhere in the app, in any
-mode, so that assertion is now trivially true rather than meaningfully
-testing anything. **According to the project owner, this was a deliberate
-removal, not an oversight: the app currently expects a bot-filling feature
-that doesn't exist yet, and it's planned to be rebuilt.** That's a statement
-of intent from outside this document's own evidence, not something derivable
-from the code — worth keeping distinct from the verified facts above it.
+Bots have been successfully reintegrated into the application via ONNX Runtime Web (`onnxruntime-web`). The trained PyTorch models (`.onnx` files) are served from the `public/models/` directory and inferenced directly in the browser via `src/lib/bot/inference.ts`. The bots feature randomized latency buffering (1s, 2s, or 2.5s) to simulate human reaction times during the draft.
+
+
 
 ### Data/asset generators referenced but missing
 
