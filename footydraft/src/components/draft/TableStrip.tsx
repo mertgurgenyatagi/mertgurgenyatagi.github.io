@@ -11,9 +11,6 @@ interface TableStripProps {
  * else — no pick counts, no per-seat status, no captions. Everything the row
  * used to spell out is either on the narrator line beside it or is state
  * nobody needs mid-draft.
- *
- * Bots keep the outlined ring they have in the lobby. A bot never gets a face,
- * because a face implies the bot is somebody.
  */
 export function TableStrip({ drafters, active }: TableStripProps) {
   return (
@@ -33,9 +30,7 @@ export function TableStrip({ drafters, active }: TableStripProps) {
                 'grid h-[31px] w-[31px] place-items-center rounded-full font-display text-[12px] font-medium transition-colors duration-300 ease-out',
                 index === active
                   ? 'bg-accent text-accent-ink'
-                  : drafter.kind === 'bot'
-                    ? 'border border-line-strong text-dim'
-                    : 'border border-line-strong bg-surface-2 text-muted',
+                  : 'border border-line-strong bg-surface-2 text-muted',
               ].join(' ')}
             >
               {drafter.mark}

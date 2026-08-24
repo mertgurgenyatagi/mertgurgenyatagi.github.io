@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SQUAD_SIZE, formation, positionCodes } from '../data/formation'
 import { leagues } from '../data/lobbyOptions'
-import { type Squad, botChoice, seatAt, slotFor } from './draftEngine'
+import { type Squad, seatAt, slotFor } from './draftEngine'
 import type { Player } from './players'
 import { landingRotation, sliceGradient, wheelSlices } from './wheelEngine'
 
@@ -150,14 +150,14 @@ describe('a whole draft', () => {
       )
       expect(board.length).toBeGreaterThan(0)
 
-      const round = Math.floor(overall / seats) + 1
-      const player = botChoice(board, squad, 'none', taken, SQUAD_SIZE - round + 1, random)
-      expect(player).not.toBeNull()
+      // Any eligible name off the board proves the point here; the wheel's
+      // exhaustion behaviour doesn't depend on which one gets taken.
+      const player = board[Math.floor(random() * board.length)]
 
-      const slot = slotFor(player as Player, squad)
+      const slot = slotFor(player, squad)
       expect(slot).not.toBeNull()
-      squad[slot as NonNullable<typeof slot>] = player as Player
-      taken.add((player as Player).id)
+      squad[slot as NonNullable<typeof slot>] = player
+      taken.add(player.id)
     }
 
     for (const squad of squads) {

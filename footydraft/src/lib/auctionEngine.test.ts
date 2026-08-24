@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { type PositionCode, formation } from '../data/formation'
-import {
-  LOTS_PER_DRAFTER,
-  buildLotList,
-  ceilingFor,
-  openingBid,
-  startingBudget,
-  stepFor,
-} from './auctionEngine'
+import { LOTS_PER_DRAFTER, buildLotList, openingBid, startingBudget } from './auctionEngine'
 import type { Player } from './players'
 
 function make(id: number, position: PositionCode, ability: number, price: number): Player {
@@ -76,21 +69,5 @@ describe('auctionEngine', () => {
       expect(new Set(lots.map((lot) => lot.player.id)).size).toBe(lots.length)
       expect(lots.map((lot) => lot.number)).toEqual(lots.map((_, index) => index + 1))
     }
-  })
-
-  it('stops bidding at the ceiling, and never bids past a budget', () => {
-    const player = make(1, 'ST', 90, 200)
-    const rich = ceilingFor(player, {}, 800, 1)
-    expect(stepFor(rich - 2, rich, () => 0)).toBeNull()
-    expect(stepFor(rich - 30, rich, () => 0)).toBe(5)
-
-    // A seat with 40M left cannot be talked past 40M, however much it wants him.
-    expect(ceilingFor(player, {}, 40, 1)).toBeLessThanOrEqual(40)
-  })
-
-  it('values a footballer it has no room for at blocking money only', () => {
-    const player = make(1, 'ST', 90, 200)
-    const full = { st: make(2, 'ST', 88, 190) }
-    expect(ceilingFor(player, full, 800, 0.5)).toBeLessThan(ceilingFor(player, {}, 800, 0.5))
   })
 })

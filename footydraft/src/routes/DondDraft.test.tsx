@@ -29,7 +29,7 @@ function fixtureCsv() {
 const DRAFTERS = [
   { id: 'you', name: 'You', kind: 'you' as const, mark: 'M' },
   { id: 'priya', name: 'Priya', kind: 'human' as const, mark: 'P' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot' as const, mark: '1' },
+  { id: 'sam', name: 'Sam', kind: 'human' as const, mark: 'S' },
 ]
 
 function renderDond() {

@@ -20,9 +20,9 @@ export interface Player {
   league: LeagueId | null
   position: PositionCode
   /**
-   * Read by the bots when they choose, and by the timeout auto-pick. Never
-   * rendered: ability is a data-model fact and this app keeps those off screen,
-   * which is also why the pool is ordered A–Z rather than by this number.
+   * Read by the timeout auto-pick. Never rendered: ability is a data-model
+   * fact and this app keeps those off screen, which is also why the pool is
+   * ordered A–Z rather than by this number.
    */
   ability: number
   /** Also never rendered — Free Pick has no currency. The auto-pick uses it. */

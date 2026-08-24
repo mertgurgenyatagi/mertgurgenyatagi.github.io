@@ -7,8 +7,7 @@ export interface Drafter {
   id: string
   /** Set in Oswald, uppercase, on the strip and on the board tabs. */
   name: string
-  kind: 'you' | 'human' | 'bot'
-  /** One character in the disc. Bots get their number — never a face. */
+  kind: 'you' | 'human'
   mark: string
 }
 
@@ -172,45 +171,6 @@ export function isEligible(
 }
 
 /* ---------------------------------------------------------------- picking -- */
-
-/**
- * What a bot does with its turn.
- *
- * It reads ability, which the screen never does, and takes one of the strongest
- * few rather than the single strongest — a table of bots that all agree on the
- * board order is a table that plays the same draft every time. Positional need
- * only bites at the end, when the rounds left stop outnumbering the holes.
- */
-export function botChoice(
-  pool: Player[],
-  squad: Squad,
-  constraint: string,
-  taken: ReadonlySet<string>,
-  roundsLeft: number,
-  random: () => number = Math.random,
-  spend: TableSpend = NO_SPEND,
-): Player | null {
-  const eligible = pool.filter((player) => isEligible(player, squad, constraint, taken, spend))
-  if (eligible.length === 0) return lastResort(pool, squad, taken)
-
-  const openPositions = formation
-    .filter((slot) => !squad[slot.id])
-    .map((slot) => slot.position)
-
-  const scarce = new Set(
-    openPositions.filter((position) => {
-      const supply = eligible.filter((player) => player.position === position).length
-      return supply <= roundsLeft
-    }),
-  )
-
-  const shortlist = scarce.size > 0 ? eligible.filter((p) => scarce.has(p.position)) : eligible
-  const ranked = [...(shortlist.length > 0 ? shortlist : eligible)].sort(
-    (a, b) => b.ability - a.ability,
-  )
-  const spread = Math.min(5, ranked.length)
-  return ranked[Math.floor(random() * spread)]
-}
 
 /**
  * On timeout the system takes the cheapest eligible footballer for an open

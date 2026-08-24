@@ -77,6 +77,5 @@ export const wheels: Choice[] = [
   { id: 'club', name: 'By club' },
 ]
 
-/** Humans plus bots. The empty seats stay on screen either way. */
 export const MIN_SEATS = 2
 export const MAX_SEATS = 5

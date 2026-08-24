@@ -61,17 +61,11 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
   const [constraint, setConstraint] = useState('club-1')
   const [wheel, setWheel] = useState('league')
 
-  /** Ids rather than a count, so adding a seat animates only the row that arrived. */
-  const nextBotId = useRef(4)
-  const [bots, setBots] = useState<number[]>([1, 2, 3])
-
   /* Chat is live here too. There is nobody else in a solo lobby to talk to yet,
      which is exactly why the table's own events go through it — a room that
      says what has happened in it is a room, and an empty panel is furniture. */
-  const messageId = useRef(1)
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 0, kind: 'system', author: '', body: t('Table opened — three bots seated.') },
-  ])
+  const messageId = useRef(0)
+  const [messages, setMessages] = useState<Message[]>([])
   const say = (message: Omit<Message, 'id'>) =>
     setMessages((current) => [...current, { ...message, id: messageId.current++ }])
 
@@ -84,13 +78,6 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
       note: 'Host — sets the draft on the right',
       tag: 'Seat 1',
     },
-    ...bots.map((id, index) => ({
-      id: String(id),
-      kind: 'bot' as const,
-      name: t('Bot {n}', { n: index + 1 }),
-      mark: String(index + 1),
-      note: 'Default style',
-    })),
   ]
 
   /** Constraints exist for Free Pick and are not offered anywhere else. */
@@ -102,10 +89,6 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
    */
   const takesWheel = format === 'spin-the-wheel' && scope !== 'league'
 
-  /**
-   * How many drafters the settings have to seat. Every option below is
-   * measured against this, so adding or removing a bot re-reads the panel.
-   */
   const size = effectiveSize(seats.length)
   const key = scopeKeyOf(scope, league)
   const seatsHint = seatsPhrase(size, t)
@@ -134,21 +117,7 @@ function ReadyRoom({ formatId }: { formatId?: string }) {
           style={{ animationDelay: '140ms' }}
         >{t("Your table")}</h1>
       }
-      seatList={
-        <SeatList
-          seats={seats}
-          onAdd={() => {
-            const id = nextBotId.current
-            nextBotId.current += 1
-            setBots((current) => [...current, id])
-            say({ kind: 'system', author: '', body: t('Bot {n} seated.', { n: bots.length + 1 }) })
-          }}
-          onRemove={(id) => {
-            setBots((current) => current.filter((entry) => String(entry) !== id))
-            say({ kind: 'system', author: '', body: t('A bot left the table.') })
-          }}
-        />
-      }
+      seatList={<SeatList seats={seats} />}
       leftFooterContent={
         <LobbyChat
           you={t('You')}

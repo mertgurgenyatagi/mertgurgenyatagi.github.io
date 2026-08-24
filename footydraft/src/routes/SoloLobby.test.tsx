@@ -48,79 +48,18 @@ describe('SoloLobby', () => {
     expect(constraint.closest('[inert]')).toBeNull()
   })
 
-  it('seats two to five, added and removed by hand', async () => {
-    const user = userEvent.setup()
+  it('seats just you, with nothing to add or remove', () => {
     renderLobby('/solo/auction')
 
-    expect(screen.getByText('4 / 5 seats')).toBeInTheDocument()
-
-    // Both renderings are in the DOM under jsdom — the media query that hides
-    // one of them isn't applied. The compact strip comes first.
-    const [compactAdd] = screen.getAllByRole('button', { name: /add a bot/i })
-    await user.click(compactAdd)
-    expect(screen.getByText('5 / 5 seats')).toBeInTheDocument()
-    // The table is full, so the empty seat row goes with it.
-    expect(screen.getAllByRole('button', { name: /add a bot/i })).toHaveLength(1)
-    expect(compactAdd).toBeDisabled()
-
-    const removes = screen.getAllByRole('button', { name: 'Remove' })
-    expect(removes).toHaveLength(4)
-    for (const button of removes) await user.click(button)
-
-    // Never below two at the table, and the last bot can't be removed.
-    expect(screen.getByText('2 / 5 seats')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Remove' })).toBeDisabled()
-  })
-
-  it('withdraws options the table is too big for, and re-offers them when a seat is freed', async () => {
-    const user = userEvent.setup()
-    // Opens at four seats. No single league is deep enough to run Deal or No
-    // Deal for four drafters, so narrowing to one isn't on offer yet.
-    renderLobby('/solo/deal-or-no-deal')
-
-    expect(screen.getByRole('button', { name: /^One league/ })).toBeDisabled()
-
-    // Free two seats and it comes back — at two, a single league can seat it.
-    await user.click(screen.getAllByRole('button', { name: 'Remove' })[0])
-    await user.click(screen.getAllByRole('button', { name: 'Remove' })[0])
-
-    expect(screen.getByText('2 / 5 seats')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'One league' })).toBeEnabled()
-  })
-
-  it('names the setting that does not fit, and will not kick off while it stands', async () => {
-    const user = userEvent.setup()
-    renderLobby('/solo/free-pick')
-
-    // Constraints are shared across the table now, so `1 per club` over Top 5
-    // tops out at three drafters — and this lobby opens at four. The status
-    // line names the constraint rather than the scope, because the scope on
-    // its own would have been fine.
-    expect(screen.getByText(/1 per club doesn.t support four at the table/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /kick off/i })).toBeDisabled()
-
-    // Switching to a constraint that does fit clears it.
-    await user.click(screen.getByRole('button', { name: '3 per club' }))
-    expect(screen.getByRole('button', { name: /kick off/i })).toBeEnabled()
-
-    // At four seats `1 per club` isn't merely unselected, it's withdrawn —
-    // dashed, disabled, and carrying the seat count in its accessible name.
-    expect(screen.getByRole('button', { name: /^1 per club —/ })).toBeDisabled()
-
-    // Freeing a seat brings it back, and it is selectable again at three.
-    await user.click(screen.getAllByRole('button', { name: 'Remove' })[0])
-    const tighter = screen.getByRole('button', { name: '1 per club' })
-    expect(tighter).toBeEnabled()
-    await user.click(tighter)
-    expect(screen.getByRole('button', { name: /kick off/i })).toBeEnabled()
+    expect(screen.getByText('1 / 5 seats')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /add a bot/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Remove' })).not.toBeInTheDocument()
   })
 
   it('kicks off into the draft it was configured for', async () => {
     const user = userEvent.setup()
     renderLobby('/solo/free-pick')
 
-    // Four at the table needs the looser constraint — see the test above.
-    await user.click(screen.getByRole('button', { name: '3 per club' }))
     await user.click(screen.getByRole('button', { name: /kick off/i }))
     expect(screen.getByText(/draft screen for free-pick/i)).toBeInTheDocument()
   })

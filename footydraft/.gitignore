@@ -7,7 +7,7 @@ dist/
 *.local
 
 # Raw source art. Multi-MB originals stay out of a repo that is otherwise all text —
-# only the shipped derivative in public/ is versioned. See PROJECT.md → Art assets.
+# only the shipped derivative in public/ is versioned.
 assets/
 
 # Tooling scratch, not project files.
@@ -17,11 +17,3 @@ assets/
 # A Python venv writes its own internal .gitignore, but this repo shouldn't
 # depend on that file existing to keep .venv/ out.
 .venv/
-
-# Training-run junk from the old wiped run (2026-08-19) that shouldn't
-# reappear if a future run writes to the same relative paths.
-scripts/training/checkpoints/**/gen_*.pt
-training_log.txt
-debug.log
-error.log
-sim_output.txt

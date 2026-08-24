@@ -66,7 +66,6 @@ export function useMultiplayerRoom(code: string | undefined) {
   return { room: code ? (rooms.get(code) ?? null) : null, uid: FAKE_UID }
 }
 
-export function useHostBotTakeover() {}
 export function useActionQueue() {}
 
 export async function joinRoom(
@@ -129,21 +128,10 @@ export async function sendSystemMessage(code: string, body: string) {
   })
 }
 
-export async function addBot(code: string, count: number) {
+/** Test-only: seats a second drafter directly, simulating another browser joining. */
+export async function seatGuest(code: string, drafter: { id: string; name: string; kind: string; mark: string }) {
   write(code, (room) => {
-    const id = `bot-${count}`
-    room.drafters = {
-      ...room.drafters,
-      [id]: { id, name: `Bot ${count}`, kind: 'bot', mark: String(count), online: true } as never,
-    }
-  })
-}
-
-export async function removeBot(code: string, botId: string) {
-  write(code, (room) => {
-    const next = { ...room.drafters }
-    delete next[botId]
-    room.drafters = next
+    room.drafters = { ...room.drafters, [drafter.id]: { ...drafter, online: true } as never }
   })
 }
 
@@ -155,4 +143,3 @@ export async function updateDondState() {}
 export async function placeDondAction() {}
 export async function updateSpinState() {}
 export async function placeSpinAction() {}
-export const TAKEOVER_MS = 45000

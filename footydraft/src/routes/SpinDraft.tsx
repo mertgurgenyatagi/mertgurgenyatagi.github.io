@@ -21,7 +21,6 @@ import {
   type Drafter,
   type Pick,
   type Squad,
-  botChoice,
   isEligible,
   roundAt,
   seatAt,
@@ -29,7 +28,6 @@ import {
 } from '../lib/draftEngine'
 import {
   useMultiplayerRoom,
-  useHostBotTakeover,
   useActionQueue,
   updateSpinState,
   placeSpinAction,
@@ -57,8 +55,6 @@ import { useI18n } from '../lib/i18n'
 const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'priya', name: 'Priya', kind: 'human', mark: 'P' },
   { id: 'you', name: 'You', kind: 'you', mark: 'M' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot', mark: '1' },
-  { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
 /**
@@ -69,8 +65,6 @@ const DEFAULT_DRAFTERS: Drafter[] = [
  * is the right one — there is nothing else happening while it turns.
  */
 const SPIN_MS = 5600
-const BOT_PAUSE = [1500, 3400]
-const HUMAN_PAUSE = [2400, 5000]
 
 
 /**
@@ -96,7 +90,6 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
   const { room, uid } = useMultiplayerRoom(config.roomId)
   const isMultiplayer = Boolean(config.roomId)
   const isHost = isMultiplayer ? room?.host === uid : true
-  useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
   const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
@@ -307,28 +300,6 @@ export function SpinDraft({ config }: { config: DraftConfig }) {
 
   const entityPoolRef = useRef(entityPool)
   entityPoolRef.current = entityPool
-
-  /* --------- The turn loop. Everyone but you is simulated, on a stagger. ---- */
-
-  useEffect(() => {
-    if (complete || !settled || activeSeat < 0 || activeSeat === youSeat) return
-    if (entityPool.length === 0) return
-    if (isMultiplayer && !isHost) return
-
-    const drafter = drafters[activeSeat]
-    if (isMultiplayer && drafter.kind !== 'bot') return
-
-    const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
-    const wait = low + Math.random() * (high - low)
-
-    const timer = window.setTimeout(() => {
-      commit(activeSeat, (squad, already) =>
-        botChoice(entityPoolRef.current, squad, 'none', already, SQUAD_SIZE - round + 1),
-      )
-    }, wait)
-
-    return () => window.clearTimeout(timer)
-  }, [settled, activeSeat, complete, youSeat, drafters, commit, round, entityPool.length, isMultiplayer, isHost])
 
   /* ---------------------------------------------------------- the reporting -- */
 

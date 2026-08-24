@@ -251,7 +251,7 @@ export function BidBoard({
 /** Kept in step with `LOCKOUT_MS` in `AuctionDraft`, in whole seconds. */
 const LOCKOUT = 3
 
-/** The seat disc. Bots keep their dashed outline; a bot never gets a face. */
+/** The seat disc. */
 function Disc({ drafter, tone }: { drafter: Drafter; tone: 'lead' | 'you' | 'plain' }) {
 
   return (
@@ -262,9 +262,7 @@ function Disc({ drafter, tone }: { drafter: Drafter; tone: 'lead' | 'you' | 'pla
           ? 'border-2 border-accent text-accent'
           : tone === 'you'
             ? 'bg-accent text-accent-ink'
-            : drafter.kind === 'bot'
-              ? 'border border-dashed border-line-strong text-muted'
-              : 'border border-line-strong text-muted',
+            : 'border border-line-strong text-muted',
       ].join(' ')}
     >
       {drafter.mark}
