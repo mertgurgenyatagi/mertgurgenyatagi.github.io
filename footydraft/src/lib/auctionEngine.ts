@@ -31,14 +31,6 @@ export const BID_STEPS = [5, 10, 25] as const
 /** The pool's high-ability skew: `p ∝ exp((ability − max) / 10)`. */
 const SKEW_TEMPERATURE = 10
 
-/**
- * Held back per still-empty slot when a seat decides what it can spend. Not a
- * rule — the rules explicitly refuse to reserve funds during bidding — only
- * what a bot chooses to leave itself, which is a decision it is free to make
- * and a human is free not to.
- */
-const RESERVE_PER_SLOT = 6
-
 export interface Lot {
   /** 1-based position in the lot list. The number the screen prints. */
   number: number
@@ -198,53 +190,6 @@ export function weakestFor(
     if (!weakest || player.ability < weakest.ability) weakest = player
   }
   return weakest
-}
-
-/* --------------------------------------------------------- what a seat pays -- */
-
-/**
- * The most a seat will commit right now, leaving itself something for the slots
- * it still has to fill. Bidding is never gated by slot status — a seat with a
- * full XI can keep raising to block, or to stockpile a spare *(R5-Q6)* — so
- * this only ever returns a smaller number, never a refusal.
- */
-export function spendable(budget: number, squad: Squad): number {
-  return budget - Math.max(0, openSlots(squad) - 1) * RESERVE_PER_SLOT
-}
-
-/**
- * What this footballer is worth to this seat, in EURm.
- *
- * `taste` is a per-seat, per-lot number in 0–1 that stops a table of bots from
- * agreeing on every valuation and turning every lot into the same auction.
- * Ability is read here and rendered nowhere, same as everywhere else.
- */
-export function ceilingFor(player: Player, squad: Squad, budget: number, taste: number): number {
-  const fits = landingSlot(player, squad) !== null
-  const left = openSlots(squad)
-
-  // A slot that is already full is worth blocking money only — a spare is a
-  // real asset, but never the one you were budgeting for.
-  const appetite = fits ? (left <= 3 ? 1.3 : 1.04) : 0.32
-  const base = player.price * (0.8 + taste * 0.52)
-
-  return Math.min(Math.floor(base * appetite), Math.max(0, spendable(budget, squad)))
-}
-
-/**
- * The raise a seat makes, or null when it is done with this lot. Mostly the
- * smallest step that clears — a bidder with a lot of room left occasionally
- * jumps, which is what ends a lot in four raises instead of twenty.
- */
-export function stepFor(price: number, ceiling: number, random: () => number): number | null {
-  const affordable = BID_STEPS.filter((step) => price + step <= ceiling)
-  if (affordable.length === 0) return null
-
-  const room = ceiling - price
-  const roll = random()
-  if (room >= 60 && roll > 0.74 && affordable.includes(25)) return 25
-  if (room >= 25 && roll > 0.58 && affordable.includes(10)) return 10
-  return affordable[0]
 }
 
 /* ------------------------------------------------------------- passing ---- */

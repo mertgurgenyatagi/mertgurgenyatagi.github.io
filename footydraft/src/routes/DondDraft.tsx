@@ -17,15 +17,12 @@ import {
   type RoundPlan,
   bankerOffers,
   bankerTarget,
-  botSticks,
-  botTakesOffer,
   drawBoxes,
   roundOrder,
   seatOrder,
 } from '../lib/dondEngine'
 import {
   useMultiplayerRoom,
-  useHostBotTakeover,
   useActionQueue,
   updateDondState,
   placeDondAction,
@@ -43,8 +40,6 @@ import { useI18n } from '../lib/i18n'
 const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'priya', name: 'Priya', kind: 'human', mark: 'P' },
   { id: 'you', name: 'You', kind: 'you', mark: 'M' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot', mark: '1' },
-  { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
 /** Long enough to read a face and a name off the stage, short enough to sit through. */
@@ -53,9 +48,6 @@ const REVEAL_HOLD = 2100
 const REPORT_HOLD = 1600
 /** The beat between a round settling and the next set of boxes arriving. */
 const ROUND_HOLD = 1400
-
-const BOT_PAUSE = [1100, 2600]
-const HUMAN_PAUSE = [1800, 3800]
 
 type Step = 'choosing' | 'revealing' | 'deciding' | 'weighing' | 'done'
 
@@ -132,7 +124,7 @@ function normaliseRound(raw: any): RoundState | null {
  * transition now runs through `commit` below, which reads the current round
  * out of a ref written synchronously, validates that the seat asking is the
  * seat on the clock, and writes both pieces of state together. Two actions
- * landing in the same tick — a bot timer racing a click, a duplicated remote
+ * landing in the same tick — a stray timer racing a click, a duplicated remote
  * action — see each other rather than each other's history.
  */
 export function DondDraft({ config }: { config: DraftConfig }) {
@@ -149,7 +141,6 @@ export function DondDraft({ config }: { config: DraftConfig }) {
   const { room, uid } = useMultiplayerRoom(config.roomId)
   const isMultiplayer = Boolean(config.roomId)
   const isHost = isMultiplayer ? room?.host === uid : true
-  useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
   const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
@@ -182,7 +173,7 @@ export function DondDraft({ config }: { config: DraftConfig }) {
    *
    * React batches state updates, so a transition that read `round` out of a
    * closure was reading whatever the last render had — fine for one action per
-   * tick, wrong the moment a bot's timer fires alongside a click or a remote
+   * tick, wrong the moment a stray timer fires alongside a click or a remote
    * action arrives while one is being applied. Writing the ref synchronously
    * makes the sequence of transitions the sequence they actually happened in.
    */
@@ -517,72 +508,10 @@ export function DondDraft({ config }: { config: DraftConfig }) {
     round && round.openedIndex !== null ? (round.boxes[round.openedIndex] ?? null) : null
   const activeOffer = round && activeSeat >= 0 ? (round.offers[activeSeat] ?? null) : null
 
-  /** Everything already out of a box this round — the read a bot is allowed. */
-  const seen = useMemo(
-    () => (round ? round.boxes.filter((box) => box.openedBy !== null).map((box) => box.player) : []),
-    [round],
-  )
-  const seenRef = useRef(seen)
-  seenRef.current = seen
-
-  /* ----------------------- The turn loop. Everyone but you is simulated. ----- */
-
   /** Every field a transition can depend on, so no dependency list is suppressed. */
   const beatKey = round
     ? `${round.index}|${round.stage}|${round.cursor}|${round.step}|${round.openedIndex}|${round.forced}|${round.hearing.length}`
     : 'idle'
-
-  useEffect(() => {
-    const state = roundRef.current
-    if (!state || complete || activeSeat < 0 || activeSeat === youSeat) return
-    if (state.step !== 'choosing' && state.step !== 'deciding' && state.step !== 'weighing') return
-    if (isMultiplayer && !isHost) return
-
-    const drafter = drafters[activeSeat]
-    if (!drafter) return
-    /* A real person's seat is theirs to play. Only a bot — including a seat a
-       bot has taken over — is simulated in a room with other people in it. */
-    if (isMultiplayer && drafter.kind !== 'bot') return
-
-    const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
-    const wait = low + Math.random() * (high - low)
-
-    const timer = window.setTimeout(() => {
-      const current = roundRef.current
-      if (!current || activeSeatOf(current) !== activeSeat) return
-
-      if (current.step === 'choosing') {
-        const shut = current.boxes
-          .map((box, index) => ({ box, index }))
-          .filter((entry) => entry.box.openedBy === null)
-        if (shut.length === 0) return
-        commit(activeSeat, {
-          type: 'openBox',
-          index: shut[Math.floor(Math.random() * shut.length)].index,
-        })
-        return
-      }
-
-      if (current.step === 'deciding') {
-        const box = current.openedIndex === null ? null : current.boxes[current.openedIndex]
-        if (!box) return
-        commit(activeSeat, botSticks(box.player, seenRef.current) ? { type: 'stick' } : { type: 'hearOffer' })
-        return
-      }
-
-      const offer = current.offers[activeSeat]
-      if (!offer) return
-      const canGoBack = current.boxes.some((box) => box.openedBy === null)
-      commit(
-        activeSeat,
-        botTakesOffer(offer, seenRef.current) || !canGoBack
-          ? { type: 'takeOffer' }
-          : { type: 'backToBoxes' },
-      )
-    }, wait)
-
-    return () => window.clearTimeout(timer)
-  }, [beatKey, complete, activeSeat, youSeat, isHost, isMultiplayer, drafters, commit])
 
   /* -------------------------------------------- a box on stage, then a choice -- */
 

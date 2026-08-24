@@ -8,15 +8,11 @@ import type { RoomState } from './multiplayer'
  * All four draft screens carried their own copy of this, and every copy had
  * the same two faults.
  *
- * **Seat order must not depend on `kind`.** The old ordering was host, then
- * humans, then bots — so the moment a dropped seat was turned over to a bot
- * (`kind: 'human'` → `'bot'`) that seat *moved*, and every seat after it
- * renumbered. Seat index is the key everything in a draft is stored against —
- * picks, sales, bids, box openings, whose turn it is — so a takeover silently
- * reassigned the entire draft's history to the wrong people, on every client,
- * at a different moment on each. Ordering is host first and then id ascending
- * now: nothing about it can change while a draft is running, because neither a
- * seat's id nor who the host is ever does.
+ * **Seat order must not depend on `kind`.** Seat index is the key everything
+ * in a draft is stored against — picks, sales, bids, box openings, whose turn
+ * it is — so ordering is host first and then id ascending: nothing about it
+ * can change while a draft is running, because neither a seat's id nor who
+ * the host is ever does.
  *
  * **An unseated client is not seat 0.** `Math.max(0, findIndex(...))` returns
  * 0 when you are not in the room yet — which is the host's seat — so for the
@@ -60,7 +56,7 @@ export function useSeats(
 
     const drafters: Drafter[] = ordered.map(([id, drafter]) => ({
       id,
-      kind: id === uid ? 'you' : (drafter.kind === 'bot' ? 'bot' : 'human'),
+      kind: id === uid ? 'you' : 'human',
       name: drafter.name,
       mark: drafter.mark,
     }))

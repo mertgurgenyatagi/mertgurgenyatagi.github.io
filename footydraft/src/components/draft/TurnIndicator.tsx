@@ -68,9 +68,7 @@ export function TurnIndicator({
                   'grid h-[var(--spin-seat)] w-[var(--spin-seat)] place-items-center rounded-full font-display text-[13px] font-medium transition-colors duration-300 ease-out',
                   index === active
                     ? 'bg-accent text-accent-ink'
-                    : drafter.kind === 'bot'
-                      ? 'border border-line-strong text-dim'
-                      : 'border border-line-strong bg-surface-2 text-muted',
+                    : 'border border-line-strong bg-surface-2 text-muted',
                 ].join(' ')}
               >
                 {drafter.mark}

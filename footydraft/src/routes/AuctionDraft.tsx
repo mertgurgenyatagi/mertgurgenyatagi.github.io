@@ -24,10 +24,8 @@ import {
   startingBudget,
   weakestFor,
 } from '../lib/auctionEngine'
-import { evaluateAuctionBot } from '../lib/auctionBot'
 import {
   useMultiplayerRoom,
-  useHostBotTakeover,
   useActionQueue,
   updateAuctionState,
   placeAuctionBid,
@@ -46,8 +44,6 @@ const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'you', name: 'You', kind: 'you', mark: 'M' },
   { id: 'priya', name: 'Priya', kind: 'human', mark: 'P' },
   { id: 'sam', name: 'Sam', kind: 'human', mark: 'S' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot', mark: '1' },
-  { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
 /** How long the hammer holds on screen before the next lot comes up. */
@@ -58,8 +54,8 @@ const RESULT_HOLD = 1900
  * countdown restarts on every bid, so this is a cooling-off period after each
  * raise rather than a one-off at the top of a lot.
  *
- * It applies to the room exactly as it applies to you: the simulated seats
- * read the same flag, so a lot cannot be walked up by two bots trading raises
+ * It applies to the room exactly as it applies to you: every seat reads the
+ * same flag, so a lot cannot be walked up by two bidders trading raises
  * faster than anybody can read them. What it buys is a beat to look at the
  * footballer and at what they are being held at before deciding, which is the
  * only decision this format has.
@@ -161,7 +157,6 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   const { room, uid } = useMultiplayerRoom(config.roomId)
   const isMultiplayer = Boolean(config.roomId)
   const isHost = isMultiplayer ? room?.host === uid : true
-  useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
   const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
@@ -444,91 +439,6 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       resets: 0,
     })
   }, [cursor, lots, finished, block, isHost])
-
-  /* ------- The room, bidding. Everyone but you is simulated, in real time. --- */
-
-  useEffect(() => {
-    if (!block || block.phase !== 'live') return
-    if (!isHost) return
-
-    const now = block
-    const spent: number[] = []
-    const timers: number[] = []
-
-    const POS_LIST = ['AMF', 'CB', 'CDM', 'CM', 'GK', 'LB', 'LW', 'RB', 'RW', 'ST']
-    const lotsRevealed = new Array(10).fill(0)
-    const lotsSold = new Array(10).fill(0)
-
-    for (const sale of live.current.sales) {
-      const pIdx = POS_LIST.indexOf(sale.player.position)
-      if (pIdx >= 0) {
-        lotsRevealed[pIdx]++
-        if (sale.seat !== null) lotsSold[pIdx]++
-      }
-    }
-    const currentPIdx = POS_LIST.indexOf(now.lot.player.position)
-    if (currentPIdx >= 0) lotsRevealed[currentPIdx]++
-
-    const lotsRemaining = Math.max(0, 15 * seatCount - now.lot.number)
-    const fractionElapsed = Math.min(1.0, now.lot.number / Math.max(1, 15 * seatCount))
-    const scopedPoolSize = scopedRef.current.length
-
-    for (let seat = 0; seat < seatCount; seat += 1) {
-      if (seat === youSeat || seat === now.holder || now.out.includes(seat)) continue
-
-      const drafter = live.current.drafters[seat]
-      if (!drafter || drafter.kind !== 'bot') continue
-
-      const step = evaluateAuctionBot(
-        seat,
-        now,
-        live.current.squads,
-        live.current.budgets,
-        seatCount,
-        lotsRevealed,
-        lotsSold,
-        lotsRemaining,
-        fractionElapsed,
-        scopedPoolSize,
-      )
-
-      if (step !== null) {
-        // The bot has decided to bid. It waits 5, 6, 6, 7, or 8 seconds randomly before placing it.
-        const delays = [5000, 6000, 6000, 7000, 8000]
-        const delay = delays[Math.floor(Math.random() * delays.length)]
-        const timer = window.setTimeout(() => {
-          // Double check it hasn't been locked out by the room in the meantime,
-          // though this delay is usually well beyond LOCKOUT_MS.
-          if (live.current.armed && live.current.block?.phase === 'live') {
-            applyBid(seat, step)
-          }
-        }, delay)
-        timers.push(timer)
-      } else {
-        spent.push(seat)
-      }
-    }
-
-    /* A seat whose line the price has already crossed is out of this lot for
-       good — its valuation is fixed for the lot's length and its budget only
-       ever falls, so it can never come back in. Saying so is what draws the
-       dimmed cards next to the one holding it, and it is now also what lets
-       the lot close the moment there is nobody left to raise. */
-    if (spent.length > 0) {
-      setBlock((previous) =>
-        previous && previous.phase === 'live'
-          ? {
-              ...previous,
-              out: [...previous.out, ...spent.filter((seat) => !previous.out.includes(seat))],
-            }
-          : previous,
-      )
-    }
-
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer))
-    }
-  }, [block?.lot.number, block?.resets, block?.phase, seatCount, youSeat, applyBid, isHost])
 
   /* -------------------------------------------------------------- the clock -- */
 

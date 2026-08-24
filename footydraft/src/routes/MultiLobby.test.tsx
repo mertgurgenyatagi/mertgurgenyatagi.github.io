@@ -9,7 +9,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../lib/multiplayer', async () => await import('../test/fakeRoom'))
 
 import { MultiLobby } from './MultiLobby'
-import { resetFakeRooms } from '../test/fakeRoom'
+import { resetFakeRooms, seatGuest } from '../test/fakeRoom'
 
 function renderLobby(state?: { name: string; host: boolean }) {
   return render(
@@ -55,7 +55,7 @@ describe('MultiLobby', () => {
     expect(screen.getByText('Auction')).toBeInTheDocument()
   })
 
-  it('lets the host fill the table and talk to it', async () => {
+  it('fills seats as people join, and lets the host talk to the table', async () => {
     const user = userEvent.setup()
     renderLobby({ name: 'Mert', host: true })
 
@@ -66,8 +66,8 @@ describe('MultiLobby', () => {
     await user.click(screen.getByRole('button', { name: 'Free Pick' }))
     expect(screen.getByRole('button', { name: /kick off/i })).toBeDisabled()
 
-    const [addBot] = screen.getAllByRole('button', { name: /add a bot/i })
-    await user.click(addBot)
+    // A second browser joining the room, simulated directly against the fake.
+    await seatGuest('KX7QD', { id: 'guest-uid', name: 'Priya', kind: 'human', mark: 'P' })
     expect(await screen.findByText('2 / 5 seats')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /kick off/i })).toBeEnabled()
 

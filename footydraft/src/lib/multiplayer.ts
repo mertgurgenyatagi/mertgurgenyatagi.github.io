@@ -29,12 +29,6 @@ export interface RoomState {
   spinState?: any
 }
 
-/**
- * How long a human seat may sit disconnected before a bot takes it over
- * *(R3-Q6, R4-Q3)*. Reconnecting hands control straight back *(R4-Q4)*.
- */
-export const TAKEOVER_MS = 45000
-
 export function useMultiplayerRoom(code: string | undefined) {
   const [room, setRoom] = useState<RoomState | null>(null)
   const [uid, setUid] = useState<string | null>(null)
@@ -62,19 +56,11 @@ export function useMultiplayerRoom(code: string | undefined) {
 
     const meRef = ref(database, `rooms/${code}/drafters/${uid}`)
 
-    /* Coming back clears the disconnect stamp as well as flipping the flag — a
-       stale `offlineAt` left behind would have the host's takeover sweep read
-       a reconnected seat as forty-five seconds gone. Handing control back on
-       reconnect is the rule *(R4-Q4)*, so `kind` goes back to human even when
-       a bot has already taken the seat over. */
+    /* Coming back clears the disconnect stamp as well as flipping the flag. */
     if (isMe.kind !== 'human' || !isMe.online || isMe.offlineAt) {
       update(meRef, { online: true, kind: 'human', offlineAt: null })
     }
 
-    /* The disconnect writes *when* it happened, not only that it did. The
-       host's sweep then reads an absolute deadline off the room itself rather
-       than holding a timer inside a component that re-renders several times a
-       second — see `useHostBotTakeover`. */
     const dcon = onDisconnect(meRef)
     dcon.update({ online: false, offlineAt: serverTimestamp() })
 
@@ -90,68 +76,6 @@ export function useMultiplayerRoom(code: string | undefined) {
   ])
 
   return { room, uid }
-}
-
-/**
- * The host turns a dropped seat over to a bot after `TAKEOVER_MS`.
- *
- * **This used to hold a `setTimeout` per offline seat inside an effect keyed
- * on `room.drafters`** — which is a fresh object on every snapshot, and during
- * a draft the host pushes state several times a second, so the cleanup ran and
- * the forty-five seconds restarted from zero before they could ever elapse.
- * The takeover fired only if the room happened to go quiet, which is exactly
- * the "sometimes it does, sometimes it doesn't" it was reported as.
- *
- * It reads a deadline instead. `onDisconnect` stamps `offlineAt` on the seat,
- * so the sweep below is stateless: once a second, convert any human seat whose
- * stamp is more than `TAKEOVER_MS` old. Restarting the interval costs nothing,
- * a host reload does not reset anybody's clock, and a seat that reconnects
- * clears its own stamp.
- */
-export function useHostBotTakeover(
-  code: string | undefined,
-  isHost: boolean,
-  room: RoomState | null,
-) {
-  /* The sweep reads the newest room off a ref rather than out of its own
-     closure, so the interval is created once per draft rather than once per
-     snapshot. */
-  const latest = useRef(room)
-  latest.current = room
-
-  const drafting = room?.status === 'drafting'
-
-  useEffect(() => {
-    if (!code || !isHost || !drafting) return
-
-    const sweep = () => {
-      const current = latest.current
-      if (!current || current.status !== 'drafting') return
-
-      for (const [id, drafter] of Object.entries(current.drafters || {})) {
-        if (drafter.kind !== 'human') continue
-        if (drafter.online !== false) continue
-
-        /* A seat that dropped before `offlineAt` existed — or whose write has
-           not landed yet — is stamped now rather than taken over on the spot.
-           The forty-five seconds are the rule, and guessing at them would cut
-           somebody's reconnect window short. */
-        if (typeof drafter.offlineAt !== 'number') {
-          update(ref(database, `rooms/${code}/drafters/${id}`), { offlineAt: Date.now() })
-          continue
-        }
-
-        if (Date.now() - drafter.offlineAt < TAKEOVER_MS) continue
-
-        update(ref(database, `rooms/${code}/drafters/${id}`), { kind: 'bot' })
-        sendSystemMessage(code, `${drafter.name} dropped — a bot has taken the seat.`)
-      }
-    }
-
-    const timer = window.setInterval(sweep, 1000)
-    sweep()
-    return () => window.clearInterval(timer)
-  }, [code, isHost, drafting])
 }
 
 /**
@@ -257,23 +181,6 @@ export async function makePick(code: string, pick: Pick) {
     slot: pick.slot,
     playerId: pick.player.id,
   })
-}
-
-export async function addBot(code: string, count: number) {
-  const botId = `bot-${count}`
-  const botRef = ref(database, `rooms/${code}/drafters/${botId}`)
-  await set(botRef, {
-    id: botId,
-    name: `Bot ${count}`,
-    kind: 'bot',
-    mark: String(count),
-    online: true,
-  })
-}
-
-export async function removeBot(code: string, botId: string) {
-  const botRef = ref(database, `rooms/${code}/drafters/${botId}`)
-  await set(botRef, null)
 }
 
 export async function updateAuctionState(code: string, block: any, sales: any) {

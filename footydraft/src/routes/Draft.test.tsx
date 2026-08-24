@@ -35,18 +35,11 @@ function fixtureCsv() {
   return [header, ...rows].join('\n')
 }
 
-/**
- * You sit **first**, so the draft opens on your turn and nothing moves until you
- * pick — the opponents are on real timers and the clock is on a real interval,
- * and a test that races either of them fails on a loaded machine rather than on
- * a defect. `timer` is passed per test: off wherever an auto-pick could land
- * mid-assertion.
- */
+/** You sit **first**, so the draft opens on your turn and nothing moves until you pick. */
 const DRAFTERS = [
   { id: 'you', name: 'You', kind: 'you' as const, mark: 'M' },
   { id: 'priya', name: 'Priya', kind: 'human' as const, mark: 'P' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot' as const, mark: '1' },
-  { id: 'bot-2', name: 'Bot 2', kind: 'bot' as const, mark: '2' },
+  { id: 'sam', name: 'Sam', kind: 'human' as const, mark: 'S' },
 ]
 
 function renderDraft(timer: string) {
@@ -84,7 +77,7 @@ describe('Draft', () => {
     // Every drafter's board is open to everyone, all the way through.
     expect(screen.getByRole('tab', { name: 'You' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: 'Priya' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Bot 1' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Sam' })).toBeInTheDocument()
 
     // A–Z, not by ability: the strongest player in the fixture is not first.
     const rows = await screen.findAllByRole('button', { name: /Player \d/ })

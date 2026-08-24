@@ -16,7 +16,6 @@ import {
   type Drafter,
   type Pick,
   type Squad,
-  botChoice,
   blockedReason,
   roundAt,
   seatAt,
@@ -26,7 +25,7 @@ import {
 } from '../lib/draftEngine'
 import { type Player, inScope, loadPool } from '../lib/players'
 import { useSeats } from '../lib/seats'
-import { useMultiplayerRoom, useHostBotTakeover, makePick as remoteMakePick, sendSystemMessage } from '../lib/multiplayer'
+import { useMultiplayerRoom, makePick as remoteMakePick, sendSystemMessage } from '../lib/multiplayer'
 import { sendChatMessage as remoteSendChatMessage } from '../lib/multiplayer'
 import { DraftGate } from '../components/draft/DraftGate'
 import { AuctionDraft } from './AuctionDraft'
@@ -54,8 +53,6 @@ export interface DraftConfig {
 const DEFAULT_DRAFTERS: Drafter[] = [
   { id: 'priya', name: 'Priya', kind: 'human', mark: 'P' },
   { id: 'you', name: 'You', kind: 'you', mark: 'M' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot', mark: '1' },
-  { id: 'bot-2', name: 'Bot 2', kind: 'bot', mark: '2' },
 ]
 
 /** Number words, as translation keys — see `reason` below. */
@@ -74,10 +71,6 @@ const WORDS = [
   'eleven',
 ]
 
-/** Bots pace at a human's reading speed, not at a machine's. */
-const BOT_PAUSE = [1500, 3500]
-/** A simulated person takes slightly longer, because a person does. */
-const HUMAN_PAUSE = [2400, 5200]
 /** How long the room reads "X took Y" before the narrator moves on. */
 const REPORT_HOLD = 1500
 
@@ -121,7 +114,6 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
   const { room, uid } = useMultiplayerRoom(config.roomId)
   const isMultiplayer = Boolean(config.roomId)
   const isHost = isMultiplayer ? room?.host === uid : true
-  useHostBotTakeover(config.roomId, isHost, room)
 
   const baseDrafters = config.drafters?.length ? config.drafters : DEFAULT_DRAFTERS
   const { drafters, youSeat, seated } = useSeats(baseDrafters, isMultiplayer, room, uid)
@@ -282,30 +274,6 @@ export function DraftRoom({ config }: { config: DraftConfig }) {
       return blockedReason(player, squad, constraint, already, spent) === null ? player : null
     })
   }, [yourTurn, selectedId, commit, youSeat, scoped, constraint])
-
-  /* ------- The turn loop. Everyone but you is simulated, on a stagger. ----- */
-
-  useEffect(() => {
-    if (complete || scoped.length === 0 || activeSeat === youSeat) return
-    if (isMultiplayer && !isHost) return // Only host simulates bots in multiplayer
-
-    const drafter = drafters[activeSeat]
-    if (drafter.kind !== 'bot') {
-      // If multiplayer and this is a human seat, don't simulate them! They will make their own picks.
-      if (isMultiplayer) return
-    }
-
-    const [low, high] = drafter.kind === 'bot' ? BOT_PAUSE : HUMAN_PAUSE
-    const wait = low + Math.random() * (high - low)
-
-    const timer = window.setTimeout(() => {
-      commit(activeSeat, (squad, already, spent) =>
-        botChoice(scoped, squad, constraint, already, SQUAD_SIZE - round + 1, Math.random, spent),
-      )
-    }, wait)
-
-    return () => window.clearTimeout(timer)
-  }, [activeSeat, complete, scoped, youSeat, drafters, commit, constraint, round, isMultiplayer, isHost])
 
   /* ---------------------------------------------------------- the narrator -- */
 

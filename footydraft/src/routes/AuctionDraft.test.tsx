@@ -21,10 +21,9 @@ function fixtureCsv() {
   return [header, ...rows].join('\n')
 }
 
-/** Two seats and one bot, so the simulated side of the room is small. */
 const DRAFTERS = [
   { id: 'you', name: 'You', kind: 'you' as const, mark: 'M' },
-  { id: 'bot-1', name: 'Bot 1', kind: 'bot' as const, mark: '1' },
+  { id: 'priya', name: 'Priya', kind: 'human' as const, mark: 'P' },
 ]
 
 function renderAuction() {
@@ -103,6 +102,6 @@ describe('AuctionDraft', () => {
 
     await screen.findByText(/^Lot \d+ \/ 30$/)
     expect(screen.getByRole('tab', { name: 'You' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Bot 1' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Priya' })).toBeInTheDocument()
   })
 })

@@ -14,7 +14,7 @@ import { MAX_SEATS, MIN_SEATS, constraints, scopes, wheels } from '../data/lobby
 import { normaliseRoomCode } from '../lib/roomCode'
 import { useI18n } from '../lib/i18n'
 import { readSession, writeSession, type LobbySession } from '../lib/lobbySession'
-import { useMultiplayerRoom, joinRoom, updateRoomConfig, setRoomStatus, sendChatMessage, addBot, removeBot } from '../lib/multiplayer'
+import { useMultiplayerRoom, joinRoom, updateRoomConfig, setRoomStatus, sendChatMessage } from '../lib/multiplayer'
 import type { DraftConfig } from '../routes/Draft'
 import {
   effectiveSize,
@@ -36,8 +36,7 @@ const initialOf = (name: string) => name.trim().charAt(0).toUpperCase() || '?'
 
 /**
  * The friends lobby. Same diptych as the single-player one — who is playing on
- * the left, what they're playing on the right — with the three things a room
- * full of people needs and a room full of bots doesn't: the code that gets it
+ * the left, what they're playing on the right — with the code that gets it
  * shared, a chat, and a host who owns the settings everyone else is only
  * shown.
  *
@@ -202,7 +201,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
     ? !format
       ? t('Pick a format to start.')
       : !enoughSeats
-        ? t('Two at the table to start — invite someone, or add a bot.')
+        ? t('Two at the table to start — invite someone.')
         : reason
           ? reason
           : dimmed
@@ -223,25 +222,7 @@ function Room({ code, session }: { code: string; session: LobbySession }) {
           <RoomCode code={code} />
         </>
       }
-      seatList={
-        <SeatList
-          seats={seats}
-          minSeats={1}
-          onAdd={
-            session.host
-              ? () => {
-                  const currentBots = seats.filter(s => s.kind === 'bot').length
-                  addBot(code, currentBots + 1)
-                }
-              : undefined
-          }
-          onRemove={
-            session.host
-              ? (id) => removeBot(code, id)
-              : undefined
-          }
-        />
-      }
+      seatList={<SeatList seats={seats} />}
       leftFooterContent={
         <LobbyChat
           you={session.name}

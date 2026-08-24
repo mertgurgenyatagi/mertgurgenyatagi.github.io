@@ -142,33 +142,3 @@ export function bankerOffers(
     .slice(0, count)
 }
 
-/* -------------------------------------------------------------- the bots --- */
-
-/**
- * Bot decision logic proper is deferred project-wide, so these are the two
- * honest heuristics that keep a table playing rather than a model.
- *
- * Both read `seen` — every box opened so far this round — and nothing else. A
- * bot cannot see inside a sealed box, so the opened ones are the only read it
- * has on how strong this round's field is, exactly as a person at the table
- * would have it.
- */
-export function botSticks(box: Player, seen: Player[], random: () => number = Math.random): boolean {
-  const field = mean(seen.map((player) => player.ability), box.ability)
-  return box.ability >= field + (random() - 0.5) * 6
-}
-
-/** Taking the deal is the certain option; the boxes are the better average one. */
-export function botTakesOffer(
-  offer: Player,
-  seen: Player[],
-  random: () => number = Math.random,
-): boolean {
-  const field = mean(seen.map((player) => player.ability), offer.ability)
-  return offer.ability >= field - 4 + (random() - 0.5) * 8
-}
-
-function mean(values: number[], fallback: number): number {
-  if (values.length === 0) return fallback
-  return values.reduce((sum, value) => sum + value, 0) / values.length
-}

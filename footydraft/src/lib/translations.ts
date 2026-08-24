@@ -119,16 +119,10 @@ export const tr: Record<string, string> = {
   'Link copied': 'Bağlantı kopyalandı',
   'Anyone with the code can take a seat.': 'Kodu bilen herkes bir koltuğa oturabilir.',
   'Lobby {code}': '{code} lobisi',
-  'Add a bot': 'Bot ekle',
   'Remove': 'Çıkar',
-  'Remove a bot': 'Bir botu çıkar',
   'One seat left': 'Bir koltuk boş',
   '{count} seats left': '{count} koltuk boş',
   '{n} / {max} seats': '{n} / {max} koltuk',
-  'Bot {n}': 'Bot {n}',
-  'Bot {n} seated.': 'Bot {n} masaya oturdu.',
-  'A bot left the table.': 'Bir bot masadan kalktı.',
-  'Table opened — three bots seated.': 'Masa açıldı — üç bot oturdu.',
   'You': 'Sen',
   'You (Host)': 'Sen (Kurucu)',
   'Host': 'Kurucu',
@@ -139,8 +133,8 @@ export const tr: Record<string, string> = {
   'At the table': 'Masada',
   'Offline': 'Bağlantı yok',
   'Pick a format to start.': 'Başlamak için bir format seç.',
-  'Two at the table to start — invite someone, or add a bot.':
-    'Başlamak için masada iki kişi olmalı — birini davet et ya da bot ekle.',
+  'Two at the table to start — invite someone.':
+    'Başlamak için masada iki kişi olmalı — birini davet et.',
   'Only {host} can change the draft or start it.':
     'Seçimi yalnızca {host} değiştirebilir ve başlatabilir.',
   'Dimmed options don’t support {phrase}.': 'Soluk seçenekler {phrase} desteklemiyor.',
