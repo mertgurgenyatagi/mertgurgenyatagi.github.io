@@ -113,19 +113,19 @@ def check_convergence(policy_net, env_factory, device, avg_return=None, is_candi
     if avg_return is not None:
         check_convergence.history.append(avg_return)
         
-    if len(check_convergence.history) < 5:
+    if len(check_convergence.history) < 50:
         return False
         
     # Check if the recent plateau is extremely flat (less than 0.1% variance or improvement)
-    recent = check_convergence.history[-5:]
-    baseline = np.mean(check_convergence.history[-10:-5]) if len(check_convergence.history) >= 10 else check_convergence.history[0]
+    recent = check_convergence.history[-25:]
+    baseline = np.mean(check_convergence.history[-50:-25])
     
     current = np.mean(recent)
     improvement = (current - baseline) / (baseline + 1e-8)
     
-    # If the score has improved by less than 0.1% over the last 500 iterations (5 checks),
+    # If the score has fluctuated by less than 0.1% over the last 5000 iterations (50 checks),
     # we assume 99% certainty of optimal drafting behavior.
-    if 0 <= improvement < 0.001:
+    if abs(improvement) < 0.001:
         return True
         
     return False

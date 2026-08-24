@@ -39,6 +39,15 @@ def main():
     net_bid = DiscreteHead(BIDDING_OBS_LEN, N_BIDDING_ACTIONS).to(device)
     net_swap = CandidateScorer(CONTEXT_LEN, CANDIDATE_FEATURE_LEN).to(device)
     
+    ckpt_bid_path = "checkpoints/auction_optimal_bid.pt"
+    ckpt_swap_path = "checkpoints/auction_optimal_swap.pt"
+    if os.path.exists(ckpt_bid_path):
+        net_bid.load_state_dict(torch.load(ckpt_bid_path, map_location=device, weights_only=True))
+        print(f"Resumed bid net from {ckpt_bid_path}")
+    if os.path.exists(ckpt_swap_path):
+        net_swap.load_state_dict(torch.load(ckpt_swap_path, map_location=device, weights_only=True))
+        print(f"Resumed swap net from {ckpt_swap_path}")
+        
     optimizer_bid = torch.optim.Adam(net_bid.parameters(), lr=args.lr)
     optimizer_swap = torch.optim.Adam(net_swap.parameters(), lr=args.lr)
     
@@ -140,6 +149,10 @@ def main():
         
         print(f"Iter {it} | Loss (Bid): {loss_val_bid if 'loss_val_bid' in locals() else 0.0:.4f} | Loss (Swap): {loss_val_swap if 'loss_val_swap' in locals() else 0.0:.4f} | Avg Return: {avg_ret:.2f}")
         
+        if it > 0 and it % 250 == 0:
+            torch.save(net_bid.state_dict(), ckpt_bid_path)
+            torch.save(net_swap.state_dict(), ckpt_swap_path)
+            
         if not args.smoke_test and it > 0 and it % 100 == 0:
             if check_convergence(net_bid, env_factory, device, avg_return=avg_ret, is_candidate=False):
                 print("Converged!")

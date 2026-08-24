@@ -37,6 +37,11 @@ def main():
     runner = CandidateRunner(envs, device, rng)
     
     net = CandidateScorer(CONTEXT_LEN, CANDIDATE_FEATURE_LEN).to(device)
+    ckpt_path = "checkpoints/spin_wheel_optimal.pt"
+    if os.path.exists(ckpt_path):
+        net.load_state_dict(torch.load(ckpt_path, map_location=device, weights_only=True))
+        print(f"Resumed from {ckpt_path}")
+        
     optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
     
     os.makedirs("checkpoints", exist_ok=True)
@@ -99,6 +104,9 @@ def main():
                 
         avg_ret = np.mean([np.sum([s['reward'] for s in t]) for t in trajectories])
         print(f"Iter {it} | Loss: {loss_val:.4f} | Avg Return: {avg_ret:.2f}")
+        
+        if it > 0 and it % 250 == 0:
+            torch.save(net.state_dict(), ckpt_path)
         
         if not args.smoke_test and it > 0 and it % 100 == 0:
             if check_convergence(net, env_factory, device, avg_return=avg_ret, is_candidate=True):
