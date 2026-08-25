@@ -563,6 +563,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
   }, [finished, seatCount])
 
   /* ------------------------------------------------------------- bot bidding --- */
+  const botAuctionState = useRef<Record<number, { lotNumber: number, maxBid: number, initialPass: boolean }>>({})
   const botBiddingLocks = useRef<Record<number, boolean>>({})
   
   useEffect(() => {
@@ -576,8 +577,7 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
       botBiddingLocks.current[seat] = true
 
       try {
-        const { botDelay, evaluateDiscreteHead } = await import('../lib/bot/inference')
-        const { encodeBiddingContext, BIDDING_OBS_LEN } = await import('../lib/bot/encoders')
+        const { botDelay } = await import('../lib/bot/inference')
         
         await botDelay()
         
@@ -588,43 +588,30 @@ export function AuctionDraft({ config }: { config: DraftConfig }) {
         const budget = live.current.budgets[seat] ?? 0
         const isLockedOut = !live.current.armed
 
-        // In footydraft_sim/env_auction.py:
-        // 0: PASS, 1: WAIT, 2: RAISE5, 3: RAISE10, 4: RAISE25
-        const legalActionMask = [
-          true, // 0: PASS
-          true, // 1: WAIT
-          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 5) <= budget), // 2: RAISE5
-          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 10) <= budget), // 3: RAISE10
-          !isLockedOut && (currentBlock.holder === null ? currentBlock.lot.opening <= budget : (currentBlock.price + 25) <= budget), // 4: RAISE25
-        ]
-        
-        const context = encodeBiddingContext(
-          seat,
-          live.current.squads,
-          seatCount,
-          cursor,
-          lots.length,
-          currentBlock.lot.player,
-          currentBlock.lot.opening,
-          currentBlock.price,
-          currentBlock.holder,
-          currentBlock.out.length,
-          isLockedOut,
-          live.current.budgets
-        )
-        
-        const actionIdx = await evaluateDiscreteHead('auction_bid', context, BIDDING_OBS_LEN, legalActionMask)
-        
-        if (actionIdx === 0) {
-          applyPass(seat)
-        } else if (actionIdx === 1) {
-          // WAIT: do nothing
-        } else if (actionIdx === 2) {
-          applyBid(seat, 5)
-        } else if (actionIdx === 3) {
-          applyBid(seat, 10)
-        } else if (actionIdx === 4) {
-          applyBid(seat, 25)
+        let state = botAuctionState.current[seat]
+        if (!state || state.lotNumber !== currentBlock.lot.number) {
+           const opening = currentBlock.lot.opening
+           const mult = 1.22 + Math.random() * (1.62 - 1.22)
+           const limit = opening * mult
+           const passChance = (lots.length - seatCount * 11) / lots.length
+           const willPass = Math.random() < passChance
+           
+           state = { lotNumber: currentBlock.lot.number, maxBid: limit, initialPass: willPass }
+           botAuctionState.current[seat] = state
+        }
+
+        if (state.initialPass) {
+            applyPass(seat)
+            return
+        }
+
+        if (isLockedOut) return
+
+        const costIfBid = currentBlock.holder === null ? currentBlock.lot.opening : (currentBlock.price + 5)
+        if (costIfBid <= budget && costIfBid <= state.maxBid) {
+            applyBid(seat, 5)
+        } else {
+            applyPass(seat)
         }
       } catch (e) {
         console.error(e)
