@@ -37,17 +37,17 @@ Daily Allowance is the primary/headline number. All four are shown, with Daily g
 
 Tracked and resolved via the `questionnaires/` folder — one questionnaire per round, 10 questions each, answered by the user, then folded back into this document.
 
-Open after Round 2, being explored in Round 3:
-- Exact content of the daily log: raw bank balance change, or discretionary-only? (Round 2's answer was ambiguous — re-asking with a concrete example.)
-- Can Flex Income/Flex Spend/Wishlist items be added or edited after the first few days of the month, or are they locked in once set?
-- Exact formula for the "ahead/behind for the month" indicator.
-- What happens on a day the user forgets to log a balance number — gap, zero, or counted as exactly the allowance?
-- Can a previously logged day be corrected after the fact?
-- When a Wishlist item is actually bought, does it count against the daily discretionary number like a normal purchase, or is it tracked separately?
-- Since the repo/site is public, should sign-in be restricted to the user's own Google account specifically?
-- Currency for displayed amounts.
-- Primarily a phone-use app (logged daily on the go) or fine as desktop/browser-first?
-- Any month-over-month/historical view, or strictly current-month-only?
+Open after Round 3, being explored in Round 4 (shifting toward UX/build-shape now that core logic is mostly settled):
+- Should a retroactive recalculation (from editing a Flex/Wishlist/Base item mid-month) be flagged visibly, or applied silently?
+- Does editing Base Income/Base Spend trigger the same retroactive recalculation of the current month as Flex/Wishlist edits do?
+- How much detail does Base item history need — old value + date, or also a reason/note?
+- Daily reminder notification to log the balance number, given missed days silently count as zero?
+- Should GurgoBudget be an installable/offline-capable app (PWA), given heavy mobile use?
+- During a Wishlist ↔ Flex Spend conversion, does the name/amount carry over as-is or become editable?
+- Anything specific wanted from the (delegated) month-over-month view, or fully open to design judgment?
+- Any desire for a "running low" warning/alert before month-end, beyond the ahead/behind number?
+- Desired visual mood (calm/minimal vs. playful vs. other) and any reference apps/products.
+- Any existing name/logo direction for GurgoBudget, or fully open for the design phase?
 
 ## Decisions Log
 
@@ -74,7 +74,19 @@ Open after Round 2, being explored in Round 3:
 - New months start with a blank slate — no carry-over/quick-pick of last month's Flex/Wishlist items.
 - Expect no more than ~7 items in any given list (Base Income/Spend, Flex/Wishlist) — a simple list UI is sufficient, no need for a table.
 
+**Round 3:**
+- The daily log is the **raw whole bank balance change** for the day — no mental subtraction of Base/Flex categories before typing it in.
+- Flex Income, Flex Spend, and Wishlist items can be added or edited at any point in the month, but any edit is treated as if it had been true since 00:00 on day 1 — it retroactively recalculates the month's allowance figures.
+- New feature: a Wishlist item can be **converted** to a Flex Spend item, and vice versa.
+- The ahead/behind indicator should be "versatile" rather than pinned to one allowance number — Claude's call on the exact mechanism (leaning toward tracking against all four simultaneously, or a user-selectable target).
+- A day with no logged entry counts as **zero spent**.
+- Previously logged days can be corrected later.
+- Auth is restricted to a single hardcoded Google account: `thisisfootballstuff@gmail.com`.
+- Currency: **TRY** (Turkish Lira).
+- Heavy **mobile-first** usage — this is the dominant device.
+- Month-over-month/historical view: delegated to Claude's design judgment.
+
 ## Status
 
-- Round: 3 of 20 (in progress)
+- Round: 4 of 20 (in progress)
 - Last updated: 2026-08-26
