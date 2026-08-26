@@ -57,16 +57,16 @@ Alongside the four allowances, also show:
 - **Deletion is scoped differently from editing**: a Base Income/Base Spend item can be deleted outright, but only going forward — current and future months stop including it, while past months keep showing it exactly as it was. (Practically: the app should model this as historical values-over-time, not just current-value-plus-audit-log, so any month — past, present, or future — is computed from whatever was true during that specific month.)
 - Practical implication: since Firestore has no "months are closed" concept enforced by the data model, the UI distinction between "current month" and "history" is a display concept only, not a data-locking one.
 
-## Wishlist & "Money Saved" (needs more detail)
+## Wishlist & "Money Saved"
 
-Per the user's Round 6 answer, this is a distinct sub-system, deliberately semi-separate from the core allowance math ("a playground, not in terms of feel, but in terms of function"):
+A distinct sub-system, deliberately semi-separate from the core allowance math ("a playground, not in terms of feel, but in terms of function"):
 
 - The **only** way the Wishlist list itself changes is items being added, deleted, or moved to/from Flex Spend.
-- Separately, there's a **"Money Saved"** figure: `Surplus − (sum of actual daily logs so far) − (projected spend for remaining days of the month)`. The projected-spend-per-remaining-day is described as "controlled via toggles."
-- Within this Money Saved view, the user can mark a Wishlist item as **purchased** — this consumes some of the projected Money Saved, but does not touch the Wishlist total used in the Strict/Minimum Allowance formula, and does not touch the daily log.
+- Separately, there's a **"Money Saved"** figure: `Surplus − (sum of actual daily logs so far) − (projected spend for remaining days of the month)`. The projection is a **single global toggle** applying the same assumption to every remaining day of the month at once (not per-day). Money Saved resets to a zero basis each month — computed purely from that month's own Surplus, no carry-over from prior months.
+- **Money Saved lives within the Wishlist page** — not a separate screen.
+- Within that view, the user can mark a Wishlist item as **purchased**. This consumes some of the projected Money Saved, but does **not** touch the Wishlist total used in the Strict/Minimum Allowance formula, and does not touch the daily log.
+- A purchased item **stays visible in the Wishlist list**, shown crossed out — it isn't moved to a separate list.
 - Marking a Wishlist item purchased is **reversible** — it can be un-marked/uncrossed if done by mistake.
-
-This is the one area of the spec that isn't yet build-ready — see Open Questions below.
 
 ## Screens & Design Philosophy
 
@@ -84,15 +84,6 @@ This is the one area of the spec that isn't yet build-ready — see Open Questio
 - Currency: **TRY** (Turkish Lira).
 - Heavy **mobile-first** usage — this is the dominant device context.
 - Data export (e.g. to spreadsheet) is a soft "nice to have," not a requirement.
-
-## Open Questions For User
-
-Raised directly (per user's instruction) rather than via another questionnaire round:
-
-1. **The "toggles" for projected remaining-day spending** — one toggle per remaining day of the month (each togglable between, say, "assume Daily Allowance" and "assume 0"), or one global toggle/setting that applies the same assumption to all remaining days at once?
-2. **Where does the Money Saved view live** — is it a distinct screen/page of its own, or a mode/section inside the Wishlist page?
-3. **When a Wishlist item is marked "purchased,"** does it stay visible in the Wishlist list (crossed out, permanently) so its purchased history is preserved, or does marking it purchased move it out of the Wishlist view entirely (e.g. into a separate purchased-history list)?
-4. **Does "Money Saved" reset to 0 basis at the start of each month** (following Surplus for that month only), or could it be a running figure that also factors in unspent money carried over from prior months? (Everything else in the spec treats months as independent, so this is the default assumption unless told otherwise.)
 
 ## Decisions Log
 
@@ -164,9 +155,14 @@ Raised directly (per user's instruction) rather than via another questionnaire r
 - Negative Surplus/negative allowances are fine as-is, no special handling.
 - New stats to add: **average daily spend this month**, and **average daily spend over the trailing 90 days**.
 
+**Round 6 follow-up (chat, resolved the last 4 open questions):**
+- The remaining-days spending projection is one **global toggle**, not per-day.
+- Money Saved is a section within the **Wishlist page**, not a separate screen.
+- A purchased Wishlist item **stays visible in the Wishlist list**, shown crossed out.
+- Money Saved resets to a **zero basis each month** — no carry-over from prior months.
+
 ## Status
 
-- Q&A phase: **complete** (6 rounds).
-- Outstanding: 4 open questions above (Money Saved mechanics) before that sub-system is fully build-ready. Everything else in this document is settled.
+- Q&A phase: **complete** (6 rounds + chat follow-up). Spec is fully settled — no outstanding open questions.
 - Next phase: visual design (fonts/palette, then per-page exhibitions) — driven by the user, outside this Q&A process.
 - Last updated: 2026-08-26
