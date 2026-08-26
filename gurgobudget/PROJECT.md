@@ -28,24 +28,26 @@ Surplus = the total amount left over that's free to spend on other things.
 |---|---|
 | Max Allowance | Surplus / days in month |
 | Daily Allowance | (Surplus / days in month) − Buffer |
-| Relaxed Allowance | (Surplus − Wishlist) / days in month |
+| Strict Allowance *(renamed from "Relaxed")* | (Surplus − Wishlist) / days in month |
 | Minimum Allowance | ((Surplus − Wishlist) / days in month) − Buffer |
+
+Daily Allowance is the primary/headline number. All four are shown, with Daily given roughly 37% visual weight and the other three ~21% each (per user's own proportions).
 
 ## Open Questions
 
 Tracked and resolved via the `questionnaires/` folder — one questionnaire per round, 10 questions each, answered by the user, then folded back into this document.
 
-Open after Round 1, being explored in Round 2:
-- Should Base Income/Base Spend history be visible in the UI, or just stored quietly?
-- Confirm the Flex Spend vs. Wishlist philosophy (mandatory-but-unplanned vs. fully optional).
-- New name needed for "Relaxed Allowance" (the current name is misleading — it's the more cautious number, not the looser one).
-- Does the Buffer amount ever change between months, or is it one number forever?
-- Should Max/Minimum (and the renamed third variant) be shown as secondary numbers, or tucked away?
-- What should the app actually do with the logged daily balance number, beyond storing it?
-- Is the logged daily balance the raw bank delta, or discretionary spend only?
-- Backend/hosting approach for cross-device sync, single-user (Firebase/Supabase/other?).
-- Should new months start blank, or pre-fill Flex/Wishlist items from last month as quick-picks?
-- Expected volume of items per month (a handful vs. 10+) — affects list vs. table layout.
+Open after Round 2, being explored in Round 3:
+- Exact content of the daily log: raw bank balance change, or discretionary-only? (Round 2's answer was ambiguous — re-asking with a concrete example.)
+- Can Flex Income/Flex Spend/Wishlist items be added or edited after the first few days of the month, or are they locked in once set?
+- Exact formula for the "ahead/behind for the month" indicator.
+- What happens on a day the user forgets to log a balance number — gap, zero, or counted as exactly the allowance?
+- Can a previously logged day be corrected after the fact?
+- When a Wishlist item is actually bought, does it count against the daily discretionary number like a normal purchase, or is it tracked separately?
+- Since the repo/site is public, should sign-in be restricted to the user's own Google account specifically?
+- Currency for displayed amounts.
+- Primarily a phone-use app (logged daily on the go) or fine as desktop/browser-first?
+- Any month-over-month/historical view, or strictly current-month-only?
 
 ## Decisions Log
 
@@ -61,7 +63,18 @@ Open after Round 1, being explored in Round 2:
 - Month resets on the 1st of the calendar month.
 - Needs real cross-device persistence — plain browser-only storage (no server) is not sufficient.
 
+**Round 2:**
+- Base Income/Base Spend history is stored quietly — not surfaced in the UI.
+- Confirmed: Flex Spend = necessary-but-unplanned spending, Wishlist = fully optional. New wrinkle: Flex Spend is set during the first few days of the month, so in practice it's known before the month's allowances are calculated (not a mid-month surprise).
+- "Relaxed Allowance" renamed to **Strict Allowance**.
+- The Buffer is fixed permanently (not just per-month).
+- All four allowance numbers are shown at once; Daily gets the most visual weight (~37%), the other three ~21% each.
+- The daily log should feed an active "ahead/behind for the month" indicator, not just sit as a passive record.
+- Backend: **Firebase, with Google Sign-In** for auth (single user, cross-device sync).
+- New months start with a blank slate — no carry-over/quick-pick of last month's Flex/Wishlist items.
+- Expect no more than ~7 items in any given list (Base Income/Spend, Flex/Wishlist) — a simple list UI is sufficient, no need for a table.
+
 ## Status
 
-- Round: 2 of 20 (in progress)
+- Round: 3 of 20 (in progress)
 - Last updated: 2026-08-26
