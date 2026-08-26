@@ -37,17 +37,19 @@ Daily Allowance is the primary/headline number. All four are shown, with Daily g
 
 Tracked and resolved via the `questionnaires/` folder — one questionnaire per round, 10 questions each, answered by the user, then folded back into this document.
 
-Aesthetics/mood/branding are intentionally on hold for now (user's call) — later rounds will return to that. Round 5 stays on structure/architecture:
-- What are the app's main screens/sections (Today, Setup/Items, History, etc.)?
-- Does a month close automatically at the calendar flip, or via a manual action?
-- Are closed/past months frozen permanently, or can later Base item edits ever reach back into them?
-- Can a logged day be corrected only within the current month, or in past closed months too?
-- Do Base Income/Base Spend items need more than name + monthly amount (e.g. a due date)?
-- Do Flex Income/Flex Spend/Wishlist items need more than name + amount?
-- Is a day-by-day log list wanted, or is the aggregate ahead/behind number enough?
-- Should ahead/behind be a single number, or a simple day-by-day trend?
-- Can a Wishlist item be added with an estimated/unknown price, or always an exact amount?
-- Is "buying" a Wishlist item a distinct status change, or just deleting it and logging the spend?
+**Round 6 is the final questionnaire.** After it, the project moves to a separate design phase (font/palette selection, then per-page design exhibitions) that the user will drive — not part of this Q&A process.
+
+Open after Round 5, being closed out in Round 6:
+- Does buying a Wishlist item shrink the Wishlist total used in the Strict/Minimum Allowance formula, or does that total stay fixed regardless of purchases? (Correctness-critical — risk of double-counting the same money otherwise.)
+- Is "money saved up this month" (mentioned re: Wishlist purchases) the same number as the ahead/behind total, or a separate figure?
+- Can a mistakenly-bought Wishlist item be un-marked, or only deleted and re-added?
+- Should editing data that affects a closed/past month show any warning, or apply instantly with no friction?
+- Can Base Income/Base Spend items be deleted outright, and do past months keep showing a deleted item as it was?
+- What should the planned graphs/stats pages actually contain?
+- Any desire to export raw data out of the app?
+- Can more than one thing happen to a single day's log, or is it always exactly one number?
+- How should a negative Surplus/negative daily allowance be handled or displayed?
+- Catch-all: anything not yet covered in five rounds.
 
 ## Decisions Log
 
@@ -96,7 +98,18 @@ Aesthetics/mood/branding are intentionally on hold for now (user's call) — lat
 - No "running low" warning wanted beyond the ahead/behind number.
 - Month-over-month comparison specifics, visual mood, and name/logo are all deliberately deferred — user wants to sidestep aesthetics/feel for now and will return to it later.
 
+**Round 5:**
+- App section/screen structure is delegated to Claude's design judgment.
+- A month closes automatically the instant the calendar flips — no manual action.
+- The user wants **full agency**: editing a Base item (or a logged day) can reach back and alter a closed/past month's numbers. Nothing is permanently frozen. (This resolves cleanly with the amount-history/versioning model — any month, open or closed, is calculated dynamically from whatever historical values apply to it.)
+- Base Income/Base Spend items: just name + amount, no due date or extra fields.
+- Flex Income/Flex Spend/Wishlist items: just name + amount, no extra fields.
+- Wants a full day-by-day log view available — nothing permanently hidden, everything reachable somewhere.
+- Design philosophy stated directly: important/primary numbers stay easily accessible on the main screens, while deeper pages exist for graphs, stats, and other detail.
+- All item amounts (not just Wishlist) can start as rough estimates and be edited freely later.
+- Buying a Wishlist item: it gets crossed out (not deleted) and its amount is deducted from "money saved up this month" — exact relationship to the ahead/behind figure being confirmed in round 6.
+
 ## Status
 
-- Round: 5 of 20 (in progress)
+- Round: 6 of 20 (final questionnaire)
 - Last updated: 2026-08-26
