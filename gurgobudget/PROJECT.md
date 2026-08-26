@@ -1,6 +1,6 @@
 # GurgoBudget — Project Notes
 
-Live document. The Q&A phase (6 rounds) is complete; this now reflects the settled spec. Design phase (fonts/palette, per-page exhibitions) is next and is driven separately by the user.
+Live document. The Q&A phase (6 rounds) is complete; this now reflects the settled spec. The visual design direction is also chosen — see [Visual Design](#visual-design) — and the next phase is building the real dashboard.
 
 ## Concept
 
@@ -161,8 +161,15 @@ A distinct sub-system, deliberately semi-separate from the core allowance math (
 - A purchased Wishlist item **stays visible in the Wishlist list**, shown crossed out.
 - Money Saved resets to a **zero basis each month** — no carry-over from prior months.
 
+## Visual Design
+
+- An exhibition of hand-built dashboard variants was drawn at `gurgobudget/exhibition.html` — 36 distinct type/palette/structure directions, each a real phone-viewport (390×844) rendering of the same sample data, built individually rather than templated.
+- A single-elimination bracket tool at `gurgobudget/tournament.html` was used to pick a winner from the 36 by direct head-to-head comparison.
+- **Winner: Yosun** — sage paper with a deep moss/olive accent, a dark hero band (today's daily allowance) over a rounded-top light "sheet" panel holding the month ledger and wishlist. This is the direction going forward.
+- **Typeface override:** Hallmark's font catalog defaults to banning Inter as a generic AI-default face, but the user explicitly asked for it across all 36 specimens regardless — it reads as more legible to them. All specimens (including Yosun) now render in Inter. This preference should carry into the real build.
+
 ## Status
 
 - Q&A phase: **complete** (6 rounds + chat follow-up). Spec is fully settled — no outstanding open questions.
-- Next phase: visual design (fonts/palette, then per-page exhibitions) — driven by the user, outside this Q&A process.
-- Last updated: 2026-08-26
+- Visual design phase: **direction chosen** (Yosun, sage/moss, dark-band-plus-sheet, Inter). Next: build the real dashboard in this direction — palette, scale, and component voice carried over from the specimen, not the specimen's literal markup.
+- Last updated: 2026-08-27

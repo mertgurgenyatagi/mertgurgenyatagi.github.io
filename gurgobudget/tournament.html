@@ -1,0 +1,1664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Bracket</title>
+<meta name="description" content="A single-elimination bracket to pick a winner among the fifty GurgoBudget dashboard looks, one matchup at a time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · component: bracket-tool · genre: editorial (utilitarian) · theme: shell = graphite/amber, carried over from exhibition.html
+ * states: default · hover · focus · active · disabled(n/a) · loading(n/a) · error(n/a) · success(winner)
+ */
+
+/* ════════════  SHELL (shared with exhibition.html)  ════════════ */
+:root{
+  --shell-paper:oklch(15% .011 62);
+  --shell-paper-2:oklch(19% .012 62);
+  --shell-ink:oklch(94% .008 82);
+  --shell-muted:oklch(67% .013 72);
+  --shell-rule:oklch(29% .012 62);
+  --shell-accent:oklch(79% .148 78);
+  --shell-good:oklch(75% .16 148);
+
+  --font-shell-display:"Archivo","Trebuchet MS",sans-serif;
+  --font-shell-body:"Geist",ui-sans-serif,system-ui,sans-serif;
+  --font-shell-mono:"Geist Mono",ui-monospace,"Courier New",monospace;
+
+  --space-3xs:4px;--space-2xs:8px;--space-xs:12px;--space-sm:16px;
+  --space-md:24px;--space-lg:32px;--space-xl:48px;--space-2xl:72px;--space-3xl:112px;
+
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --dur-instant:90ms;--dur-short:150ms;--dur-mid:260ms;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:clip}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+body{
+  margin:0;background:var(--shell-paper);color:var(--shell-ink);
+  font-family:var(--font-shell-body);font-size:16px;line-height:1.6;font-weight:300;
+  -webkit-font-smoothing:antialiased;
+  min-height:100dvh;display:flex;flex-direction:column;
+}
+:focus-visible{outline:2px solid var(--shell-accent);outline-offset:3px}
+a{color:inherit}
+button{font:inherit;color:inherit}
+
+/* the specimen frame — identical contract to exhibition.html */
+.screen{
+  width:390px;height:844px;overflow:hidden;
+  display:flex;flex-direction:column;
+  font-variant-numeric:tabular-nums;
+  font-synthesis-weight:none;
+}
+.screen *{min-width:0}
+.screen button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+.screen ul{list-style:none;margin:0;padding:0}
+.screen h1,.screen h2,.screen h3,.screen p{margin:0;font-style:normal}
+.screen a{text-decoration:none}
+
+/* ════════════  TOURNAMENT CHROME  ════════════ */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-md);
+  padding:var(--space-sm) clamp(20px,4vw,40px);border-bottom:1px solid var(--shell-rule);
+  flex-wrap:wrap;
+}
+.topbar__back{
+  font-family:var(--font-shell-mono);font-size:.72rem;letter-spacing:.08em;color:var(--shell-muted);
+  transition:color var(--dur-short) var(--ease-out);
+}
+.topbar__back:hover{color:var(--shell-accent)}
+.topbar__title{
+  font-family:var(--font-shell-display);font-weight:900;font-size:1.05rem;letter-spacing:-.02em;
+  margin:0;
+}
+.topbar__prog{
+  font-family:var(--font-shell-mono);font-size:.72rem;letter-spacing:.06em;color:var(--shell-muted);
+  white-space:nowrap;
+}
+.topbar__prog b{color:var(--shell-accent);font-weight:700}
+
+.rail{height:2px;background:var(--shell-rule);position:relative}
+.rail__fill{
+  position:absolute;inset:0 auto 0 0;height:100%;background:var(--shell-accent);
+  width:0%;transition:width var(--dur-mid) var(--ease-out);
+}
+
+main{flex:1;display:flex;align-items:center;justify-content:center;padding:var(--space-xl) clamp(16px,4vw,40px)}
+
+/* ─ matchup ─ */
+.matchup{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  gap:clamp(16px,3vw,48px);max-width:1100px;width:100%;
+}
+.side{display:flex;flex-direction:column;align-items:center;gap:var(--space-sm)}
+.side__label{
+  font-family:var(--font-shell-mono);font-size:.72rem;letter-spacing:.1em;color:var(--shell-muted);
+  text-align:center;
+}
+.side__label b{color:var(--shell-ink);font-weight:600}
+.side__label span{color:var(--shell-accent)}
+.stage{
+  width:293px;height:633px;overflow:hidden;border-radius:6px;
+  border:1px solid var(--shell-rule);cursor:pointer;
+  transition:border-color var(--dur-short) var(--ease-out),transform var(--dur-short) var(--ease-out);
+}
+.stage:hover{border-color:var(--shell-accent);transform:translateY(-2px)}
+.stage:active{transform:translateY(0)}
+.stage > .screen{transform:scale(0.75);transform-origin:top left}
+.pick{
+  width:100%;max-width:293px;
+  padding:13px 20px;border-radius:999px;border:1px solid var(--shell-accent);
+  background:none;color:var(--shell-accent);
+  font-family:var(--font-shell-mono);font-weight:500;font-size:.82rem;letter-spacing:.04em;
+  cursor:pointer;text-align:center;
+  transition:background-color var(--dur-short) var(--ease-out),color var(--dur-short) var(--ease-out);
+}
+.pick:hover{background:var(--shell-accent);color:var(--shell-paper)}
+.pick:active{transform:translateY(1px)}
+
+.vs{
+  font-family:var(--font-shell-display);font-weight:900;font-size:1.4rem;letter-spacing:-.02em;
+  color:var(--shell-rule);align-self:center;
+}
+
+/* ─ bye ─ */
+.bye{
+  display:flex;flex-direction:column;align-items:center;gap:var(--space-lg);text-align:center;
+  max-width:420px;
+}
+.bye__k{
+  font-family:var(--font-shell-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--shell-muted);
+}
+.bye__t{
+  font-family:var(--font-shell-display);font-weight:900;font-size:clamp(1.6rem,3vw,2.2rem);
+  letter-spacing:-.03em;margin:0;overflow-wrap:anywhere;
+}
+.bye__t em{font-style:normal;color:var(--shell-accent)}
+.bye__p{color:var(--shell-muted);margin:0;font-size:.92rem;max-width:38ch}
+.bye .stage{width:220px;height:475px}
+.bye .stage > .screen{transform:scale(0.564)}
+
+/* ─ winner ─ */
+.win{
+  display:flex;flex-direction:column;align-items:center;gap:var(--space-md);text-align:center;
+}
+.win__k{
+  font-family:var(--font-shell-mono);font-size:.76rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--shell-accent);
+}
+.win__t{
+  font-family:var(--font-shell-display);font-weight:900;font-size:clamp(2.2rem,6vw,4rem);
+  letter-spacing:-.04em;margin:0;line-height:1;overflow-wrap:anywhere;
+}
+.win__meta{
+  font-family:var(--font-shell-mono);font-size:.8rem;color:var(--shell-muted);letter-spacing:.02em;
+}
+.win__meta b{color:var(--shell-ink);font-weight:500}
+.win .stage{width:293px;height:633px;margin-top:var(--space-sm);cursor:default}
+.win .stage:hover{border-color:var(--shell-rule);transform:none}
+.win__actions{display:flex;gap:var(--space-sm);margin-top:var(--space-md);flex-wrap:wrap;justify-content:center}
+.btn{
+  padding:12px 24px;border-radius:999px;font-family:var(--font-shell-mono);font-weight:500;
+  font-size:.82rem;letter-spacing:.04em;cursor:pointer;transition:opacity var(--dur-short) var(--ease-out);
+}
+.btn--solid{background:var(--shell-accent);color:var(--shell-paper);border:1px solid var(--shell-accent)}
+.btn--ghost{background:none;color:var(--shell-muted);border:1px solid var(--shell-rule)}
+.btn:hover{opacity:.85}
+.btn:active{transform:translateY(1px)}
+
+@media (max-width: 760px){
+  .matchup{grid-template-columns:1fr}
+  .vs{padding:var(--space-2xs) 0}
+  .stage{width:100%;max-width:293px;margin-inline:auto}
+}
+
+/* ════════════  36 SPECIMEN TOKEN BLOCKS + MARKUP STYLES  ════════════ */
+.d01{--paper:oklch(96% .014 84);--ink:oklch(24% .03 52);--muted:oklch(55% .022 60);
+  --rule:oklch(85% .016 84);--accent:oklch(55% .162 40);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-weight:400;padding:30px 26px 0}
+.d01 .top{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:14px;border-bottom:1px solid var(--rule)}
+.d01 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em}
+.d01 .mo{font-size:12px;color:var(--muted);font-variant-caps:all-small-caps;letter-spacing:.14em}
+.d01 .lede{padding:34px 0 26px}
+.d01 .lede h1{font-size:11px;font-variant-caps:all-small-caps;letter-spacing:.2em;color:var(--muted);font-weight:400}
+.d01 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:76px;line-height:.94;
+  letter-spacing:-.035em;margin-top:6px;display:block}
+.d01 .fig i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:.5em;margin-right:2px}
+.d01 .note{margin-top:12px;font-size:13.5px;color:var(--muted)}
+.d01 .note b{color:var(--accent);font-weight:600}
+.d01 .three{display:grid;grid-template-columns:repeat(3,1fr);
+  border-block:1px solid var(--rule);padding:14px 0}
+.d01 .three div+div{padding-left:14px;border-left:1px solid var(--rule)}
+.d01 .three dt{font-size:10px;font-variant-caps:all-small-caps;letter-spacing:.16em;color:var(--muted)}
+.d01 .three dd{margin:2px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:19px}
+.d01 .book{padding-top:22px}
+.d01 .book h2{font-size:11px;font-variant-caps:all-small-caps;letter-spacing:.2em;color:var(--muted);font-weight:400}
+.d01 .book li{display:flex;justify-content:space-between;gap:16px;padding:7px 0;font-size:14px;
+  border-bottom:1px solid var(--rule)}
+.d01 .book li b{font-weight:400;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;border-top:2px solid var(--ink);margin-top:4px;padding-top:9px}
+.d01 .book .sum b{font-weight:700;font-size:17px}
+.d01 .wish{padding-top:20px}
+.d01 .wish .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.d01 .wish .row span{font-size:13px;color:var(--muted)}
+.d01 .wish .row b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:22px;color:var(--accent);font-weight:700}
+.d01 .wish li{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:5px 0;color:var(--muted)}
+.d01 .wish .done{text-decoration:line-through;text-decoration-thickness:1px}
+.d01 .strip{margin-top:auto;display:flex;justify-content:space-between;
+  padding:18px 0;border-top:1px solid var(--rule);
+  font-size:11px;font-variant-caps:all-small-caps;letter-spacing:.14em;color:var(--muted)}
+.d01 .strip .on{color:var(--accent)}
+
+.d02{--paper:oklch(92% .006 96);--ink:oklch(17% .008 60);--muted:oklch(47% .01 70);
+  --rule:oklch(76% .008 96);--accent:oklch(51% .195 28);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;padding:22px 20px 0}
+.d02 .flag{display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:3px double var(--ink);padding-bottom:8px}
+.d02 .flag h1{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:23px;letter-spacing:-.02em}
+.d02 .flag span{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d02 .banner{padding:16px 0 12px;border-bottom:1px solid var(--rule)}
+.d02 .banner .kick{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.d02 .banner .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:62px;
+  line-height:.9;letter-spacing:-.035em;margin-top:4px}
+.d02 .banner .dek{margin-top:8px;font-size:12.5px;color:var(--muted);font-style:italic}
+.d02 .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:1px solid var(--rule)}
+.d02 .cols div{padding:9px 8px}
+.d02 .cols div+div{border-left:1px solid var(--rule)}
+.d02 .cols dt{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d02 .cols dd{margin:1px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px}
+.d02 .body{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;padding-top:12px}
+.d02 .body>section{border-top:1px solid var(--rule);padding-top:8px;margin-top:8px}
+.d02 h2{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-bottom:4px}
+.d02 li{display:flex;justify-content:space-between;gap:8px;padding:3.5px 0;font-size:12px;
+  border-bottom:1px dotted var(--rule)}
+.d02 .sum{border-bottom:0;border-top:1.5px solid var(--ink);margin-top:3px;padding-top:5px;font-weight:700}
+.d02 .save{grid-column:span 2;display:flex;justify-content:space-between;align-items:baseline;
+  border-block:1px solid var(--ink);padding:9px 0;margin-top:10px}
+.d02 .save span{font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+.d02 .save b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:26px;color:var(--accent)}
+.d02 .today{grid-column:span 2;display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.d02 .today em{font-style:normal;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d02 .today b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:22px;display:block}
+.d02 .today button{border:1px solid var(--ink);padding:7px 14px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;border-top:3px double var(--ink);display:flex;justify-content:space-between;
+  padding:11px 0;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase}
+.d02 .rail .on{color:var(--accent);font-weight:700}
+
+.d03{--paper:oklch(97% .012 92);--ink:oklch(26% .026 62);--muted:oklch(59% .022 76);
+  --rule:oklch(88% .014 92);--accent:oklch(58% .108 82);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px;padding:44px 34px 0;text-align:center}
+.d03 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:15px;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--muted)}
+.d03 .hair{width:38px;height:1px;background:var(--accent);margin:26px auto}
+.d03 .k{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+.d03 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:300;font-size:86px;
+  line-height:1;letter-spacing:-.01em;margin-top:10px}
+.d03 .sub{margin-top:14px;font-size:14px;color:var(--muted);font-style:italic}
+.d03 .three{display:flex;justify-content:center;gap:26px;margin-top:34px;padding-top:20px;
+  border-top:1px solid var(--rule)}
+.d03 .three dt{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.d03 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:21px}
+.d03 .ledger{margin-top:34px;text-align:left}
+.d03 h2{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+  font-weight:400;text-align:center;margin-bottom:14px}
+.d03 li{display:flex;justify-content:space-between;gap:14px;padding:6px 0;font-size:14.5px}
+.d03 li i{flex:1;border-bottom:1px dotted var(--rule);margin:0 6px 4px;font-style:normal}
+.d03 .sum{margin-top:8px;padding-top:10px;border-top:1px solid var(--accent);
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:19px;font-weight:600}
+.d03 .saved{margin-top:30px;padding:18px 0;border-block:1px solid var(--rule)}
+.d03 .saved b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;
+  font-size:38px;color:var(--accent);line-height:1}
+.d03 .saved span{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.d03 .wl{margin-top:16px;text-align:left;font-size:13.5px;color:var(--muted)}
+.d03 .wl li{padding:4px 0}
+.d03 .wl .done{text-decoration:line-through}
+.d03 .foot{margin-top:auto;padding:22px 0;display:flex;justify-content:center;gap:18px;
+  font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d03 .foot .on{color:var(--accent)}
+
+.d04{--paper:oklch(15% .022 148);--ink:oklch(88% .13 148);--muted:oklch(56% .09 148);
+  --rule:oklch(29% .05 148);--accent:oklch(85% .19 132);
+  background:var(--paper);color:var(--ink);
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:12.5px;line-height:1.7;padding:24px 20px 0}
+.d04 .ln{color:var(--muted)}
+.d04 .ln em{font-style:normal;color:var(--accent)}
+.d04 .hr{border-top:1px dashed var(--rule);margin:14px 0}
+.d04 .fig{font-size:54px;line-height:1.05;letter-spacing:-.06em;font-weight:700;margin:10px 0 4px}
+.d04 .cur{color:var(--muted)}
+.d04 .blink{color:var(--accent)}
+.d04 table{width:100%;border-collapse:collapse;font-size:12px}
+.d04 td{padding:3.5px 0}
+.d04 td+td{text-align:right}
+.d04 .tot td{border-top:1px solid var(--rule);padding-top:7px;color:var(--accent);font-weight:700}
+.d04 .box{border:1px solid var(--rule);padding:12px 14px;margin-top:14px}
+.d04 .box .lab{color:var(--muted);font-size:11px}
+.d04 .box .val{font-size:26px;font-weight:700;letter-spacing:-.04em}
+.d04 .box button{border:1px solid var(--accent);color:var(--accent);padding:5px 12px;font-size:11px;
+  font-family:inherit;margin-top:8px}
+.d04 .row{display:flex;justify-content:space-between}
+.d04 .done{color:var(--muted);text-decoration:line-through}
+.d04 nav{margin-top:auto;border-top:1px dashed var(--rule);display:flex;gap:10px;padding:14px 0;font-size:11px}
+.d04 nav .on{color:var(--accent)}
+.d04 nav .on::before{content:"▸"}
+
+.d05{--paper:oklch(17% .026 262);--card:oklch(21% .028 262);--ink:oklch(95% .012 250);
+  --muted:oklch(66% .026 258);--rule:oklch(29% .028 262);--accent:oklch(81% .148 78);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-weight:400;padding:26px 22px 0;display:flex;flex-direction:column;gap:18px}
+.d05 .top{display:flex;justify-content:space-between;align-items:center}
+.d05 .mark{font-weight:900;letter-spacing:-.04em;font-size:17px}
+.d05 .mo{font-size:12px;color:var(--muted);font-weight:300}
+.d05 .hero{padding:4px 0 2px}
+.d05 .hero p{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d05 .hero .fig{font-size:72px;font-weight:900;letter-spacing:-.055em;line-height:1;margin-top:8px}
+.d05 .hero .fig i{font-style:normal;font-size:32px;color:var(--muted);vertical-align:.55em}
+.d05 .pill{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;
+  border-radius:999px;background:var(--card);font-size:12px;color:var(--accent);font-weight:500}
+.d05 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d05 .three div{background:var(--card);border-radius:14px;padding:13px 12px}
+.d05 .three dt{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d05 .three dd{margin:4px 0 0;font-size:18px;font-weight:700;letter-spacing:-.03em}
+.d05 .log{background:var(--card);border-radius:18px;padding:16px 18px;display:flex;
+  justify-content:space-between;align-items:center;gap:14px}
+.d05 .log span{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.d05 .log b{display:block;font-size:26px;font-weight:700;letter-spacing:-.035em;margin-top:2px}
+.d05 .log button{background:var(--accent);color:var(--paper);border-radius:999px;padding:10px 18px;
+  font-weight:600;font-size:13px}
+.d05 .card{background:var(--card);border-radius:18px;padding:16px 18px}
+.d05 .card h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d05 .card li{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
+.d05 .card li+li{border-top:1px solid var(--rule)}
+.d05 .card .sum{font-weight:700;color:var(--accent)}
+.d05 .saved{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}
+.d05 .saved b{font-size:28px;font-weight:900;letter-spacing:-.04em;color:var(--accent)}
+.d05 .done{color:var(--muted);text-decoration:line-through}
+.d05 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);padding:16px 0 20px;
+  font-size:10.5px;text-align:center;color:var(--muted);font-weight:500}
+.d05 nav .on{color:var(--accent);font-weight:700}
+
+.d06{--paper:oklch(95% .01 88);--ink:oklch(18% .012 40);--muted:oklch(51% .014 50);
+  --rule:oklch(78% .012 88);--accent:oklch(55% .22 27);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:24px 22px 0}
+.d06 .top{display:flex;justify-content:space-between;align-items:baseline;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;letter-spacing:.02em;text-transform:uppercase;font-size:15px}
+.d06 .top span{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:11px;letter-spacing:.16em;color:var(--muted)}
+.d06 .slab{border-top:8px solid var(--ink);margin-top:14px;padding-top:10px}
+.d06 .slab .k{font-size:11px;letter-spacing:.24em;text-transform:uppercase;font-weight:600}
+.d06 .slab .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:98px;line-height:.82;
+  letter-spacing:-.045em;margin-top:6px}
+.d06 .slab .dl{border-top:3px solid var(--ink);margin-top:12px;padding-top:8px;
+  font-size:12px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.d06 .slab .dl b{color:var(--accent)}
+.d06 .grid{display:grid;grid-template-columns:repeat(3,1fr);margin-top:16px;
+  border-top:3px solid var(--ink);border-bottom:3px solid var(--ink)}
+.d06 .grid div{padding:10px 0}
+.d06 .grid div+div{border-left:1px solid var(--rule);padding-left:12px}
+.d06 .grid dt{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d06 .grid dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:23px;letter-spacing:-.02em}
+.d06 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:15px;letter-spacing:.04em;
+  text-transform:uppercase;margin:18px 0 6px}
+.d06 li{display:flex;justify-content:space-between;gap:14px;padding:5px 0;
+  border-bottom:1px solid var(--rule);font-size:13px;font-weight:500}
+.d06 .sum{border-bottom:0;border-top:3px solid var(--ink);margin-top:4px;padding-top:8px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:19px;letter-spacing:.01em}
+.d06 .today{display:flex;justify-content:space-between;align-items:center;
+  border-block:3px solid var(--ink);padding:12px 0;margin-top:16px}
+.d06 .today em{font-style:normal;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d06 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:28px;letter-spacing:-.02em}
+.d06 .today button{background:var(--accent);color:var(--paper);padding:9px 18px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.d06 .saved{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px}
+.d06 .saved b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:34px;color:var(--accent);letter-spacing:-.02em}
+.d06 .saved span{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:600}
+.d06 .done{color:var(--muted);text-decoration:line-through}
+.d06 nav{margin-top:auto;border-top:8px solid var(--ink);display:flex;justify-content:space-between;
+  padding:12px 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.d06 nav .on{color:var(--accent)}
+
+.d07{--paper:oklch(97% .006 250);--ink:oklch(21% .028 258);--muted:oklch(53% .022 254);
+  --rule:oklch(87% .01 250);--accent:oklch(47% .152 252);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;font-weight:400;padding:28px 24px 0}
+.d07 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d07 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:19px;letter-spacing:-.02em}
+.d07 .mo{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.d07 .rule{height:1px;background:var(--rule);margin:18px 0}
+.d07 .rule--ink{height:2px;background:var(--ink)}
+.d07 .head{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:300;font-size:15px;
+  color:var(--muted);font-style:italic}
+.d07 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:70px;line-height:1;
+  letter-spacing:-.03em;margin-top:2px}
+.d07 .fig i{font-style:normal;font-size:30px;color:var(--muted);vertical-align:.5em}
+.d07 .meta{margin-top:10px;font-size:12.5px;color:var(--muted)}
+.d07 .meta b{color:var(--accent);font-weight:600}
+.d07 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.d07 .three div+div{border-left:1px solid var(--rule);padding-left:14px}
+.d07 .three dt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d07 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:20px}
+.d07 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:16px;margin-bottom:6px}
+.d07 li{display:flex;justify-content:space-between;gap:14px;padding:6.5px 0;
+  border-bottom:1px solid var(--rule);font-size:13.5px}
+.d07 li span:last-child{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:15px}
+.d07 .sum{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:9px;font-weight:600}
+.d07 .sum span:last-child{font-weight:600;font-size:19px}
+.d07 .today{display:flex;justify-content:space-between;align-items:flex-end;padding:2px 0}
+.d07 .today em{font-style:normal;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d07 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:26px;margin-top:2px}
+.d07 .today button{border-bottom:2px solid var(--accent);color:var(--accent);font-weight:600;
+  font-size:12.5px;padding-bottom:2px}
+.d07 .saved{display:flex;justify-content:space-between;align-items:baseline}
+.d07 .saved b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:30px;color:var(--accent)}
+.d07 .done{color:var(--muted);text-decoration:line-through}
+.d07 nav{margin-top:auto;border-top:2px solid var(--ink);display:flex;justify-content:space-between;
+  padding:15px 0;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.d07 nav .on{color:var(--accent);font-weight:600}
+
+.d08{--paper:oklch(21% .016 58);--tile:oklch(25% .018 58);--ink:oklch(94% .014 82);
+  --muted:oklch(67% .018 70);--rule:oklch(33% .018 58);--accent:oklch(71% .175 48);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:22px 18px 0;display:grid;grid-template-columns:repeat(6,1fr);
+  gap:8px;align-content:start}
+.d08 .top{grid-column:span 6;display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.d08 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:17px;letter-spacing:-.04em}
+.d08 .mo{font-size:11px;color:var(--muted)}
+.d08 .t{background:var(--tile);border:1px solid var(--rule);border-radius:10px;padding:14px 15px}
+.d08 .big{grid-column:span 6}
+.d08 .big .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d08 .big .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:64px;
+  line-height:1;letter-spacing:-.05em;margin-top:6px}
+.d08 .big .fig i{font-style:normal;font-size:28px;color:var(--muted);vertical-align:.55em}
+.d08 .big .d{margin-top:8px;font-size:12px;color:var(--accent);font-weight:600}
+.d08 .sm{grid-column:span 2}
+.d08 .sm dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d08 .sm dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;
+  font-size:17px;letter-spacing:-.035em}
+.d08 .log{grid-column:span 4;display:flex;flex-direction:column;justify-content:center}
+.d08 .log span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d08 .log b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:28px;
+  letter-spacing:-.04em;margin-top:2px}
+.d08 .act{grid-column:span 2;background:var(--accent);border:0;color:oklch(18% .016 58);
+  border-radius:10px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:14px;
+  letter-spacing:-.02em;display:grid;place-items:center}
+.d08 .month{grid-column:span 6}
+.d08 h2{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:8px}
+.d08 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d08 li+li{border-top:1px solid var(--rule)}
+.d08 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:16px;color:var(--accent)}
+.d08 .wish{grid-column:span 6}
+.d08 .wish .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d08 .wish .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:26px;
+  color:var(--accent);letter-spacing:-.04em}
+.d08 .done{color:var(--muted);text-decoration:line-through}
+.d08 nav{grid-column:span 6;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:14px 0 18px;font-size:10px;color:var(--muted);font-weight:500}
+.d08 nav .on{color:var(--accent);font-weight:700}
+
+.d09{--paper:oklch(97% .022 158);--card:oklch(100% 0 0);--ink:oklch(27% .05 160);
+  --muted:oklch(56% .038 160);--rule:oklch(90% .026 158);--accent:oklch(51% .134 158);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:24px 16px 0;display:flex;flex-direction:column;gap:12px}
+.d09 .top{display:flex;justify-content:space-between;align-items:center;padding:0 8px}
+.d09 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:18px;letter-spacing:-.03em}
+.d09 .mo{font-size:12px;color:var(--muted)}
+.d09 .c{background:var(--card);border-radius:26px;padding:20px 22px}
+.d09 .hero{text-align:center;padding:26px 22px 24px}
+.d09 .hero p{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d09 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:66px;line-height:1;
+  letter-spacing:-.045em;margin-top:8px}
+.d09 .hero .fig i{font-style:normal;font-size:28px;color:var(--muted);vertical-align:.55em}
+.d09 .hero .chip{display:inline-block;margin-top:14px;background:var(--paper);color:var(--accent);
+  border-radius:999px;padding:7px 15px;font-size:12px;font-weight:700}
+.d09 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d09 .three div{background:var(--card);border-radius:20px;padding:14px 10px;text-align:center}
+.d09 .three dt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d09 .three dd{margin:5px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.03em}
+.d09 .log{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 22px}
+.d09 .log span{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.d09 .log b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:26px;letter-spacing:-.03em}
+.d09 .log button{background:var(--accent);color:var(--card);border-radius:999px;padding:11px 20px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:13.5px}
+.d09 h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-bottom:8px}
+.d09 li{display:flex;justify-content:space-between;padding:6px 0;font-size:13.5px}
+.d09 li+li{border-top:1px solid var(--rule)}
+.d09 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;color:var(--accent);font-size:16px}
+.d09 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d09 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:28px;color:var(--accent);letter-spacing:-.04em}
+.d09 .done{color:var(--muted);text-decoration:line-through}
+.d09 nav{margin-top:auto;background:var(--card);border-radius:26px 26px 0 0;
+  display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding:16px 0 20px;
+  font-size:10.5px;color:var(--muted);font-weight:700}
+.d09 nav .on{color:var(--accent)}
+
+.d10{--paper:oklch(86% .04 68);--ink:oklch(23% .036 46);--muted:oklch(47% .032 52);
+  --rule:oklch(72% .04 66);--accent:oklch(56% .142 46);--onink:oklch(90% .03 68);
+  background:var(--ink);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13.5px}
+.d10 .band{padding:30px 26px 34px;color:var(--onink)}
+.d10 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d10 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:18px;letter-spacing:-.01em}
+.d10 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.d10 .k{margin-top:30px;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
+.d10 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:70px;line-height:1;
+  letter-spacing:-.025em;margin-top:8px}
+.d10 .fig i{font-style:normal;font-size:30px;opacity:.6;vertical-align:.5em}
+.d10 .dl{margin-top:12px;font-size:12.5px;opacity:.78}
+.d10 .dl b{color:var(--accent);font-weight:700}
+.d10 .sheet{background:var(--paper);border-radius:28px 28px 0 0;margin-top:auto;flex:1;
+  padding:22px 26px 0;display:flex;flex-direction:column}
+.d10 .three{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--rule);
+  padding-bottom:14px}
+.d10 .three div+div{border-left:1px solid var(--rule);padding-left:14px}
+.d10 .three dt{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d10 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:19px}
+.d10 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d10 .today em{font-style:normal;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d10 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:24px;margin-top:2px}
+.d10 .today button{background:var(--ink);color:var(--onink);border-radius:999px;padding:9px 18px;font-size:12.5px;font-weight:600}
+.d10 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.d10 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d10 li+li{border-top:1px solid var(--rule)}
+.d10 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:16px}
+.d10 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px;
+  padding-top:12px;border-top:1px solid var(--rule)}
+.d10 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:28px;color:var(--accent)}
+.d10 .done{color:var(--muted);text-decoration:line-through}
+.d10 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:16px 0 20px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d10 nav .on{color:var(--accent);font-weight:700}
+
+.d11{--paper:oklch(95% .005 258);--tile:oklch(99% .003 258);--ink:oklch(20% .014 262);
+  --muted:oklch(52% .012 258);--rule:oklch(82% .007 258);--accent:oklch(46% .21 266);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:11.5px;padding:20px 16px 0;display:grid;grid-template-columns:repeat(4,1fr);
+  gap:6px;align-content:start}
+.d11 .top{grid-column:span 4;display:flex;justify-content:space-between;align-items:center}
+.d11 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px;letter-spacing:-.04em}
+.d11 .mo{color:var(--muted)}
+.d11 .b{background:var(--tile);border:1px solid var(--rule);padding:12px 13px}
+.d11 .hero{grid-column:span 4;border-color:var(--ink);border-width:2px}
+.d11 .hero .k{color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-size:10px}
+.d11 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:60px;line-height:1;
+  letter-spacing:-.06em;margin-top:4px}
+.d11 .hero .bar{height:6px;background:var(--rule);margin-top:12px;position:relative}
+.d11 .hero .bar span{position:absolute;inset:0 45% 0 0;background:var(--accent)}
+.d11 .hero .lg{display:flex;justify-content:space-between;margin-top:5px;color:var(--muted);font-size:10px}
+.d11 .q{grid-column:span 2}
+.d11 .q dt{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.d11 .q dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.04em}
+.d11 .log{grid-column:span 4;display:flex;justify-content:space-between;align-items:center}
+.d11 .log b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:24px;letter-spacing:-.04em;display:block}
+.d11 .log span{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.d11 .log button{background:var(--accent);color:var(--tile);padding:9px 16px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:12px}
+.d11 .wide{grid-column:span 4}
+.d11 h2{color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:7px}
+.d11 li{display:flex;justify-content:space-between;padding:4px 0;font-size:11.5px}
+.d11 li+li{border-top:1px dotted var(--rule)}
+.d11 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;color:var(--accent);font-size:14px}
+.d11 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.d11 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:24px;color:var(--accent);letter-spacing:-.04em}
+.d11 .done{color:var(--muted);text-decoration:line-through}
+.d11 nav{grid-column:span 4;display:flex;justify-content:space-between;padding:14px 0 18px;
+  color:var(--muted);font-size:10px}
+.d11 nav .on{color:var(--accent);font-weight:700}
+
+.d12{--paper:oklch(97% .015 74);--ink:oklch(22% .04 22);--muted:oklch(53% .03 30);
+  --rule:oklch(87% .016 74);--accent:oklch(47% .188 18);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px;padding:34px 30px 0}
+.d12 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:20px;
+  letter-spacing:-.01em;text-align:center}
+.d12 .mo{text-align:center;font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--muted);margin-top:4px}
+.d12 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:92px;line-height:.94;
+  letter-spacing:-.02em;text-align:center;margin-top:30px}
+.d12 .k{text-align:center;font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--muted);margin-top:10px}
+.d12 .dl{text-align:center;margin-top:16px;font-size:14px;color:var(--accent);font-weight:600}
+.d12 .three{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;
+  border-block:1px solid var(--rule);margin-top:26px;padding:14px 0}
+.d12 .three div+div{border-left:1px solid var(--rule)}
+.d12 .three dt{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d12 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:20px}
+.d12 .today{display:flex;justify-content:space-between;align-items:center;padding:16px 0;
+  border-bottom:1px solid var(--rule)}
+.d12 .today em{font-style:normal;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d12 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:26px}
+.d12 .today button{border:1px solid var(--ink);padding:8px 18px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.d12 h2{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px}
+.d12 li{display:flex;justify-content:space-between;padding:5px 0;font-size:14.5px;
+  border-bottom:1px solid var(--rule)}
+.d12 li b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400}
+.d12 .sum{border-bottom:0;border-top:1px solid var(--ink);margin-top:4px;padding-top:8px}
+.d12 .sum b{font-weight:700;font-size:19px}
+.d12 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+.d12 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:32px;color:var(--accent)}
+.d12 .done{color:var(--muted);text-decoration:line-through}
+.d12 nav{margin-top:auto;border-top:1px solid var(--rule);display:flex;justify-content:center;gap:16px;
+  padding:16px 0 20px;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d12 nav .on{color:var(--accent)}
+
+.d13{--paper:oklch(16% .018 52);--ink:oklch(84% .126 76);--muted:oklch(57% .086 72);
+  --rule:oklch(30% .04 60);--accent:oklch(81% .155 66);
+  background:var(--paper);color:var(--ink);
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:12px;line-height:1.75;padding:22px 20px 0}
+.d13 .hdr{border:1px solid var(--rule);padding:6px 9px;display:flex;justify-content:space-between;
+  font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.d13 .pane{border:1px solid var(--rule);border-top:0;padding:16px 14px}
+.d13 .k{color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.d13 .fig{font-size:52px;line-height:1.1;font-weight:600;letter-spacing:-.05em;color:var(--accent)}
+.d13 .meter{display:flex;gap:2px;margin-top:10px}
+.d13 .meter i{flex:1;height:9px;background:var(--rule);font-style:normal}
+.d13 .meter i.f{background:var(--accent)}
+.d13 .cap{color:var(--muted);font-size:11px;margin-top:6px;display:flex;justify-content:space-between}
+.d13 .row3{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rule);border-top:0}
+.d13 .row3 div{padding:10px 12px}
+.d13 .row3 div+div{border-left:1px solid var(--rule)}
+.d13 .row3 dt{color:var(--muted);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.d13 .row3 dd{margin:2px 0 0;font-size:16px;font-weight:600;letter-spacing:-.03em}
+.d13 .sect{margin-top:16px}
+.d13 .sect h2{color:var(--accent);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.d13 .sect h2::before{content:"── "}
+.d13 .sect h2::after{content:" ──────────"}
+.d13 li{display:flex;justify-content:space-between;padding:2px 0}
+.d13 .tot{color:var(--accent);font-weight:600;border-top:1px solid var(--rule);margin-top:4px;padding-top:5px}
+.d13 .input{border:1px solid var(--accent);margin-top:16px;padding:11px 13px;display:flex;
+  justify-content:space-between;align-items:center}
+.d13 .input b{font-size:22px;font-weight:600;letter-spacing:-.04em}
+.d13 .input button{color:var(--paper);background:var(--accent);padding:5px 11px;font-family:inherit;font-size:11px;font-weight:600}
+.d13 .done{color:var(--muted);text-decoration:line-through}
+.d13 nav{margin-top:auto;display:flex;gap:12px;padding:14px 0;border-top:1px solid var(--rule);
+  font-size:11px;color:var(--muted)}
+.d13 nav .on{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+
+.d14{--paper:oklch(98% .004 240);--tile:oklch(100% 0 0);--ink:oklch(25% .022 250);
+  --muted:oklch(58% .016 246);--rule:oklch(90% .006 240);--accent:oklch(49% .1 244);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:22px 18px 0;display:flex;flex-direction:column;gap:14px}
+.d14 .top{display:flex;justify-content:space-between;align-items:center}
+.d14 .mark{font-weight:700;font-size:15px;letter-spacing:-.03em}
+.d14 .mo{font-size:11.5px;color:var(--muted)}
+.d14 .hero{background:var(--tile);border:1px solid var(--rule);border-radius:10px;padding:18px 18px 16px}
+.d14 .hero .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d14 .hero .fig{font-size:56px;font-weight:700;letter-spacing:-.05em;line-height:1.05;margin-top:4px}
+.d14 .hero .fig i{font-style:normal;font-size:24px;color:var(--muted);vertical-align:.5em}
+.d14 .track{height:4px;border-radius:2px;background:var(--rule);margin-top:14px;overflow:hidden}
+.d14 .track i{display:block;height:100%;width:55%;background:var(--accent)}
+.d14 .hero .cap{display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:var(--muted)}
+.d14 .hero .cap b{color:var(--accent);font-weight:600}
+.d14 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d14 .three div{background:var(--tile);border:1px solid var(--rule);border-radius:10px;padding:11px 12px}
+.d14 .three dt{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d14 .three dd{margin:3px 0 0;font-size:16px;font-weight:700;letter-spacing:-.035em}
+.d14 .log{background:var(--tile);border:1px solid var(--rule);border-radius:10px;
+  padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.d14 .log span{font-size:10.5px;color:var(--muted);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.d14 .log b{display:block;font-size:22px;font-weight:700;letter-spacing:-.035em}
+.d14 .log button{background:var(--accent);color:var(--tile);border-radius:7px;padding:9px 16px;font-weight:600;font-size:12.5px}
+.d14 .panel{background:var(--tile);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
+.d14 h2{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin-bottom:6px}
+.d14 li{display:flex;justify-content:space-between;padding:4.5px 0;font-size:12.5px}
+.d14 li+li{border-top:1px solid var(--rule)}
+.d14 .sum{font-weight:700}
+.d14 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.d14 .sv b{font-size:23px;font-weight:700;color:var(--accent);letter-spacing:-.035em}
+.d14 .done{color:var(--muted);text-decoration:line-through}
+.d14 nav{margin-top:auto;background:var(--tile);border-top:1px solid var(--rule);
+  margin-inline:-18px;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:13px 0 17px;font-size:10px;color:var(--muted);font-weight:600}
+.d14 nav .on{color:var(--accent);font-weight:700}
+
+.d15{--paper:oklch(96% .018 8);--tile:oklch(99.5% .006 8);--ink:oklch(26% .07 328);
+  --muted:oklch(57% .046 330);--rule:oklch(89% .022 8);--accent:oklch(44% .152 330);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:26px 18px 0;display:flex;flex-direction:column;gap:14px}
+.d15 .top{display:flex;justify-content:space-between;align-items:baseline;padding:0 6px}
+.d15 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:20px;letter-spacing:-.015em}
+.d15 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d15 .card{background:var(--tile);border-radius:20px;padding:22px 22px}
+.d15 .hero .k{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d15 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:74px;line-height:1;
+  letter-spacing:-.03em;margin-top:6px}
+.d15 .hero .fig i{font-style:normal;font-size:30px;color:var(--muted);vertical-align:.5em}
+.d15 .hero .dl{margin-top:12px;font-size:13px;color:var(--accent);font-weight:600}
+.d15 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d15 .three div{background:var(--tile);border-radius:16px;padding:13px 13px}
+.d15 .three dt{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d15 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:19px}
+.d15 .log{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px}
+.d15 .log span{font-size:10.5px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.d15 .log b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:26px;margin-top:2px}
+.d15 .log button{background:var(--accent);color:var(--tile);border-radius:999px;padding:10px 20px;font-weight:700;font-size:13px}
+.d15 h2{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-bottom:8px}
+.d15 li{display:flex;justify-content:space-between;padding:5.5px 0;font-size:13.5px}
+.d15 li+li{border-top:1px solid var(--rule)}
+.d15 .sum b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:17px;font-weight:400}
+.d15 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d15 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:30px;color:var(--accent)}
+.d15 .done{color:var(--muted);text-decoration:line-through}
+.d15 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:16px 0 20px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:700}
+.d15 nav .on{color:var(--accent)}
+
+.d16{--paper:oklch(58% .008 250);--ink:oklch(14% .012 250);--muted:oklch(31% .012 250);
+  --rule:oklch(45% .01 250);--accent:oklch(89% .175 102);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;
+  font-weight:400;padding:22px 20px 0}
+.d16 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:3px solid var(--ink);padding-bottom:9px}
+.d16 .mark{font-weight:900;font-size:16px;letter-spacing:-.05em;text-transform:uppercase}
+.d16 .mo{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d16 .stage{padding:22px 0 16px;border-bottom:3px solid var(--ink)}
+.d16 .stage .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:900}
+.d16 .stage .fig{font-weight:900;font-size:88px;line-height:.86;letter-spacing:-.07em;margin-top:8px}
+.d16 .stage .mark2{display:inline-block;margin-top:14px;background:var(--accent);color:var(--ink);
+  padding:4px 10px;font-weight:900;font-size:12px;letter-spacing:-.01em}
+.d16 .three{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--rule)}
+.d16 .three div{padding:12px 0}
+.d16 .three div+div{border-left:1px solid var(--rule);padding-left:12px}
+.d16 .three dt{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d16 .three dd{margin:3px 0 0;font-weight:900;font-size:20px;letter-spacing:-.045em}
+.d16 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d16 .today em{font-style:normal;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--muted);font-weight:700}
+.d16 .today b{display:block;font-weight:900;font-size:26px;letter-spacing:-.05em}
+.d16 .today button{background:var(--ink);color:var(--paper);padding:9px 18px;font-weight:900;
+  font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.d16 h2{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:900;margin:14px 0 5px}
+.d16 li{display:flex;justify-content:space-between;padding:4.5px 0;font-size:13px;font-weight:400}
+.d16 li+li{border-top:1px solid var(--rule)}
+.d16 .sum{font-weight:900;font-size:17px;letter-spacing:-.04em}
+.d16 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;
+  border-top:3px solid var(--ink);padding-top:10px}
+.d16 .sv b{font-weight:900;font-size:30px;letter-spacing:-.05em;
+  background:var(--accent);padding:0 6px}
+.d16 .done{color:var(--muted);text-decoration:line-through}
+.d16 nav{margin-top:auto;border-top:3px solid var(--ink);display:flex;justify-content:space-between;
+  padding:13px 0 17px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.d16 nav .on{color:var(--ink);font-weight:900}
+
+.d17{--paper:oklch(18% .034 196);--tile:oklch(22% .038 196);--ink:oklch(94% .022 186);
+  --muted:oklch(64% .04 190);--rule:oklch(31% .04 196);--accent:oklch(83% .14 178);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;font-weight:400;padding:24px 20px 0;display:flex;flex-direction:column;gap:16px}
+.d17 .top{display:flex;justify-content:space-between;align-items:center}
+.d17 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:16px;letter-spacing:-.04em}
+.d17 .mo{font-size:11px;color:var(--muted)}
+.d17 .dial{position:relative;width:230px;aspect-ratio:1;margin:6px auto 0;display:grid;place-items:center}
+.d17 .dial .ring{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(var(--accent) 0 55%, var(--rule) 55% 100%);
+  -webkit-mask:radial-gradient(circle,transparent 0 66%,#000 66.5%);
+  mask:radial-gradient(circle,transparent 0 66%,#000 66.5%)}
+.d17 .dial .c{position:relative;text-align:center}
+.d17 .dial .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.d17 .dial .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:38px;letter-spacing:-.05em;
+  line-height:1.15;margin-top:4px}
+.d17 .dial .s{font-size:11.5px;color:var(--accent);font-weight:800;margin-top:2px}
+.d17 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d17 .three div{background:var(--tile);border-radius:16px;padding:13px 12px;text-align:center}
+.d17 .three dt{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.d17 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:16px;letter-spacing:-.04em}
+.d17 .log{background:var(--tile);border-radius:18px;padding:14px 18px;display:flex;
+  justify-content:space-between;align-items:center}
+.d17 .log span{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.d17 .log b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:24px;letter-spacing:-.04em}
+.d17 .log button{background:var(--accent);color:var(--paper);border-radius:999px;padding:10px 18px;
+  font-weight:800;font-size:12.5px}
+.d17 .panel{background:var(--tile);border-radius:18px;padding:15px 18px}
+.d17 h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:800;margin-bottom:7px}
+.d17 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d17 li+li{border-top:1px solid var(--rule)}
+.d17 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;color:var(--accent);font-size:15px}
+.d17 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.d17 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:24px;color:var(--accent);letter-spacing:-.04em}
+.d17 .done{color:var(--muted);text-decoration:line-through}
+.d17 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:14px 0 18px;font-size:10px;color:var(--muted);font-weight:800}
+.d17 nav .on{color:var(--accent)}
+
+.d18{--paper:oklch(97% .011 88);--ink:oklch(22% .05 258);--muted:oklch(53% .032 256);
+  --rule:oklch(87% .013 88);--accent:oklch(40% .13 258);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:32px 28px 0}
+.d18 .top{text-align:center;padding-bottom:16px;border-bottom:1px solid var(--ink)}
+.d18 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.01em}
+.d18 .mo{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+.d18 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:60px;
+  line-height:1.05;letter-spacing:-.03em;margin-top:26px}
+.d18 .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.d18 .dl{margin-top:14px;padding-left:14px;border-left:2px solid var(--accent);
+  font-size:13.5px;color:var(--muted);line-height:1.5}
+.d18 .dl b{color:var(--accent);font-weight:700}
+.d18 .three{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;
+  border-block:1px solid var(--rule);padding:13px 0}
+.d18 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d18 .three dt{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d18 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px}
+.d18 .today{display:flex;justify-content:space-between;align-items:flex-end;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d18 .today em{font-style:normal;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d18 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:23px;margin-top:3px}
+.d18 .today button{color:var(--accent);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:12.5px;
+  border-bottom:1px solid var(--accent);padding-bottom:1px}
+.d18 h2{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin:16px 0 4px}
+.d18 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13.5px;
+  border-bottom:1px solid var(--rule)}
+.d18 .sum{border-bottom:0;border-top:1px solid var(--ink);margin-top:4px;padding-top:8px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px}
+.d18 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+.d18 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:26px;color:var(--accent)}
+.d18 .done{color:var(--muted);text-decoration:line-through}
+.d18 nav{margin-top:auto;border-top:1px solid var(--ink);display:flex;justify-content:space-between;
+  padding:15px 0 19px;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d18 nav .on{color:var(--accent);font-weight:600}
+
+.d19{--paper:oklch(97% .004 262);--ink:oklch(19% .018 262);--muted:oklch(51% .014 260);
+  --rule:oklch(86% .006 262);--accent:oklch(55% .225 258);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px;padding:22px 20px 0}
+.d19 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--ink);padding-bottom:7px}
+.d19 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:22px;
+  letter-spacing:.01em;text-transform:uppercase}
+.d19 .mo{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d19 .lead{padding:16px 0 12px}
+.d19 .lead .k{font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d19 .lead .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:104px;
+  line-height:.82;letter-spacing:-.01em;margin-top:4px}
+.d19 .lead .dl{font-size:14px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-top:8px}
+.d19 .lead .dl b{color:var(--accent)}
+.d19 .strip{display:grid;grid-template-columns:repeat(3,1fr);border-block:2px solid var(--ink)}
+.d19 .strip div{padding:9px 0}
+.d19 .strip div+div{border-left:1px solid var(--rule);padding-left:12px}
+.d19 .strip dt{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d19 .strip dd{margin:1px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:26px}
+.d19 .two{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:12px}
+.d19 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;
+  letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--ink);padding-bottom:3px;margin-bottom:4px}
+.d19 li{display:flex;justify-content:space-between;padding:3px 0;font-size:15px;font-weight:400;
+  border-bottom:1px solid var(--rule)}
+.d19 .tot{grid-column:span 2;display:flex;justify-content:space-between;align-items:baseline;
+  border-top:2px solid var(--ink);margin-top:10px;padding-top:8px}
+.d19 .tot span{font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
+.d19 .tot b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:32px}
+.d19 .today{display:flex;justify-content:space-between;align-items:center;
+  border-block:2px solid var(--ink);padding:10px 0;margin-top:12px}
+.d19 .today em{font-style:normal;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--muted);font-weight:600}
+.d19 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:32px}
+.d19 .today button{background:var(--accent);color:var(--paper);padding:8px 20px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px;
+  letter-spacing:.1em;text-transform:uppercase}
+.d19 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:12px}
+.d19 .sv span{font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:600}
+.d19 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:38px;color:var(--accent)}
+.d19 .done{color:var(--muted);text-decoration:line-through}
+.d19 nav{margin-top:auto;border-top:2px solid var(--ink);display:flex;justify-content:space-between;
+  padding:11px 0 16px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:600;color:var(--muted)}
+.d19 nav .on{color:var(--accent);font-weight:700}
+
+.d20{--paper:oklch(93% .016 128);--ink:oklch(24% .036 132);--muted:oklch(50% .028 132);
+  --rule:oklch(81% .018 128);--accent:oklch(47% .108 138);--onink:oklch(94% .015 128);
+  background:var(--ink);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13.5px;font-weight:400}
+.d20 .band{color:var(--onink);padding:28px 26px 30px}
+.d20 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d20 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em}
+.d20 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.d20 .k{margin-top:26px;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
+.d20 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:72px;line-height:1;
+  letter-spacing:-.035em;margin-top:6px}
+.d20 .fig i{font-style:normal;font-size:30px;opacity:.6;vertical-align:.5em}
+.d20 .three{display:grid;grid-template-columns:repeat(3,1fr);margin-top:22px;
+  border-top:1px solid oklch(45% .04 132);padding-top:12px}
+.d20 .three dt{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.68}
+.d20 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:18px}
+.d20 .sheet{background:var(--paper);border-radius:24px 24px 0 0;flex:1;margin-top:auto;
+  padding:20px 26px 0;display:flex;flex-direction:column}
+.d20 .today{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;
+  border-bottom:1px solid var(--rule)}
+.d20 .today em{font-style:normal;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d20 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:25px;margin-top:2px}
+.d20 .today button{background:var(--accent);color:var(--paper);border-radius:6px;padding:9px 18px;
+  font-weight:500;font-size:12.5px}
+.d20 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin:14px 0 5px}
+.d20 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d20 li+li{border-top:1px solid var(--rule)}
+.d20 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px;color:var(--accent)}
+.d20 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--rule)}
+.d20 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:28px;color:var(--accent)}
+.d20 .done{color:var(--muted);text-decoration:line-through}
+.d20 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:15px 0 19px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d20 nav .on{color:var(--accent);font-weight:700}
+
+.d21{--paper:oklch(15% .04 300);--tile:oklch(20% .05 300);--ink:oklch(94% .026 310);
+  --muted:oklch(64% .05 306);--rule:oklch(30% .056 300);--accent:oklch(73% .215 338);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:22px 18px 0;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;align-content:start}
+.d21 .top{grid-column:span 6;display:flex;justify-content:space-between;align-items:center}
+.d21 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:14px;letter-spacing:-.04em}
+.d21 .mo{font-size:11px;color:var(--muted)}
+.d21 .t{background:var(--tile);border-radius:14px;padding:15px 16px}
+.d21 .hero{grid-column:span 6;border:1px solid var(--accent)}
+.d21 .hero .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d21 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:52px;line-height:1.05;
+  letter-spacing:-.06em;margin-top:6px;color:var(--accent)}
+.d21 .hero .dl{margin-top:8px;font-size:12px;color:var(--muted)}
+.d21 .hero .dl b{color:var(--ink);font-weight:800}
+.d21 .a{grid-column:span 3}
+.d21 .b{grid-column:span 3}
+.d21 .c{grid-column:span 6}
+.d21 dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d21 dd{margin:5px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.05em}
+.d21 .log{grid-column:span 6;display:flex;justify-content:space-between;align-items:center}
+.d21 .log span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.d21 .log b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:24px;letter-spacing:-.05em}
+.d21 .log button{background:var(--accent);color:var(--paper);border-radius:999px;padding:10px 20px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:11px;letter-spacing:-.02em}
+.d21 h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:8px}
+.d21 li{display:flex;justify-content:space-between;padding:5px 0;font-size:12.5px}
+.d21 li+li{border-top:1px solid var(--rule)}
+.d21 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:14px;color:var(--accent);letter-spacing:-.05em}
+.d21 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d21 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:24px;color:var(--accent);letter-spacing:-.05em}
+.d21 .done{color:var(--muted);text-decoration:line-through}
+.d21 nav{grid-column:span 6;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:14px 0 18px;font-size:10px;color:var(--muted);font-weight:500}
+.d21 nav .on{color:var(--accent);font-weight:800}
+
+.d22{--paper:oklch(98% .008 96);--ink:oklch(25% .022 68);--muted:oklch(57% .018 74);
+  --rule:oklch(89% .01 96);--accent:oklch(59% .128 74);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:16px;padding:46px 32px 0}
+.d22 .mark{font-size:12px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+.d22 .fig{font-weight:600;font-size:84px;line-height:1;letter-spacing:-.02em;margin-top:44px}
+.d22 .fig i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:.52em}
+.d22 .k{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+.d22 .dl{margin-top:20px;font-size:16px;line-height:1.45;max-width:24ch}
+.d22 .dl b{color:var(--accent);font-weight:600}
+.d22 .three{margin-top:38px;border-top:1px solid var(--rule)}
+.d22 .three div{display:flex;justify-content:space-between;align-items:baseline;
+  padding:10px 0;border-bottom:1px solid var(--rule)}
+.d22 .three dt{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d22 .three dd{margin:0;font-weight:600;font-size:20px}
+.d22 .today{display:flex;justify-content:space-between;align-items:baseline;padding:18px 0;
+  border-bottom:1px solid var(--rule)}
+.d22 .today em{font-style:normal;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d22 .today b{font-weight:600;font-size:26px}
+.d22 h2{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);margin:22px 0 6px}
+.d22 li{display:flex;justify-content:space-between;padding:5px 0;font-size:15.5px}
+.d22 .sum{border-top:1px solid var(--ink);margin-top:6px;padding-top:9px;font-weight:600;font-size:19px}
+.d22 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:22px;
+  padding-top:14px;border-top:1px solid var(--rule)}
+.d22 .sv b{font-weight:600;font-size:30px;color:var(--accent)}
+.d22 .done{color:var(--muted);text-decoration:line-through}
+.d22 nav{margin-top:auto;display:flex;justify-content:space-between;padding:20px 0 24px;
+  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d22 nav .on{color:var(--accent)}
+
+.d23{--paper:oklch(97% .003 240);--ink:oklch(17% .008 240);--muted:oklch(50% .008 240);
+  --rule:oklch(85% .005 240);--accent:oklch(51% .21 27);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:12px;padding:0}
+.d23 .top{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;
+  border-bottom:1px solid var(--ink)}
+.d23 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:11px;letter-spacing:-.05em;text-transform:uppercase}
+.d23 .mo{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9.5px;color:var(--muted);letter-spacing:-.04em}
+.d23 .hero{padding:18px 16px;border-bottom:1px solid var(--ink)}
+.d23 .hero .k{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9px;letter-spacing:-.02em;
+  text-transform:uppercase;color:var(--muted)}
+.d23 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:44px;
+  letter-spacing:-.09em;line-height:1.1;margin-top:4px}
+.d23 .hero .dl{margin-top:8px;font-size:11.5px;color:var(--muted)}
+.d23 .hero .dl b{color:var(--accent);font-weight:600}
+.d23 .grid{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--ink)}
+.d23 .grid div{padding:10px 16px}
+.d23 .grid div+div{border-left:1px solid var(--rule)}
+.d23 .grid dt{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:8.5px;letter-spacing:-.02em;
+  text-transform:uppercase;color:var(--muted)}
+.d23 .grid dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:14px;letter-spacing:-.08em}
+.d23 .rowset{padding:12px 16px;border-bottom:1px solid var(--rule)}
+.d23 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9px;letter-spacing:-.02em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.d23 li{display:flex;justify-content:space-between;padding:3.5px 0;font-size:12px}
+.d23 li span:last-child{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:11px;letter-spacing:-.06em}
+.d23 .sum{border-top:1px solid var(--ink);margin-top:4px;padding-top:6px;font-weight:600}
+.d23 .sum span:last-child{color:var(--accent);font-weight:700}
+.d23 .today{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;
+  border-bottom:1px solid var(--ink)}
+.d23 .today em{font-style:normal;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:8.5px;
+  text-transform:uppercase;color:var(--muted);letter-spacing:-.02em}
+.d23 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:20px;letter-spacing:-.08em}
+.d23 .today button{background:var(--accent);color:var(--paper);padding:7px 14px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:9.5px;letter-spacing:-.03em;text-transform:uppercase}
+.d23 .sv{display:flex;justify-content:space-between;align-items:baseline;padding:12px 16px;
+  border-bottom:1px solid var(--rule)}
+.d23 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px;
+  color:var(--accent);letter-spacing:-.08em}
+.d23 .done{color:var(--muted);text-decoration:line-through}
+.d23 nav{margin-top:auto;border-top:1px solid var(--ink);display:grid;grid-template-columns:repeat(5,1fr)}
+.d23 nav span{text-align:center;padding:13px 0 17px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:8.5px;letter-spacing:-.03em;text-transform:uppercase;color:var(--muted)}
+.d23 nav span+span{border-left:1px solid var(--rule)}
+.d23 nav .on{color:var(--accent);font-weight:700}
+
+.d24{--paper:oklch(19% .038 336);--tile:oklch(23% .042 336);--ink:oklch(95% .02 44);
+  --muted:oklch(67% .042 24);--rule:oklch(32% .046 336);--accent:oklch(81% .142 46);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:26px 22px 0;display:flex;flex-direction:column;gap:16px}
+.d24 .top{display:flex;justify-content:space-between;align-items:center}
+.d24 .mark{font-weight:900;font-size:16px;letter-spacing:-.045em}
+.d24 .mo{font-size:11px;color:var(--muted);font-weight:500}
+.d24 .dial{position:relative;width:238px;aspect-ratio:1;margin:2px auto 0;display:grid;place-items:center}
+.d24 .dial .ring{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(var(--accent) 0 55%, var(--rule) 55% 100%);
+  -webkit-mask:radial-gradient(circle,transparent 0 71%,#000 71.5%);
+  mask:radial-gradient(circle,transparent 0 71%,#000 71.5%)}
+.d24 .dial .c{position:relative;text-align:center}
+.d24 .dial .k{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d24 .dial .fig{font-weight:900;font-size:44px;letter-spacing:-.055em;line-height:1.1;margin-top:4px}
+.d24 .dial .s{font-size:11.5px;color:var(--muted);margin-top:4px;font-weight:500}
+.d24 .three{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--rule);padding:13px 0}
+.d24 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d24 .three dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d24 .three dd{margin:4px 0 0;font-weight:700;font-size:17px;letter-spacing:-.04em}
+.d24 .log{background:var(--tile);border-radius:20px;padding:15px 18px;display:flex;
+  justify-content:space-between;align-items:center}
+.d24 .log span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d24 .log b{display:block;font-weight:900;font-size:24px;letter-spacing:-.045em}
+.d24 .log button{background:var(--accent);color:var(--paper);border-radius:999px;padding:10px 20px;
+  font-weight:700;font-size:12.5px}
+.d24 h2{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-bottom:6px}
+.d24 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;font-weight:400}
+.d24 li+li{border-top:1px solid var(--rule)}
+.d24 .sum{font-weight:900;color:var(--accent);font-size:15px}
+.d24 .sv{display:flex;justify-content:space-between;align-items:baseline}
+.d24 .sv b{font-weight:900;font-size:26px;color:var(--accent);letter-spacing:-.045em}
+.d24 .done{color:var(--muted);text-decoration:line-through}
+.d24 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:14px 0 18px;font-size:10px;color:var(--muted);font-weight:500}
+.d24 nav .on{color:var(--accent);font-weight:900}
+
+.d25{--paper:oklch(95% .026 106);--ink:oklch(28% .046 112);--muted:oklch(52% .04 110);
+  --rule:oklch(85% .03 106);--accent:oklch(45% .096 118);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:30px 26px 0}
+.d25 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--ink);padding-bottom:10px}
+.d25 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px;letter-spacing:-.015em}
+.d25 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d25 .lede{padding:26px 0 20px;border-bottom:1px solid var(--rule)}
+.d25 .lede .k{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-style:italic;font-size:15px;color:var(--muted)}
+.d25 .lede .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:72px;line-height:1;
+  letter-spacing:-.035em;margin-top:4px}
+.d25 .lede .fig i{font-style:normal;font-size:30px;color:var(--muted);vertical-align:.5em}
+.d25 .lede .dl{margin-top:12px;font-size:13px;color:var(--accent);font-weight:600}
+.d25 .three{display:flex;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--rule)}
+.d25 .three dt{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d25 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px}
+.d25 .today{display:flex;justify-content:space-between;align-items:flex-end;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d25 .today em{font-style:normal;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d25 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:26px;margin-top:2px}
+.d25 .today button{background:var(--accent);color:var(--paper);padding:9px 18px;border-radius:3px;
+  font-weight:600;font-size:12.5px}
+.d25 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px;margin:18px 0 4px}
+.d25 li{display:flex;justify-content:space-between;padding:5.5px 0;font-size:13.5px;
+  border-bottom:1px solid var(--rule)}
+.d25 li b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:15px}
+.d25 .sum{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:8px}
+.d25 .sum b{font-weight:700;font-size:19px}
+.d25 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px}
+.d25 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:29px;color:var(--accent)}
+.d25 .done{color:var(--muted);text-decoration:line-through}
+.d25 nav{margin-top:auto;border-top:1px solid var(--ink);display:flex;justify-content:space-between;
+  padding:15px 0 19px;font-size:10px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);font-weight:600}
+.d25 nav .on{color:var(--accent);font-weight:700}
+
+.d26{--paper:oklch(92% .028 76);--tile:oklch(97% .016 76);--ink:oklch(26% .046 48);
+  --muted:oklch(52% .038 54);--rule:oklch(84% .026 76);--accent:oklch(54% .152 44);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:24px 16px 0;display:flex;flex-direction:column;gap:12px}
+.d26 .top{display:flex;justify-content:space-between;align-items:center;padding:0 8px}
+.d26 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:17px;letter-spacing:-.03em}
+.d26 .mo{font-size:11.5px;color:var(--muted);font-weight:500}
+.d26 .c{background:var(--tile);border-radius:18px;padding:20px 20px}
+.d26 .hero .k{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted)}
+.d26 .hero .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:64px;line-height:1;
+  letter-spacing:-.045em;margin-top:6px}
+.d26 .hero .fig i{font-style:normal;font-size:26px;color:var(--muted);vertical-align:.55em}
+.d26 .hero .bar{height:8px;border-radius:4px;background:var(--rule);margin-top:16px;overflow:hidden}
+.d26 .hero .bar i{display:block;height:100%;width:55%;background:var(--accent);border-radius:4px}
+.d26 .hero .cap{display:flex;justify-content:space-between;margin-top:7px;font-size:11.5px;color:var(--muted)}
+.d26 .hero .cap b{color:var(--accent);font-weight:700}
+.d26 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d26 .three div{background:var(--tile);border-radius:14px;padding:13px 12px}
+.d26 .three dt{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d26 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:17px;letter-spacing:-.04em}
+.d26 .log{display:flex;justify-content:space-between;align-items:center;padding:15px 20px}
+.d26 .log span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d26 .log b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:25px;letter-spacing:-.04em}
+.d26 .log button{background:var(--accent);color:var(--tile);border-radius:12px;padding:11px 20px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:13px}
+.d26 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.d26 li{display:flex;justify-content:space-between;padding:5.5px 0;font-size:13.5px}
+.d26 li+li{border-top:1px solid var(--rule)}
+.d26 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;color:var(--accent);font-size:16px;letter-spacing:-.04em}
+.d26 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d26 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:800;font-size:27px;color:var(--accent);letter-spacing:-.045em}
+.d26 .done{color:var(--muted);text-decoration:line-through}
+.d26 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:16px 0 20px;font-size:10.5px;color:var(--muted);font-weight:700}
+.d26 nav .on{color:var(--accent)}
+
+.d27{--paper:oklch(97% .009 78);--ink:oklch(23% .04 26);--muted:oklch(53% .03 32);
+  --rule:oklch(87% .011 78);--accent:oklch(42% .142 24);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:15px;padding:30px 28px 0}
+.d27 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d27 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:20px;letter-spacing:-.02em}
+.d27 .mo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d27 .keyline{border-top:4px solid var(--ink);border-bottom:1px solid var(--ink);height:5px;margin:12px 0 0}
+.d27 .lede{padding:24px 0 18px}
+.d27 .lede .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:78px;
+  line-height:.98;letter-spacing:-.035em}
+.d27 .lede .fig i{font-style:normal;font-size:32px;color:var(--muted);vertical-align:.5em}
+.d27 .lede .k{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.d27 .lede .dl{margin-top:14px;font-size:15px;line-height:1.45;color:var(--muted)}
+.d27 .lede .dl b{color:var(--accent);font-weight:700}
+.d27 .three{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--ink);padding:13px 0}
+.d27 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d27 .three dt{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d27 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px}
+.d27 .today{display:flex;justify-content:space-between;align-items:flex-end;padding:15px 0;
+  border-bottom:1px solid var(--rule)}
+.d27 .today em{font-style:normal;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d27 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:26px}
+.d27 .today button{color:var(--accent);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:14px;
+  border-bottom:2px solid var(--accent)}
+.d27 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:15px;margin:16px 0 4px}
+.d27 li{display:flex;justify-content:space-between;padding:5px 0;font-size:15px;border-bottom:1px solid var(--rule)}
+.d27 .sum{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:8px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:19px}
+.d27 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;
+  border-top:4px solid var(--ink);padding-top:12px}
+.d27 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:900;font-size:30px;color:var(--accent)}
+.d27 .done{color:var(--muted);text-decoration:line-through}
+.d27 nav{margin-top:auto;border-top:1px solid var(--ink);display:flex;justify-content:space-between;
+  padding:15px 0 19px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d27 nav .on{color:var(--accent);font-weight:700}
+
+.d28{--paper:oklch(19% .006 258);--ink:oklch(95% .006 258);--muted:oklch(64% .01 258);
+  --rule:oklch(31% .008 258);--accent:oklch(89% .2 122);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;
+  font-weight:400;padding:22px 20px 0}
+.d28 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--ink);padding-bottom:8px}
+.d28 .mark{font-weight:900;font-size:15px;letter-spacing:-.055em;text-transform:uppercase}
+.d28 .mo{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d28 .stage{padding:20px 0 14px;border-bottom:2px solid var(--ink)}
+.d28 .stage .k{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d28 .stage .fig{font-weight:900;font-size:92px;line-height:.84;letter-spacing:-.075em;margin-top:8px}
+.d28 .stage .dl{margin-top:12px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.d28 .stage .dl b{color:var(--accent)}
+.d28 .three{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--rule)}
+.d28 .three div{padding:12px 0}
+.d28 .three div+div{border-left:1px solid var(--rule);padding-left:12px}
+.d28 .three dt{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d28 .three dd{margin:3px 0 0;font-weight:900;font-size:20px;letter-spacing:-.05em}
+.d28 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d28 .today em{font-style:normal;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d28 .today b{display:block;font-weight:900;font-size:26px;letter-spacing:-.055em}
+.d28 .today button{border:2px solid var(--accent);color:var(--accent);padding:8px 16px;
+  font-weight:900;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.d28 h2{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin:14px 0 5px}
+.d28 li{display:flex;justify-content:space-between;padding:4.5px 0;font-size:12.5px}
+.d28 li+li{border-top:1px solid var(--rule)}
+.d28 .sum{font-weight:900;font-size:17px;letter-spacing:-.05em;color:var(--accent)}
+.d28 .sv{display:flex;justify-content:space-between;align-items:baseline;
+  border-top:2px solid var(--ink);margin-top:14px;padding-top:11px}
+.d28 .sv span{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d28 .sv b{font-weight:900;font-size:30px;letter-spacing:-.06em;color:var(--accent)}
+.d28 .done{color:var(--muted);text-decoration:line-through}
+.d28 nav{margin-top:auto;border-top:2px solid var(--ink);display:flex;justify-content:space-between;
+  padding:13px 0 17px;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:600;color:var(--muted)}
+.d28 nav .on{color:var(--accent);font-weight:900}
+
+.d29{--paper:oklch(98% .01 236);--tile:oklch(100% 0 0);--ink:oklch(24% .034 250);
+  --muted:oklch(57% .024 246);--rule:oklch(90% .012 236);--accent:oklch(52% .205 252);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:26px 16px 0;display:flex;flex-direction:column;gap:12px}
+.d29 .top{display:flex;justify-content:space-between;align-items:center;padding:0 8px}
+.d29 .mark{font-weight:700;font-size:16px;letter-spacing:-.035em}
+.d29 .mo{font-size:11.5px;color:var(--muted)}
+.d29 .c{background:var(--tile);border-radius:24px;padding:22px 22px}
+.d29 .hero{text-align:center;padding-block:28px}
+.d29 .hero .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d29 .hero .fig{font-weight:700;font-size:62px;line-height:1;letter-spacing:-.055em;margin-top:8px}
+.d29 .hero .fig i{font-style:normal;font-size:26px;color:var(--muted);vertical-align:.55em}
+.d29 .hero .ring{width:100%;height:3px;background:var(--rule);border-radius:2px;margin-top:18px;overflow:hidden}
+.d29 .hero .ring i{display:block;height:100%;width:55%;background:var(--accent)}
+.d29 .hero .cap{margin-top:8px;font-size:11.5px;color:var(--muted)}
+.d29 .hero .cap b{color:var(--accent);font-weight:700}
+.d29 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d29 .three div{background:var(--tile);border-radius:18px;padding:14px 10px;text-align:center}
+.d29 .three dt{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d29 .three dd{margin:4px 0 0;font-weight:700;font-size:16px;letter-spacing:-.04em}
+.d29 .log{display:flex;justify-content:space-between;align-items:center;padding:16px 22px}
+.d29 .log span{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d29 .log b{display:block;font-weight:700;font-size:24px;letter-spacing:-.04em}
+.d29 .log button{background:var(--accent);color:var(--tile);border-radius:999px;padding:11px 20px;
+  font-weight:700;font-size:13px}
+.d29 h2{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-bottom:8px}
+.d29 li{display:flex;justify-content:space-between;padding:5.5px 0;font-size:13.5px}
+.d29 li+li{border-top:1px solid var(--rule)}
+.d29 .sum{font-weight:700;color:var(--accent);font-size:15px}
+.d29 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d29 .sv b{font-weight:700;font-size:26px;color:var(--accent);letter-spacing:-.045em}
+.d29 .done{color:var(--muted);text-decoration:line-through}
+.d29 nav{margin-top:auto;background:var(--tile);border-radius:24px 24px 0 0;
+  display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding:16px 0 20px;
+  font-size:10.5px;color:var(--muted);font-weight:700}
+.d29 nav .on{color:var(--accent)}
+
+.d30{--paper:oklch(24% .008 96);--ink:oklch(95% .008 96);--muted:oklch(66% .012 92);
+  --rule:oklch(37% .01 96);--accent:oklch(88% .17 96);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;padding:24px 20px 0}
+.d30 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule);padding-bottom:9px}
+.d30 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px;letter-spacing:.01em;text-transform:uppercase}
+.d30 .mo{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:300;font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted)}
+.d30 .stage{padding:24px 0 18px}
+.d30 .stage .k{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:12px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--muted)}
+.d30 .stage .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:94px;line-height:.9;
+  letter-spacing:-.01em;margin-top:6px}
+.d30 .stage .dl{display:inline-block;margin-top:14px;background:var(--accent);color:var(--paper);
+  padding:4px 12px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:12px;
+  letter-spacing:.1em;text-transform:uppercase}
+.d30 .three{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--rule)}
+.d30 .three div{padding:12px 0}
+.d30 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d30 .three dt{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted)}
+.d30 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:21px}
+.d30 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d30 .today em{font-style:normal;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted)}
+.d30 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:28px}
+.d30 .today button{background:var(--accent);color:var(--paper);padding:8px 18px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.d30 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:11px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--muted);margin:14px 0 5px}
+.d30 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d30 li+li{border-top:1px solid var(--rule)}
+.d30 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:18px;color:var(--accent)}
+.d30 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--rule)}
+.d30 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:30px;color:var(--accent)}
+.d30 .done{color:var(--muted);text-decoration:line-through}
+.d30 nav{margin-top:auto;border-top:1px solid var(--rule);display:flex;justify-content:space-between;
+  padding:14px 0 18px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:11px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d30 nav .on{color:var(--accent);font-weight:500}
+
+.d31{--paper:oklch(93% .02 76);--ink:oklch(20% .028 52);--muted:oklch(48% .028 60);
+  --rule:oklch(82% .022 76);--accent:oklch(60% .128 64);--onink:oklch(92% .022 76);
+  background:var(--ink);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13.5px}
+.d31 .band{color:var(--onink);padding:28px 26px 32px}
+.d31 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d31 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px;letter-spacing:-.02em}
+.d31 .mo{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.68}
+.d31 .k{margin-top:28px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:10.5px;
+  letter-spacing:.22em;text-transform:uppercase;opacity:.7}
+.d31 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:74px;line-height:1;
+  letter-spacing:-.04em;margin-top:6px}
+.d31 .fig i{font-style:normal;font-size:30px;opacity:.55;vertical-align:.5em}
+.d31 .dl{margin-top:12px;font-size:13px;color:var(--accent);font-weight:500}
+.d31 .sheet{background:var(--paper);border-radius:22px 22px 0 0;flex:1;margin-top:auto;
+  padding:20px 26px 0;display:flex;flex-direction:column}
+.d31 .three{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--rule);padding-bottom:13px}
+.d31 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d31 .three dt{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted)}
+.d31 .three dd{margin:3px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:19px}
+.d31 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d31 .today em{font-style:normal;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d31 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:25px;margin-top:2px}
+.d31 .today button{background:var(--ink);color:var(--onink);border-radius:4px;padding:9px 18px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:12.5px}
+.d31 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted);margin:14px 0 5px}
+.d31 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d31 li+li{border-top:1px solid var(--rule)}
+.d31 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:16px;color:var(--accent)}
+.d31 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--rule)}
+.d31 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:700;font-size:28px;color:var(--accent)}
+.d31 .done{color:var(--muted);text-decoration:line-through}
+.d31 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:15px 0 19px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.d31 nav .on{color:var(--accent);font-weight:700}
+
+.d32{--paper:oklch(95% .038 68);--tile:oklch(98.5% .018 68);--ink:oklch(27% .07 336);
+  --muted:oklch(55% .05 344);--rule:oklch(86% .036 68);--accent:oklch(44% .16 334);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13.5px;padding:30px 24px 0}
+.d32 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d32 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:21px;letter-spacing:-.015em}
+.d32 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d32 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:88px;line-height:.96;letter-spacing:-.03em;margin-top:34px}
+.d32 .fig i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:.5em}
+.d32 .k{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin-top:10px}
+.d32 .dl{margin-top:18px;background:var(--tile);border-radius:14px;padding:12px 16px;
+  font-size:13px;color:var(--accent);font-weight:700}
+.d32 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.d32 .three div{background:var(--tile);border-radius:14px;padding:13px 13px}
+.d32 .three dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d32 .three dd{margin:4px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:19px}
+.d32 .today{background:var(--tile);border-radius:14px;padding:14px 16px;margin-top:12px;
+  display:flex;justify-content:space-between;align-items:center}
+.d32 .today em{font-style:normal;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);font-weight:700}
+.d32 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:25px;margin-top:2px}
+.d32 .today button{background:var(--accent);color:var(--tile);border-radius:999px;padding:10px 20px;
+  font-weight:700;font-size:12.5px}
+.d32 h2{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:18px 0 4px}
+.d32 li{display:flex;justify-content:space-between;padding:5.5px 0;font-size:13.5px;
+  border-bottom:1px solid var(--rule)}
+.d32 li b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:400;font-size:15px}
+.d32 .sum{border-bottom:0;border-top:2px solid var(--ink);margin-top:4px;padding-top:8px}
+.d32 .sum b{font-size:19px}
+.d32 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px}
+.d32 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:30px;color:var(--accent)}
+.d32 .done{color:var(--muted);text-decoration:line-through}
+.d32 nav{margin-top:auto;display:flex;justify-content:space-between;padding:16px 0 20px;
+  font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.d32 nav .on{color:var(--accent)}
+
+.d33{--paper:oklch(96% .003 258);--ink:oklch(20% .008 258);--muted:oklch(57% .008 258);
+  --rule:oklch(86% .005 258);--accent:oklch(37% .014 258);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-weight:300;font-size:11.5px;line-height:1.65;padding:26px 22px 0}
+.d33 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d33 .mark{font-weight:500;font-size:12px;letter-spacing:-.02em}
+.d33 .mo{color:var(--muted);font-size:11px}
+.d33 .hr{height:1px;background:var(--rule);margin:16px 0}
+.d33 .k{color:var(--muted);font-size:10.5px;letter-spacing:.06em}
+.d33 .fig{font-weight:500;font-size:46px;line-height:1.1;letter-spacing:-.07em;margin-top:2px}
+.d33 .dl{color:var(--muted);margin-top:6px}
+.d33 .dl b{color:var(--ink);font-weight:500}
+.d33 table{width:100%;border-collapse:collapse}
+.d33 td{padding:4px 0;font-size:11.5px}
+.d33 td+td{text-align:right;font-weight:500}
+.d33 .tot td{border-top:1px solid var(--ink);padding-top:6px;font-weight:500}
+.d33 .three td{color:var(--muted)}
+.d33 .three td+td{color:var(--ink)}
+.d33 .in{display:flex;justify-content:space-between;align-items:center;
+  border:1px solid var(--rule);padding:10px 12px;margin:16px 0}
+.d33 .in b{font-weight:500;font-size:19px;letter-spacing:-.06em;display:block}
+.d33 .in span{color:var(--muted);font-size:10.5px}
+.d33 .in button{border:1px solid var(--ink);padding:5px 12px;font-family:inherit;font-size:10.5px;font-weight:500}
+.d33 h2{color:var(--muted);font-size:10.5px;letter-spacing:.06em;font-weight:400;margin-bottom:2px}
+.d33 .done{color:var(--muted);text-decoration:line-through}
+.d33 nav{margin-top:auto;border-top:1px solid var(--rule);display:flex;justify-content:space-between;
+  padding:14px 0 18px;font-size:10.5px;color:var(--muted)}
+.d33 nav .on{color:var(--ink);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+
+.d34{--paper:oklch(20% .026 268);--ink:oklch(94% .014 264);--muted:oklch(67% .022 266);
+  --rule:oklch(33% .028 268);--accent:oklch(85% .102 88);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-weight:300;font-size:13px;padding:42px 30px 0;text-align:center}
+.d34 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:300;font-size:15px;
+  letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
+.d34 .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:300;font-size:96px;
+  line-height:1;margin-top:46px;color:var(--accent)}
+.d34 .k{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+.d34 .dl{margin-top:22px;font-size:13px;color:var(--muted)}
+.d34 .three{display:flex;justify-content:center;gap:30px;margin-top:36px;padding-top:20px;
+  border-top:1px solid var(--rule)}
+.d34 .three dt{font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.d34 .three dd{margin:5px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:22px}
+.d34 .today{margin-top:26px;padding:16px 0;border-block:1px solid var(--rule);
+  display:flex;justify-content:space-between;align-items:baseline;text-align:left}
+.d34 .today em{font-style:normal;font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.d34 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:26px}
+.d34 .today button{color:var(--accent);font-size:11px;letter-spacing:.2em;text-transform:uppercase}
+.d34 .rows{text-align:left;margin-top:22px}
+.d34 h2{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);
+  text-align:center;margin-bottom:10px}
+.d34 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d34 li+li{border-top:1px solid var(--rule)}
+.d34 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;font-size:17px;color:var(--accent)}
+.d34 .sv{margin-top:24px;padding-top:16px;border-top:1px solid var(--rule)}
+.d34 .sv b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:500;
+  font-size:34px;color:var(--accent);line-height:1}
+.d34 .sv span{font-size:9px;letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.d34 .done{color:var(--muted);text-decoration:line-through}
+.d34 nav{margin-top:auto;display:flex;justify-content:center;gap:18px;padding:20px 0 24px;
+  font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d34 nav .on{color:var(--accent)}
+
+.d35{--paper:oklch(28% .014 176);--ink:oklch(95% .008 96);--muted:oklch(70% .014 140);
+  --rule:oklch(42% .016 176);--accent:oklch(74% .162 34);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size:13px;font-weight:300;padding:24px 22px 0}
+.d35 .top{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule);padding-bottom:8px}
+.d35 .mark{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:24px;letter-spacing:.04em}
+.d35 .mo{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:15px;letter-spacing:.16em;color:var(--muted)}
+.d35 .stage{padding:26px 0 20px}
+.d35 .stage .k{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:15px;letter-spacing:.28em;color:var(--muted)}
+.d35 .stage .fig{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:110px;line-height:.84;
+  letter-spacing:.005em;margin-top:4px}
+.d35 .stage .dl{margin-top:12px;font-size:13px;color:var(--accent);font-weight:400}
+.d35 .three{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--rule)}
+.d35 .three div{padding:12px 0}
+.d35 .three div+div{border-left:1px solid var(--rule);padding-left:13px}
+.d35 .three dt{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;letter-spacing:.2em;color:var(--muted)}
+.d35 .three dd{margin:1px 0 0;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:26px;letter-spacing:.01em}
+.d35 .today{display:flex;justify-content:space-between;align-items:center;padding:14px 0;
+  border-bottom:1px solid var(--rule)}
+.d35 .today em{font-style:normal;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:13px;
+  letter-spacing:.2em;color:var(--muted)}
+.d35 .today b{display:block;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:32px;letter-spacing:.01em}
+.d35 .today button{background:var(--accent);color:var(--paper);padding:7px 18px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:16px;letter-spacing:.14em}
+.d35 h2{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:14px;letter-spacing:.22em;
+  color:var(--muted);margin:14px 0 4px}
+.d35 li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.d35 li+li{border-top:1px solid var(--rule)}
+.d35 .sum{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:21px;letter-spacing:.01em;color:var(--accent)}
+.d35 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;
+  padding-top:12px;border-top:1px solid var(--rule)}
+.d35 .sv span{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:14px;letter-spacing:.22em;color:var(--muted)}
+.d35 .sv b{font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:38px;color:var(--accent);letter-spacing:.01em}
+.d35 .done{color:var(--muted);text-decoration:line-through}
+.d35 nav{margin-top:auto;border-top:1px solid var(--rule);display:flex;justify-content:space-between;
+  padding:13px 0 17px;font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-size:15px;
+  letter-spacing:.14em;color:var(--muted)}
+.d35 nav .on{color:var(--accent)}
+
+.d36{--paper:oklch(97% .008 196);--tile:oklch(100% 0 0);--ink:oklch(26% .03 200);
+  --muted:oklch(56% .026 198);--rule:oklch(90% .01 196);--accent:oklch(53% .102 194);
+  background:var(--paper);color:var(--ink);font-family:"Inter", ui-sans-serif, system-ui, sans-serif;
+  font-weight:400;font-size:14px;padding:26px 16px 0;display:flex;flex-direction:column;gap:12px}
+.d36 .top{display:flex;justify-content:space-between;align-items:center;padding:0 10px}
+.d36 .mark{font-weight:900;font-size:18px;letter-spacing:-.035em}
+.d36 .mo{font-size:12px;color:var(--muted)}
+.d36 .c{background:var(--tile);border-radius:28px;padding:22px 24px}
+.d36 .hero{padding-block:26px}
+.d36 .hero .k{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d36 .hero .fig{font-weight:900;font-size:66px;line-height:1;letter-spacing:-.04em;margin-top:8px}
+.d36 .hero .fig i{font-style:normal;font-size:27px;color:var(--muted);vertical-align:.55em}
+.d36 .hero .dl{margin-top:14px;font-size:13.5px;color:var(--accent);font-weight:600}
+.d36 .three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d36 .three div{background:var(--tile);border-radius:20px;padding:15px 12px;text-align:center}
+.d36 .three dt{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d36 .three dd{margin:5px 0 0;font-weight:900;font-size:17px;letter-spacing:-.035em}
+.d36 .log{display:flex;justify-content:space-between;align-items:center;padding:17px 24px}
+.d36 .log span{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.d36 .log b{display:block;font-weight:900;font-size:26px;letter-spacing:-.035em}
+.d36 .log button{background:var(--accent);color:var(--tile);border-radius:999px;padding:11px 20px;
+  font-family:"Inter", ui-sans-serif, system-ui, sans-serif;font-weight:600;font-size:13px}
+.d36 h2{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  font-weight:600;margin-bottom:8px}
+.d36 li{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}
+.d36 li+li{border-top:1px solid var(--rule)}
+.d36 .sum{font-weight:900;color:var(--accent);font-size:16px}
+.d36 .sv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.d36 .sv b{font-weight:900;font-size:28px;color:var(--accent);letter-spacing:-.04em}
+.d36 .done{color:var(--muted);text-decoration:line-through}
+.d36 nav{margin-top:auto;background:var(--tile);border-radius:28px 28px 0 0;
+  display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding:17px 0 21px;
+  font-size:10.5px;color:var(--muted);font-weight:600}
+.d36 nav .on{color:var(--accent);font-weight:900}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="topbar__back" href="exhibition.html">← Fifty Looks</a>
+  <h1 class="topbar__title">The Bracket</h1>
+  <span class="topbar__prog" id="prog">—</span>
+</header>
+<div class="rail"><div class="rail__fill" id="rail"></div></div>
+
+<main id="stage-area"></main>
+
+<script id="specimen-data" type="application/json">[{"num":1,"id":"d01","name":"Kâğıt","fonts":"Inter","palette":"warm oat paper · terracotta · ledger","html":"<div class=\"screen d01\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"lede\">\n      <h1>Daily allowance</h1>\n      <span class=\"fig\"><i>₺</i>1.203</span>\n      <p class=\"note\">Day 26 of 31 · <b>₺8.878 ahead</b> of plan</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Minimum</dt><dd>₺794</dd></div>\n    </dl>\n    <section class=\"book\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><b>₺84.000</b></li>\n        <li><span>Flex income</span><b>₺6.500</b></li>\n        <li><span>Base spend</span><b>−₺41.200</b></li>\n        <li><span>Flex spend</span><b>−₺8.900</b></li>\n        <li class=\"sum\"><span>Surplus</span><b>₺40.400</b></li>\n      </ul>\n    </section>\n    <section class=\"wish\">\n      <div class=\"row\"><span>Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </section>\n    <nav class=\"strip\"><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":2,"id":"d02","name":"Manşet","fonts":"Inter","palette":"newsprint grey · vermilion · dense broadsheet","html":"<div class=\"screen d02\">\n    <div class=\"flag\"><h1>GurgoBudget</h1><span>Sat 26 Aug 2026</span></div>\n    <div class=\"banner\">\n      <p class=\"kick\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dek\">Five days to run. You are ₺8.878 ahead of the plan.</p>\n    </div>\n    <dl class=\"cols\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"body\">\n      <div class=\"today\">\n        <span><em>Today's change</em><b>−₺870</b></span>\n        <button type=\"button\">Log</button>\n      </div>\n      <section>\n        <h2>In</h2>\n        <ul>\n          <li><span>Base</span><span>₺84.000</span></li>\n          <li><span>Flex</span><span>₺6.500</span></li>\n        </ul>\n      </section>\n      <section>\n        <h2>Out</h2>\n        <ul>\n          <li><span>Base</span><span>₺41.200</span></li>\n          <li><span>Flex</span><span>₺8.900</span></li>\n        </ul>\n      </section>\n      <section style=\"grid-column:span 2\">\n        <ul><li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li></ul>\n      </section>\n      <div class=\"save\"><span>Money saved</span><b>₺11.985</b></div>\n      <section style=\"grid-column:span 2\">\n        <h2>Wishlist</h2>\n        <ul>\n          <li><span>New guitar</span><span>₺9.500</span></li>\n          <li style=\"text-decoration:line-through;color:var(--muted)\"><span>Headphones</span><span>₺3.200</span></li>\n        </ul>\n      </section>\n    </div>\n    <nav class=\"rail\"><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":3,"id":"d03","name":"Sarnıç","fonts":"Inter","palette":"bone · antique gold · centred, airy","html":"<div class=\"screen d03\">\n    <p class=\"mark\">GurgoBudget</p>\n    <div class=\"hair\"></div>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"fig\">₺1.203</p>\n    <p class=\"sub\">Day twenty-six of thirty-one</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <section class=\"ledger\">\n      <h2>August</h2>\n      <ul>\n        <li><span>Base income</span><i></i><span>₺84.000</span></li>\n        <li><span>Flex income</span><i></i><span>₺6.500</span></li>\n        <li><span>Base spend</span><i></i><span>₺41.200</span></li>\n        <li><span>Flex spend</span><i></i><span>₺8.900</span></li>\n        <li class=\"sum\"><span>Surplus</span><i></i><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"saved\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul class=\"wl\">\n      <li><span>New guitar — ₺9.500</span></li>\n      <li class=\"done\"><span>Headphones — ₺3.200</span></li>\n    </ul>\n    <nav class=\"foot\"><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":4,"id":"d04","name":"Fosfor","fonts":"Inter","palette":"black-green · phosphor · terminal","html":"<div class=\"screen d04\">\n    <p class=\"ln\">gurgobudget <em>v1</em> — aug 2026</p>\n    <p class=\"ln\">day 26/31 · <em>+₺8.878</em> vs plan</p>\n    <div class=\"hr\"></div>\n    <p class=\"ln\">daily_allowance =</p>\n    <p class=\"fig\"><span class=\"cur\">₺</span>1.203<span class=\"blink\">_</span></p>\n    <div class=\"hr\"></div>\n    <table>\n      <tr><td>max</td><td>₺1.303</td></tr>\n      <tr><td>strict</td><td>₺894</td></tr>\n      <tr><td>minimum</td><td>₺794</td></tr>\n    </table>\n    <div class=\"hr\"></div>\n    <table>\n      <tr><td>base_income</td><td>+84.000</td></tr>\n      <tr><td>flex_income</td><td>+6.500</td></tr>\n      <tr><td>base_spend</td><td>−41.200</td></tr>\n      <tr><td>flex_spend</td><td>−8.900</td></tr>\n      <tr class=\"tot\"><td>surplus</td><td>₺40.400</td></tr>\n    </table>\n    <div class=\"box\">\n      <p class=\"lab\">today's balance change</p>\n      <p class=\"val\">−₺870</p>\n      <button type=\"button\">write ↵</button>\n    </div>\n    <div class=\"hr\"></div>\n    <p class=\"row\"><span class=\"ln\">money_saved</span><span style=\"color:var(--accent);font-weight:700\">₺11.985</span></p>\n    <p class=\"row\"><span>new guitar</span><span>₺9.500</span></p>\n    <p class=\"row done\"><span>headphones</span><span>₺3.200</span></p>\n    <nav><span class=\"on\">today</span><span>items</span><span>wish</span><span>log</span><span>stats</span></nav>\n  </div>"},{"num":5,"id":"d05","name":"Gece Yarısı","fonts":"Inter","palette":"deep navy · amber · soft cards","html":"<div class=\"screen d05\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"hero\">\n      <p>Daily allowance</p>\n      <div class=\"fig\"><i>₺</i>1.203</div>\n      <span class=\"pill\">₺8.878 ahead · 5 days left</span>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"card\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"card\">\n      <h2>Wishlist</h2>\n      <div class=\"saved\"><span style=\"font-size:13px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":6,"id":"d06","name":"Afiş","fonts":"Inter","palette":"bone · hot red · poster slab","html":"<div class=\"screen d06\">\n    <div class=\"top\">GurgoBudget<span>AUG 2026</span></div>\n    <div class=\"slab\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">Day 26 / 31 — <b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"grid\">\n      <div><dt>Max</dt><dd>1.303</dd></div>\n      <div><dt>Strict</dt><dd>894</dd></div>\n      <div><dt>Min</dt><dd>794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <h2>The month</h2>\n    <ul>\n      <li><span>Income</span><span>₺90.500</span></li>\n      <li><span>Committed</span><span>−₺50.100</span></li>\n      <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n    </ul>\n    <div class=\"saved\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul>\n      <li><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":7,"id":"d07","name":"Defter","fonts":"Inter","palette":"cool paper · ink blue · ruled ledger","html":"<div class=\"screen d07\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"rule rule--ink\"></div>\n    <p class=\"head\">You can spend, today,</p>\n    <p class=\"fig\"><i>₺</i>1.203</p>\n    <p class=\"meta\">Five days remain. <b>₺8.878 ahead</b> of where the plan expected you.</p>\n    <div class=\"rule\"></div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Minimum</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"rule\"></div>\n    <div class=\"today\">\n      <span><em>Today's balance change</em><b>−₺870</b></span>\n      <button type=\"button\">Log it</button>\n    </div>\n    <div class=\"rule\"></div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><span>₺84.000</span></li>\n        <li><span>Flex income</span><span>₺6.500</span></li>\n        <li><span>Base spend</span><span>−₺41.200</span></li>\n        <li><span>Flex spend</span><span>−₺8.900</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"rule\"></div>\n    <section>\n      <div class=\"saved\"><span style=\"color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul style=\"margin-top:6px\">\n        <li style=\"border:0;padding:3px 0\"><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\" style=\"border:0;padding:3px 0\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </section>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":8,"id":"d08","name":"Kömür","fonts":"Inter","palette":"warm charcoal · ember · bento","html":"<div class=\"screen d08\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug 2026 · day 26</span></div>\n    <div class=\"t big\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"d\">↑ ₺8.878 ahead of plan</p>\n    </div>\n    <div class=\"t sm\"><dt>Max</dt><dd>₺1.303</dd></div>\n    <div class=\"t sm\"><dt>Strict</dt><dd>₺894</dd></div>\n    <div class=\"t sm\"><dt>Min</dt><dd>₺794</dd></div>\n    <div class=\"t log\"><span>Today</span><b>−₺870</b></div>\n    <button class=\"act\" type=\"button\">Log</button>\n    <div class=\"t month\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"t wish\">\n      <div class=\"sv\"><span style=\"color:var(--muted);font-size:12px\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":9,"id":"d09","name":"Nane","fonts":"Inter","palette":"pale mint · deep green · soft stack","html":"<div class=\"screen d09\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August</span></div>\n    <div class=\"c hero\">\n      <p>Daily allowance</p>\n      <div class=\"fig\"><i>₺</i>1.203</div>\n      <span class=\"chip\">₺8.878 ahead · 5 days left</span>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"c log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"c\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"c\">\n      <div class=\"sv\"><span style=\"color:var(--muted);font-size:12.5px\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":10,"id":"d10","name":"Bakır","fonts":"Inter","palette":"clay · copper · dark band + sheet","html":"<div class=\"screen d10\">\n    <div class=\"band\">\n      <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"dl\">Day 26 of 31 · <b>₺8.878 ahead</b></p>\n    </div>\n    <div class=\"sheet\">\n      <dl class=\"three\">\n        <div><dt>Max</dt><dd>₺1.303</dd></div>\n        <div><dt>Strict</dt><dd>₺894</dd></div>\n        <div><dt>Min</dt><dd>₺794</dd></div>\n      </dl>\n      <div class=\"today\">\n        <span><em>Today's change</em><b>−₺870</b></span>\n        <button type=\"button\">Log</button>\n      </div>\n      <section>\n        <h2>This month</h2>\n        <ul>\n          <li><span>Income</span><span>₺90.500</span></li>\n          <li><span>Committed</span><span>−₺50.100</span></li>\n          <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n        </ul>\n      </section>\n      <div class=\"sv\"><span style=\"color:var(--muted);font-size:12px\">Money saved</span><b>₺11.985</b></div>\n      <ul style=\"margin-top:4px\">\n        <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n      <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n    </div>\n  </div>"},{"num":11,"id":"d11","name":"Grafik","fonts":"Inter","palette":"concrete · ultramarine · module grid","html":"<div class=\"screen d11\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">2026-08-26</span></div>\n    <div class=\"b hero\">\n      <p class=\"k\">daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <div class=\"bar\"><span></span></div>\n      <p class=\"lg\"><span>55% of surplus spent</span><span>day 26/31</span></p>\n    </div>\n    <div class=\"b q\"><dt>max</dt><dd>₺1.303</dd></div>\n    <div class=\"b q\"><dt>strict</dt><dd>₺894</dd></div>\n    <div class=\"b q\"><dt>minimum</dt><dd>₺794</dd></div>\n    <div class=\"b q\"><dt>ahead by</dt><dd style=\"color:var(--accent)\">₺8.878</dd></div>\n    <div class=\"b log\">\n      <span>today's change<b>−₺870</b></span>\n      <button type=\"button\">LOG</button>\n    </div>\n    <div class=\"b wide\">\n      <h2>month</h2>\n      <ul>\n        <li><span>base income</span><span>84.000</span></li>\n        <li><span>flex income</span><span>6.500</span></li>\n        <li><span>base spend</span><span>−41.200</span></li>\n        <li><span>flex spend</span><span>−8.900</span></li>\n        <li><span>surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"b wide\">\n      <div class=\"sv\"><span>money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>new guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">today</span><span>items</span><span>wish</span><span>log</span><span>stats</span></nav>\n  </div>"},{"num":12,"id":"d12","name":"Vişne","fonts":"Inter","palette":"cream · cherry · high-contrast centre","html":"<div class=\"screen d12\">\n    <p class=\"mark\">GurgoBudget</p>\n    <p class=\"mo\">August 2026</p>\n    <p class=\"fig\">₺1.203</p>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"dl\">₺8.878 ahead · 5 days left</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><b>₺90.500</b></li>\n        <li><span>Committed</span><b>−₺50.100</b></li>\n        <li class=\"sum\"><span>Surplus</span><b>₺40.400</b></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:13px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:2px\">\n      <li style=\"border:0\"><span>New guitar</span><b>₺9.500</b></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><b>₺3.200</b></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":13,"id":"d13","name":"Terminal 82","fonts":"Inter","palette":"brown-black · amber CRT · panelled","html":"<div class=\"screen d13\">\n    <div class=\"hdr\"><span>GURGOBUDGET</span><span>AUG · 26/31</span></div>\n    <div class=\"pane\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <div class=\"meter\"><i class=\"f\"></i><i class=\"f\"></i><i class=\"f\"></i><i class=\"f\"></i><i class=\"f\"></i><i class=\"f\"></i><i></i><i></i><i></i><i></i><i></i></div>\n      <p class=\"cap\"><span>55% of surplus spent</span><span>+₺8.878</span></p>\n    </div>\n    <dl class=\"row3\">\n      <div><dt>Max</dt><dd>1.303</dd></div>\n      <div><dt>Strict</dt><dd>894</dd></div>\n      <div><dt>Min</dt><dd>794</dd></div>\n    </dl>\n    <div class=\"input\">\n      <span><span class=\"k\">Today</span><b>−₺870</b></span>\n      <button type=\"button\">SAVE</button>\n    </div>\n    <section class=\"sect\">\n      <h2>MONTH</h2>\n      <ul>\n        <li><span>base income</span><span>84.000</span></li>\n        <li><span>flex income</span><span>6.500</span></li>\n        <li><span>base spend</span><span>−41.200</span></li>\n        <li><span>flex spend</span><span>−8.900</span></li>\n        <li class=\"tot\"><span>surplus</span><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <section class=\"sect\">\n      <h2>WISHLIST</h2>\n      <ul>\n        <li><span>money saved</span><span style=\"color:var(--accent);font-weight:600\">₺11.985</span></li>\n        <li><span>new guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>headphones</span><span>₺3.200</span></li>\n      </ul>\n    </section>\n    <nav><span class=\"on\">today</span><span>items</span><span>wish</span><span>log</span><span>stats</span></nav>\n  </div>"},{"num":14,"id":"d14","name":"Tuz","fonts":"Inter","palette":"near-white · slate blue · utility panels","html":"<div class=\"screen d14\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <div class=\"track\"><i></i></div>\n      <p class=\"cap\"><span>Day 26 of 31</span><b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"panel\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><span>₺84.000</span></li>\n        <li><span>Flex income</span><span>₺6.500</span></li>\n        <li><span>Base spend</span><span>−₺41.200</span></li>\n        <li><span>Flex spend</span><span>−₺8.900</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"panel\">\n      <div class=\"sv\"><span style=\"color:var(--muted);font-size:12px\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":15,"id":"d15","name":"Vitrin","fonts":"Inter","palette":"blush · deep plum · rounded cards","html":"<div class=\"screen d15\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August</span></div>\n    <div class=\"card hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"dl\">₺8.878 ahead · 5 days left</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"card log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"card\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li class=\"sum\"><span>Surplus</span><b>₺40.400</b></li>\n      </ul>\n    </div>\n    <div class=\"card\">\n      <div class=\"sv\"><span style=\"color:var(--muted);font-size:12.5px\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":16,"id":"d16","name":"Kurşun","fonts":"Inter","palette":"mid graphite · safety yellow · poster","html":"<div class=\"screen d16\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">AUG 2026</span></div>\n    <div class=\"stage\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <span class=\"mark2\">₺8.878 AHEAD</span>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>1.303</dd></div>\n      <div><dt>Strict</dt><dd>894</dd></div>\n      <div><dt>Min</dt><dd>794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:900\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:6px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":17,"id":"d17","name":"Deniz","fonts":"Inter","palette":"teal-black · aqua · dial as anchor","html":"<div class=\"screen d17\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug · day 26/31</span></div>\n    <div class=\"dial\">\n      <div class=\"ring\"></div>\n      <div class=\"c\">\n        <p class=\"k\">Daily</p>\n        <p class=\"fig\">₺1.203</p>\n        <p class=\"s\">₺8.878 ahead</p>\n      </div>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"panel\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"panel\">\n      <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":18,"id":"d18","name":"Mürekkep","fonts":"Inter","palette":"ivory · navy · centred masthead","html":"<div class=\"screen d18\">\n    <div class=\"top\">\n      <p class=\"mark\">GurgoBudget</p>\n      <p class=\"mo\">August 2026</p>\n    </div>\n    <p class=\"fig\">₺1.203</p>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"dl\">Five days left in the month. You are <b>₺8.878 ahead</b> of where the plan put you.</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log it</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:12.5px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:2px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":19,"id":"d19","name":"Vurgu","fonts":"Inter","palette":"off-white · electric blue · condensed dense","html":"<div class=\"screen d19\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug 26</span></div>\n    <div class=\"lead\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">Day 26 of 31 — <b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"strip\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"two\">\n      <section>\n        <h2>In</h2>\n        <ul>\n          <li><span>Base</span><span>84.000</span></li>\n          <li><span>Flex</span><span>6.500</span></li>\n        </ul>\n      </section>\n      <section>\n        <h2>Out</h2>\n        <ul>\n          <li><span>Base</span><span>41.200</span></li>\n          <li><span>Flex</span><span>8.900</span></li>\n        </ul>\n      </section>\n      <div class=\"tot\"><span>Surplus</span><b>₺40.400</b></div>\n    </div>\n    <div class=\"sv\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:4px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":20,"id":"d20","name":"Yosun","fonts":"Inter","palette":"sage · moss · dark band + sheet","html":"<div class=\"screen d20\">\n    <div class=\"band\">\n      <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <dl class=\"three\">\n        <div><dt>Max</dt><dd>₺1.303</dd></div>\n        <div><dt>Strict</dt><dd>₺894</dd></div>\n        <div><dt>Min</dt><dd>₺794</dd></div>\n      </dl>\n    </div>\n    <div class=\"sheet\">\n      <div class=\"today\">\n        <span><em>Today · ₺8.878 ahead</em><b>−₺870</b></span>\n        <button type=\"button\">Log</button>\n      </div>\n      <section>\n        <h2>This month</h2>\n        <ul>\n          <li><span>Base income</span><span>₺84.000</span></li>\n          <li><span>Flex income</span><span>₺6.500</span></li>\n          <li><span>Base spend</span><span>−₺41.200</span></li>\n          <li><span>Flex spend</span><span>−₺8.900</span></li>\n          <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n        </ul>\n      </section>\n      <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul style=\"margin-top:4px\">\n        <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n      <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n    </div>\n  </div>"},{"num":21,"id":"d21","name":"Neon Sokak","fonts":"Inter","palette":"dark violet · magenta · bento","html":"<div class=\"screen d21\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug · 26/31</span></div>\n    <div class=\"t hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">You are <b>₺8.878 ahead</b> with 5 days to run.</p>\n    </div>\n    <div class=\"t a\"><dt>Max</dt><dd>₺1.303</dd></div>\n    <div class=\"t b\"><dt>Strict</dt><dd>₺894</dd></div>\n    <div class=\"t a\"><dt>Minimum</dt><dd>₺794</dd></div>\n    <div class=\"t b\"><dt>Avg / day</dt><dd>₺862</dd></div>\n    <div class=\"t log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">LOG</button>\n    </div>\n    <div class=\"t c\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"t c\">\n      <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":22,"id":"d22","name":"Kireç","fonts":"Inter","palette":"limewash · ochre · quiet single-face","html":"<div class=\"screen d22\">\n    <p class=\"mark\">GurgoBudget · August</p>\n    <p class=\"fig\"><i>₺</i>1.203</p>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"dl\">Five days left, and you are <b>₺8.878 ahead</b> of the plan.</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Minimum</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\"><em>Today</em><b>−₺870</b></div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:13px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:4px;font-size:14px;color:var(--muted)\">\n      <li><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":23,"id":"d23","name":"Milimetre","fonts":"Inter","palette":"cool white · signal red · drawn grid","html":"<div class=\"screen d23\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">2026-08-26</span></div>\n    <div class=\"hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">Day 26 / 31 · <b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"grid\">\n      <div><dt>Max</dt><dd>1.303</dd></div>\n      <div><dt>Strict</dt><dd>894</dd></div>\n      <div><dt>Min</dt><dd>794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"rowset\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><span>84.000</span></li>\n        <li><span>Flex income</span><span>6.500</span></li>\n        <li><span>Base spend</span><span>−41.200</span></li>\n        <li><span>Flex spend</span><span>−8.900</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"sv\"><span style=\"color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <div class=\"rowset\" style=\"border:0\">\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":24,"id":"d24","name":"Şafak","fonts":"Inter","palette":"dark plum · peach · thin dial","html":"<div class=\"screen d24\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"dial\">\n      <div class=\"ring\"></div>\n      <div class=\"c\">\n        <p class=\"k\">Daily allowance</p>\n        <p class=\"fig\">₺1.203</p>\n        <p class=\"s\">55% of surplus spent</p>\n      </div>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"log\">\n      <span>Today · ₺8.878 ahead<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <section>\n      <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul style=\"margin-top:4px\">\n        <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </section>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":25,"id":"d25","name":"Zeytin","fonts":"Inter","palette":"olive cream · deep olive · warm ledger","html":"<div class=\"screen d25\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"lede\">\n      <p class=\"k\">You can spend, today,</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"dl\">₺8.878 ahead · 5 days left</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Minimum</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><b>₺84.000</b></li>\n        <li><span>Flex income</span><b>₺6.500</b></li>\n        <li><span>Base spend</span><b>−₺41.200</b></li>\n        <li><span>Flex spend</span><b>−₺8.900</b></li>\n        <li class=\"sum\"><span>Surplus</span><b>₺40.400</b></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:12.5px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:2px\">\n      <li style=\"border:0\"><span>New guitar</span><b>₺9.500</b></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><b>₺3.200</b></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":26,"id":"d26","name":"Kum","fonts":"Inter","palette":"sand · burnt sienna · warm stack","html":"<div class=\"screen d26\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"c hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <div class=\"bar\"><i></i></div>\n      <p class=\"cap\"><span>Day 26 of 31</span><b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"c log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"c\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"c\">\n      <div class=\"sv\"><span style=\"font-size:12.5px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":27,"id":"d27","name":"Basım","fonts":"Inter","palette":"warm white · oxblood · printed keylines","html":"<div class=\"screen d27\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"keyline\"></div>\n    <div class=\"lede\">\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"dl\">Five days left, and you're running <b>₺8.878 ahead</b> of plan.</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Minimum</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log it</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li class=\"sum\"><span>Surplus</span><span>₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:13px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:2px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":28,"id":"d28","name":"Karbon","fonts":"Inter","palette":"true graphite · lime · poster slab","html":"<div class=\"screen d28\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">AUG 2026</span></div>\n    <div class=\"stage\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">Day 26 / 31 — <b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>1.303</dd></div>\n      <div><dt>Strict</dt><dd>894</dd></div>\n      <div><dt>Min</dt><dd>794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Base income</span><span>₺84.000</span></li>\n        <li><span>Flex income</span><span>₺6.500</span></li>\n        <li><span>Base spend</span><span>−₺41.200</span></li>\n        <li><span>Flex spend</span><span>−₺8.900</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:6px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":29,"id":"d29","name":"Buz","fonts":"Inter","palette":"icy white · cobalt · rounded stack","html":"<div class=\"screen d29\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"c hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <div class=\"ring\"><i></i></div>\n      <p class=\"cap\">Day 26 of 31 · <b>₺8.878 ahead</b></p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"c log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"c\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"c\">\n      <div class=\"sv\"><span style=\"font-size:12.5px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":30,"id":"d30","name":"Fener","fonts":"Inter","palette":"charcoal · signal yellow · condensed poster","html":"<div class=\"screen d30\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug 2026</span></div>\n    <div class=\"stage\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <span class=\"dl\">₺8.878 ahead · 5 days left</span>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today's change</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:4px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":31,"id":"d31","name":"Kahve","fonts":"Inter","palette":"espresso · caramel · dark band + sheet","html":"<div class=\"screen d31\">\n    <div class=\"band\">\n      <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"dl\">₺8.878 ahead · 5 days left</p>\n    </div>\n    <div class=\"sheet\">\n      <dl class=\"three\">\n        <div><dt>Max</dt><dd>₺1.303</dd></div>\n        <div><dt>Strict</dt><dd>₺894</dd></div>\n        <div><dt>Min</dt><dd>₺794</dd></div>\n      </dl>\n      <div class=\"today\">\n        <span><em>Today's change</em><b>−₺870</b></span>\n        <button type=\"button\">Log</button>\n      </div>\n      <section>\n        <h2>This month</h2>\n        <ul>\n          <li><span>Base income</span><span>₺84.000</span></li>\n          <li><span>Flex income</span><span>₺6.500</span></li>\n          <li><span>Base spend</span><span>−₺41.200</span></li>\n          <li><span>Flex spend</span><span>−₺8.900</span></li>\n          <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n        </ul>\n      </section>\n      <div class=\"sv\"><span style=\"font-size:12px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul style=\"margin-top:4px\">\n        <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n      <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n    </div>\n  </div>"},{"num":32,"id":"d32","name":"Reçel","fonts":"Inter","palette":"apricot · damson · fruit-stand serif","html":"<div class=\"screen d32\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August</span></div>\n    <p class=\"fig\"><i>₺</i>1.203</p>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"dl\">₺8.878 ahead of plan · 5 days left</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><b>₺90.500</b></li>\n        <li><span>Committed</span><b>−₺50.100</b></li>\n        <li class=\"sum\"><span>Surplus</span><b>₺40.400</b></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span style=\"font-size:12.5px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:2px\">\n      <li style=\"border:0\"><span>New guitar</span><b>₺9.500</b></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><b>₺3.200</b></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":33,"id":"d33","name":"Mikro","fonts":"Inter","palette":"pale grey · no chroma accent · pure data","html":"<div class=\"screen d33\">\n    <div class=\"top\"><span class=\"mark\">gurgobudget</span><span class=\"mo\">2026-08-26</span></div>\n    <div class=\"hr\"></div>\n    <p class=\"k\">daily allowance</p>\n    <p class=\"fig\">₺1.203</p>\n    <p class=\"dl\">day 26/31 · <b>₺8.878 ahead</b></p>\n    <div class=\"hr\"></div>\n    <table class=\"three\">\n      <tr><td>max</td><td>₺1.303</td></tr>\n      <tr><td>strict</td><td>₺894</td></tr>\n      <tr><td>minimum</td><td>₺794</td></tr>\n    </table>\n    <div class=\"in\">\n      <span>today's change<b>−₺870</b></span>\n      <button type=\"button\">log</button>\n    </div>\n    <h2>month</h2>\n    <table>\n      <tr><td>base income</td><td>84.000</td></tr>\n      <tr><td>flex income</td><td>6.500</td></tr>\n      <tr><td>base spend</td><td>−41.200</td></tr>\n      <tr><td>flex spend</td><td>−8.900</td></tr>\n      <tr class=\"tot\"><td>surplus</td><td>₺40.400</td></tr>\n    </table>\n    <div class=\"hr\"></div>\n    <h2>wishlist</h2>\n    <table>\n      <tr class=\"tot\" style=\"border:0\"><td>money saved</td><td>₺11.985</td></tr>\n      <tr><td>new guitar</td><td>₺9.500</td></tr>\n      <tr class=\"done\"><td>headphones</td><td>₺3.200</td></tr>\n    </table>\n    <div class=\"hr\"></div>\n    <h2>average daily spend</h2>\n    <table>\n      <tr><td>this month</td><td>₺862</td></tr>\n      <tr><td>trailing 90d</td><td>₺910</td></tr>\n    </table>\n    <nav><span class=\"on\">today</span><span>items</span><span>wish</span><span>log</span><span>stats</span></nav>\n  </div>"},{"num":34,"id":"d34","name":"Ay","fonts":"Inter","palette":"night blue · pale gold · quiet, centred","html":"<div class=\"screen d34\">\n    <p class=\"mark\">GurgoBudget</p>\n    <p class=\"fig\">₺1.203</p>\n    <p class=\"k\">Daily allowance</p>\n    <p class=\"dl\">Day 26 of 31 · ₺8.878 ahead</p>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section class=\"rows\">\n      <h2>August</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul class=\"rows\" style=\"margin-top:12px;color:var(--muted);font-size:12.5px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":35,"id":"d35","name":"Tebeşir","fonts":"Inter","palette":"blackboard · coral · all-caps display","html":"<div class=\"screen d35\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">Aug 2026</span></div>\n    <div class=\"stage\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\">₺1.203</p>\n      <p class=\"dl\">Day 26 of 31 · ₺8.878 ahead of plan</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"today\">\n      <span><em>Today</em><b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <section>\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </section>\n    <div class=\"sv\"><span>Money saved</span><b>₺11.985</b></div>\n    <ul style=\"margin-top:4px\">\n      <li style=\"border:0\"><span>New guitar</span><span>₺9.500</span></li>\n      <li class=\"done\" style=\"border:0\"><span>Headphones</span><span>₺3.200</span></li>\n    </ul>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"},{"num":36,"id":"d36","name":"Sedef","fonts":"Inter","palette":"pearl · soft teal · very round stack","html":"<div class=\"screen d36\">\n    <div class=\"top\"><span class=\"mark\">GurgoBudget</span><span class=\"mo\">August 2026</span></div>\n    <div class=\"c hero\">\n      <p class=\"k\">Daily allowance</p>\n      <p class=\"fig\"><i>₺</i>1.203</p>\n      <p class=\"dl\">₺8.878 ahead · 5 days left</p>\n    </div>\n    <dl class=\"three\">\n      <div><dt>Max</dt><dd>₺1.303</dd></div>\n      <div><dt>Strict</dt><dd>₺894</dd></div>\n      <div><dt>Min</dt><dd>₺794</dd></div>\n    </dl>\n    <div class=\"c log\">\n      <span>Today<b>−₺870</b></span>\n      <button type=\"button\">Log</button>\n    </div>\n    <div class=\"c\">\n      <h2>This month</h2>\n      <ul>\n        <li><span>Income</span><span>₺90.500</span></li>\n        <li><span>Committed</span><span>−₺50.100</span></li>\n        <li><span>Surplus</span><span class=\"sum\">₺40.400</span></li>\n      </ul>\n    </div>\n    <div class=\"c\">\n      <div class=\"sv\"><span style=\"font-size:13px;color:var(--muted)\">Money saved</span><b>₺11.985</b></div>\n      <ul>\n        <li><span>New guitar</span><span>₺9.500</span></li>\n        <li class=\"done\"><span>Headphones</span><span>₺3.200</span></li>\n      </ul>\n    </div>\n    <nav><span class=\"on\">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>\n  </div>"}]</script>
+<script>
+(function(){
+  const SPECIMENS = JSON.parse(document.getElementById('specimen-data').textContent);
+  const stageArea = document.getElementById('stage-area');
+  const progEl = document.getElementById('prog');
+  const railEl = document.getElementById('rail');
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  const totalRounds = Math.ceil(Math.log2(SPECIMENS.length));
+  let pool, round, queue, matchIndex, nextPool, totalThisRound;
+
+  function startTournament(){
+    pool = shuffle(SPECIMENS.slice());
+    round = 1;
+    buildRound();
+    render();
+  }
+
+  function buildRound(){
+    const p = shuffle(pool.slice());
+    queue = [];
+    if (p.length % 2 === 1){
+      queue.push({ bye: p.pop() });
+    }
+    for (let i = 0; i < p.length; i += 2){
+      queue.push({ a: p[i], b: p[i+1] });
+    }
+    shuffle(queue);
+    matchIndex = 0;
+    nextPool = [];
+    totalThisRound = queue.length;
+  }
+
+  function updateProgress(){
+    progEl.innerHTML = 'Round <b>' + round + '</b> of ' + totalRounds +
+      ' · ' + pool.length + ' left · matchup ' + (matchIndex + 1) + '/' + totalThisRound;
+    const doneRounds = round - 1;
+    const roundFrac = matchIndex / Math.max(totalThisRound, 1);
+    const pct = Math.min(100, ((doneRounds + roundFrac) / totalRounds) * 100);
+    railEl.style.width = pct + '%';
+  }
+
+  function render(){
+    if (pool.length === 1){ renderWinner(pool[0]); return; }
+    if (matchIndex >= queue.length){
+      pool = nextPool;
+      round++;
+      if (pool.length === 1){ renderWinner(pool[0]); return; }
+      buildRound();
+    }
+    updateProgress();
+    const m = queue[matchIndex];
+    if (m.bye) renderBye(m.bye);
+    else renderMatch(m.a, m.b);
+  }
+
+  function choose(winner){
+    nextPool.push(winner);
+    matchIndex++;
+    render();
+  }
+
+  function continueBye(item){
+    nextPool.push(item);
+    matchIndex++;
+    render();
+  }
+
+  function sideMarkup(s, otherName){
+    return '' +
+      '<div class="side">' +
+        '<div class="side__label">' + String(s.num).padStart(2,'0') + ' · <b>' + s.name + '</b><br><span>' + s.fonts + '</span></div>' +
+        '<div class="stage" data-pick tabindex="0" role="button" aria-label="Choose ' + s.name + ' over ' + otherName + '">' + s.html + '</div>' +
+        '<button class="pick" type="button" data-pick>Choose ' + s.name + '</button>' +
+      '</div>';
+  }
+
+  function renderMatch(a, b){
+    stageArea.innerHTML =
+      '<div class="matchup">' +
+        sideMarkup(a, b.name) +
+        '<div class="vs">VS</div>' +
+        sideMarkup(b, a.name) +
+      '</div>';
+    const sides = stageArea.querySelectorAll('.side');
+    sides[0].querySelectorAll('[data-pick]').forEach(function(el){
+      el.addEventListener('click', function(){ choose(a); });
+      el.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); choose(a); } });
+    });
+    sides[1].querySelectorAll('[data-pick]').forEach(function(el){
+      el.addEventListener('click', function(){ choose(b); });
+      el.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); choose(b); } });
+    });
+  }
+
+  function renderBye(item){
+    stageArea.innerHTML =
+      '<div class="bye">' +
+        '<p class="bye__k">Odd one out this round</p>' +
+        '<h2 class="bye__t"><em>' + item.name + '</em> draws a bye</h2>' +
+        '<p class="bye__p">No match to judge it against this round — it advances automatically.</p>' +
+        '<div class="stage" style="cursor:default">' + item.html + '</div>' +
+        '<button class="btn btn--solid" type="button" id="byeContinue">Continue</button>' +
+      '</div>';
+    stageArea.querySelector('.stage').style.pointerEvents = 'none';
+    document.getElementById('byeContinue').addEventListener('click', function(){ continueBye(item); });
+  }
+
+  function renderWinner(s){
+    progEl.innerHTML = 'Winner decided';
+    railEl.style.width = '100%';
+    stageArea.innerHTML =
+      '<div class="win">' +
+        '<p class="win__k">Winner</p>' +
+        '<h2 class="win__t">' + s.name + '</h2>' +
+        '<p class="win__meta"><b>' + s.fonts + '</b> · ' + s.palette + '</p>' +
+        '<div class="stage">' + s.html + '</div>' +
+        '<div class="win__actions">' +
+          '<button class="btn btn--solid" type="button" id="restart">Run it again</button>' +
+          '<a class="btn btn--ghost" href="exhibition.html">Back to all fifty</a>' +
+        '</div>' +
+      '</div>';
+    stageArea.querySelector('.stage').style.cursor = 'default';
+    stageArea.querySelector('.stage').style.pointerEvents = 'none';
+    document.getElementById('restart').addEventListener('click', startTournament);
+  }
+
+  startTournament();
+})();
+</script>
+</body>
+</html>
