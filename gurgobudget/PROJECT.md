@@ -37,6 +37,12 @@ All four are shown together; Daily gets the most visual weight (~37%), the other
 
 The Wishlist figure used here is the sum of whatever is **currently in the Wishlist list** — it only changes when items are added, deleted, or moved to/from Flex Spend. Marking a Wishlist item "purchased" (see below) does **not** change this total.
 
+## Ahead/Behind Indicator (added Dashboard Round 1)
+
+- There are **six candidate figures** for "how much should I be spending" going forward: the four allowances (Max, Daily, Strict, Minimum) plus the two averages (this-month average, trailing-90-day average). The user selects which one drives the projection for the remaining days of the month.
+- Two candidate UI approaches for that selection are still open and will be prototyped side by side in the eventual dashboard component exhibition (same process used to pick Yosun): **(a)** a toggle/switcher cycling through the six, or **(b)** all six stacked in a visible list, tapped to mark one as "projected." Not decided yet — build both, then choose.
+- Ahead/behind should surface **three always-visible states**, stacked rather than toggled: a **bankruptcy** threshold, a **buffer** threshold, and an **"affords the full current Wishlist"** threshold.
+
 ## Additional Stats (added Round 6)
 
 Alongside the four allowances, also show:
@@ -49,6 +55,8 @@ Alongside the four allowances, also show:
 - A day with no entry counts as **zero spent**.
 - Logged days can be corrected later, including days in past/closed months, with no confirmation warning.
 - A day can have both a raw balance log **and** an independent Wishlist-purchase action (see below) — they don't conflict; each day is not restricted to "exactly one number."
+- **Logging is the app's single most frequent action and must be near-frictionless.** The primary entry point is a tap that jumps straight to the earliest unlogged day — no date picking, no navigating a calendar to find where you left off.
+- The user will **never** log the current day in real time (e.g. late-night orders land after the day is functionally "closed" for them) — logging is inherently retrospective, catching up on past unlogged days. No same-day "log today" fast path is needed; the earliest-unlogged-day flow above is the actual fast path.
 
 ## Retroactive Recalculation & Data Model
 
@@ -72,8 +80,11 @@ A distinct sub-system, deliberately semi-separate from the core allowance math (
 
 - Screen/section structure is delegated to Claude's judgment (a "Today" view, a Setup/Items view, and a History view are the working assumption).
 - Stated design philosophy: **important/primary numbers stay easily accessible on the main screens; deeper pages exist for graphs, stats, and other detail** — nothing is permanently hidden, everything is reachable somewhere. A full day-by-day log view should exist.
+- **The dashboard should not feel busy** — a deliberately low-density, uncluttered read on the main screens (added Dashboard Round 1, sharpens the philosophy above).
+- Editing a Base or Flex item (e.g. bumping rent): tapping the value opens a small separate editor for that item, rather than editing inline in place (added Dashboard Round 1).
 - Graphs/stats page contents are delegated to Claude.
 - A month closes automatically the instant the calendar flips — no manual "close month" action.
+- Offline behavior: if the app can't reach Firestore, a plain "can't reach the server" message is sufficient — no requirement to fall back to cached/last-known numbers (added Dashboard Round 1).
 - Aesthetics/mood/branding are intentionally deferred by the user to a later, separate design phase (fonts/palette, then per-page design exhibitions) — not part of this document's scope.
 
 ## Platform & Auth
@@ -168,8 +179,21 @@ A distinct sub-system, deliberately semi-separate from the core allowance math (
 - **Winner: Yosun** — sage paper with a deep moss/olive accent, a dark hero band (today's daily allowance) over a rounded-top light "sheet" panel holding the month ledger and wishlist. This is the direction going forward.
 - **Typeface override:** Hallmark's font catalog defaults to banning Inter as a generic AI-default face, but the user explicitly asked for it across all 36 specimens regardless — it reads as more legible to them. All specimens (including Yosun) now render in Inter. This preference should carry into the real build.
 
+## Dashboard Build — Round Notes
+
+A second, shorter Q&A pass (5 questions/round, ~7 rounds anticipated) covering the real dashboard build — screens, interactions, and edge cases the original spec left to Claude's judgment. Raw round-by-round record lives in `gurgobudget/dashboard-questionnaires/`; settled answers are folded into the relevant sections above as they land.
+
+**Round 1 — Screens, edits, and blank slates:**
+- Empty Today screen (no items set up yet): not important, can be rough/unstyled — no dedicated design effort warranted.
+- Editing a Base/Flex item opens a small separate editor on tap (folded into [Screens & Design Philosophy](#screens--design-philosophy)).
+- Ahead/behind indicator and remaining-days projection fully specified — see new [Ahead/Behind Indicator](#aheadbehind-indicator-added-dashboard-round-1) section.
+- New-month rollover: answer ("yeah sure") was ambiguous between "drop straight into blank Today" and "show a one-time recap first" — needs a follow-up confirmation, not yet folded into spec.
+- Offline behavior: plain error is fine, no cached fallback (folded into [Screens & Design Philosophy](#screens--design-philosophy)).
+- Primary daily action is logging spend, which must jump straight to the earliest unlogged day; the user never logs same-day (folded into [The Daily Log](#the-daily-log)).
+
 ## Status
 
 - Q&A phase: **complete** (6 rounds + chat follow-up). Spec is fully settled — no outstanding open questions.
 - Visual design phase: **direction chosen** (Yosun, sage/moss, dark-band-plus-sheet, Inter). Next: build the real dashboard in this direction — palette, scale, and component voice carried over from the specimen, not the specimen's literal markup.
+- Dashboard questionnaire phase: **in progress** — round 1 of ~7 recorded (see [Dashboard Build — Round Notes](#dashboard-build--round-notes)). One open item pending user confirmation (new-month rollover behavior).
 - Last updated: 2026-08-27
