@@ -37,17 +37,17 @@ Daily Allowance is the primary/headline number. All four are shown, with Daily g
 
 Tracked and resolved via the `questionnaires/` folder — one questionnaire per round, 10 questions each, answered by the user, then folded back into this document.
 
-Open after Round 3, being explored in Round 4 (shifting toward UX/build-shape now that core logic is mostly settled):
-- Should a retroactive recalculation (from editing a Flex/Wishlist/Base item mid-month) be flagged visibly, or applied silently?
-- Does editing Base Income/Base Spend trigger the same retroactive recalculation of the current month as Flex/Wishlist edits do?
-- How much detail does Base item history need — old value + date, or also a reason/note?
-- Daily reminder notification to log the balance number, given missed days silently count as zero?
-- Should GurgoBudget be an installable/offline-capable app (PWA), given heavy mobile use?
-- During a Wishlist ↔ Flex Spend conversion, does the name/amount carry over as-is or become editable?
-- Anything specific wanted from the (delegated) month-over-month view, or fully open to design judgment?
-- Any desire for a "running low" warning/alert before month-end, beyond the ahead/behind number?
-- Desired visual mood (calm/minimal vs. playful vs. other) and any reference apps/products.
-- Any existing name/logo direction for GurgoBudget, or fully open for the design phase?
+Aesthetics/mood/branding are intentionally on hold for now (user's call) — later rounds will return to that. Round 5 stays on structure/architecture:
+- What are the app's main screens/sections (Today, Setup/Items, History, etc.)?
+- Does a month close automatically at the calendar flip, or via a manual action?
+- Are closed/past months frozen permanently, or can later Base item edits ever reach back into them?
+- Can a logged day be corrected only within the current month, or in past closed months too?
+- Do Base Income/Base Spend items need more than name + monthly amount (e.g. a due date)?
+- Do Flex Income/Flex Spend/Wishlist items need more than name + amount?
+- Is a day-by-day log list wanted, or is the aggregate ahead/behind number enough?
+- Should ahead/behind be a single number, or a simple day-by-day trend?
+- Can a Wishlist item be added with an estimated/unknown price, or always an exact amount?
+- Is "buying" a Wishlist item a distinct status change, or just deleting it and logging the spend?
 
 ## Decisions Log
 
@@ -86,7 +86,17 @@ Open after Round 3, being explored in Round 4 (shifting toward UX/build-shape no
 - Heavy **mobile-first** usage — this is the dominant device.
 - Month-over-month/historical view: delegated to Claude's design judgment.
 
+**Round 4:**
+- Retroactive recalculations apply silently — no visible "recalculated because..." flag needed.
+- Editing a Base Income/Base Spend amount retroactively recalculates the rest of the current month, same as Flex/Wishlist edits.
+- Base item amount history needs no reason/note — just the old value and the date it changed.
+- No daily reminder notification wanted.
+- Plain browser use is fine — no installable/offline PWA requirement.
+- Wishlist ↔ Flex Spend conversion carries the name and amount over as-is, no edit step.
+- No "running low" warning wanted beyond the ahead/behind number.
+- Month-over-month comparison specifics, visual mood, and name/logo are all deliberately deferred — user wants to sidestep aesthetics/feel for now and will return to it later.
+
 ## Status
 
-- Round: 4 of 20 (in progress)
+- Round: 5 of 20 (in progress)
 - Last updated: 2026-08-26
