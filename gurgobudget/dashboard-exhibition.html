@@ -1,0 +1,1828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twenty Dashboards</title>
+<meta name="description" content="Twenty hand-built dashboard structures for GurgoBudget, all in the settled Yosun palette, each drawn at a real phone viewport.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* GurgoBudget · Exhibuild 02 · scope: DASHBOARD ONLY
+ * palette locked to Yosun (sage paper / moss accent) — structure is the variable, not colour
+ * typeface locked to Inter throughout, per standing user override
+ * 20 specimens, each hand-built with its own token block + markup. No templating, no loops.
+ */
+
+/* ════════════  SHELL  ════════════ */
+:root{
+  --shell-paper:oklch(16% .014 140);
+  --shell-paper-2:oklch(20% .015 140);
+  --shell-ink:oklch(94% .01 130);
+  --shell-muted:oklch(66% .015 135);
+  --shell-rule:oklch(29% .015 140);
+  --shell-accent:oklch(78% .135 135);
+
+  --font:"Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --space-3xs:4px;--space-2xs:8px;--space-xs:12px;--space-sm:16px;
+  --space-md:24px;--space-lg:32px;--space-xl:48px;--space-2xl:72px;--space-3xl:112px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{overflow-x:clip}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}}
+body{
+  margin:0;background:var(--shell-paper);color:var(--shell-ink);
+  font-family:var(--font);font-size:16px;line-height:1.6;font-weight:300;
+  -webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--shell-accent);outline-offset:3px}
+
+.wrap{width:100%;max-width:1760px;margin-inline:auto;padding-inline:clamp(20px,4vw,56px)}
+
+.mast{padding-block:var(--space-3xl) var(--space-2xl)}
+.mast__over{margin:0 0 var(--space-sm);font-size:.7rem;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--shell-accent)}
+.mast__t{margin:0;font-weight:900;font-size:clamp(2.6rem,6vw,5rem);line-height:.98;
+  letter-spacing:-.04em;max-width:18ch;overflow-wrap:anywhere}
+.mast__t em{font-style:normal;color:var(--shell-accent)}
+.mast__cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:var(--space-lg);margin-top:var(--space-xl);padding-top:var(--space-md);
+  border-top:1px solid var(--shell-rule)}
+.mast__cols p{margin:0;color:var(--shell-muted);font-size:.92rem;max-width:44ch}
+.mast__cols b{color:var(--shell-ink);font-weight:500}
+.mast__cols code{font-family:var(--font);font-weight:500;color:var(--shell-accent);font-size:.88em}
+
+.brief{margin-top:var(--space-lg);padding:var(--space-md) var(--space-md) var(--space-sm);
+  background:var(--shell-paper-2);border-radius:14px}
+.brief h2{margin:0 0 var(--space-xs);font-size:.72rem;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--shell-accent);font-weight:600}
+.brief ul{margin:0;padding-left:1.1em;color:var(--shell-muted);font-size:.88rem;line-height:1.75}
+.brief b{color:var(--shell-ink);font-weight:500}
+
+.gallery{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));
+  gap:var(--space-2xl) var(--space-lg);padding-bottom:var(--space-3xl);
+  justify-items:center;align-items:start;
+}
+.slot{width:100%;max-width:390px}
+.slot__h{margin:0 0 var(--space-2xs);display:flex;align-items:baseline;gap:var(--space-2xs)}
+.slot__n{font-size:.72rem;letter-spacing:.1em;color:var(--shell-accent);font-weight:500}
+.slot__t{margin:0;font-weight:600;font-size:1.18rem;letter-spacing:-.02em;line-height:1.2}
+.slot__meta{margin:0 0 var(--space-xs);color:var(--shell-muted);font-size:.7rem;
+  line-height:1.6;letter-spacing:.01em}
+.slot__meta span{color:var(--shell-ink)}
+
+/* ── cull controls ── */
+.slot__hide{
+  margin-left:auto;align-self:center;font-family:var(--font);font-size:.64rem;font-weight:500;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--shell-muted);background:none;
+  border:1px solid var(--shell-rule);border-radius:999px;padding:5px 12px;cursor:pointer;
+  transition:color .12s ease,border-color .12s ease,background .12s ease}
+.slot__hide:hover{color:var(--shell-ink);border-color:var(--shell-muted)}
+
+.slot.is-hidden .slot__meta,
+.slot.is-hidden .screen{display:none}
+.slot.is-hidden .slot__h{margin:0;padding-bottom:var(--space-xs);
+  border-bottom:1px dashed var(--shell-rule)}
+.slot.is-hidden .slot__n{opacity:.45}
+.slot.is-hidden .slot__t{font-weight:400;color:var(--shell-muted);text-decoration:line-through;
+  text-decoration-thickness:1px;text-decoration-color:var(--shell-rule)}
+.slot.is-hidden .slot__hide{color:var(--shell-accent);border-color:var(--shell-accent)}
+.gallery.is-tidy .slot.is-hidden{display:none}
+
+.cull{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:var(--space-sm);
+  flex-wrap:wrap;margin-bottom:var(--space-xl);padding:12px 18px;border-radius:12px;
+  background:oklch(20% .015 140 / .92);backdrop-filter:blur(8px);
+  border:1px solid var(--shell-rule)}
+.cull__n{font-size:.78rem;letter-spacing:.04em;color:var(--shell-muted)}
+.cull__n b{color:var(--shell-ink);font-weight:600;font-variant-numeric:tabular-nums}
+.cull__sp{flex:1}
+.cull button{font-family:var(--font);font-size:.68rem;font-weight:500;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--shell-muted);background:none;
+  border:1px solid var(--shell-rule);border-radius:999px;padding:6px 14px;cursor:pointer;
+  transition:color .12s ease,border-color .12s ease}
+.cull button:hover{color:var(--shell-ink);border-color:var(--shell-muted)}
+.cull button[aria-pressed="true"]{color:var(--shell-paper);background:var(--shell-accent);
+  border-color:var(--shell-accent);font-weight:700}
+.cull button:disabled{opacity:.35;cursor:default}
+.cull button:disabled:hover{color:var(--shell-muted);border-color:var(--shell-rule)}
+
+/* the specimen frame — hairline figure border, no imitation device chrome */
+.screen{
+  width:390px;height:844px;overflow:hidden;
+  display:flex;flex-direction:column;
+  border:1px solid var(--shell-rule);
+  font-family:var(--font);
+  font-variant-numeric:tabular-nums;
+  font-synthesis-weight:none;
+  line-height:1.5;
+}
+.screen *{min-width:0}
+.screen button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;text-align:left}
+.screen ul,.screen ol{list-style:none;margin:0;padding:0}
+.screen h1,.screen h2,.screen h3,.screen p{margin:0;font-style:normal}
+.screen dl,.screen dd{margin:0}
+
+.close{padding-block:var(--space-2xl) var(--space-3xl);border-top:1px solid var(--shell-rule)}
+.close__t{margin:0;font-weight:900;font-size:clamp(1.8rem,4vw,2.9rem);line-height:1.06;
+  letter-spacing:-.035em;max-width:20ch;overflow-wrap:anywhere}
+.close__p{margin:var(--space-md) 0 0;color:var(--shell-muted);max-width:56ch;font-size:.95rem}
+</style>
+</head>
+<body>
+
+<header class="mast wrap">
+  <p class="mast__over">GurgoBudget · Exhibuild 02 · dashboard only · 20 specimens</p>
+  <h1 class="mast__t">Twenty ways to hold <em>six numbers</em> without getting busy</h1>
+  <div class="mast__cols">
+    <p>Palette and typeface are settled — <b>Yosun</b> sage and moss, <b>Inter</b> throughout. Nothing here is arguing about colour. The variable is <b>structure</b>: what earns the fold, what nests, and what gets a tap.</p>
+    <p>Every screen is drawn at <b>390 × 844</b> and clipped there. If it didn't fit, it didn't earn its place. This is the Today screen alone — items, wishlist, history and stats are separate pages, built later.</p>
+    <p>Figures are sample data but internally consistent, so a specimen can be read for sense as well as feel. Same month, same balances, twenty postures.</p>
+  </div>
+
+  <div class="brief">
+    <h2>What every specimen has to carry</h2>
+    <ul>
+      <li><b>Daily allowance ₺1.203</b> as the headline, with Max / Strict / Minimum in support.</li>
+      <li>A <b>projection source</b> picked from six — the four allowances plus two averages. Specimens split between a <code>toggle</code> and a <code>tap-list</code>; that fork is what this exhibition is here to settle.</li>
+      <li>Three <b>always-visible</b> outcome states, never hidden behind a switch: stays solvent, buffer intact, wishlist covered.</li>
+      <li>A <b>log entry point</b> that goes straight to the earliest unlogged day — <code>24 Aug</code>, two days back. Never "log today"; today is never logged.</li>
+      <li>Whole lira only. No kuruş anywhere.</li>
+    </ul>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="cull">
+    <p class="cull__n"><b id="bar-count">20</b> of 20 showing<span id="bar-cut"></span></p>
+    <span class="cull__sp"></span>
+    <button id="bar-tidy" type="button" aria-pressed="false">Tidy away hidden</button>
+    <button id="bar-reset" type="button" disabled>Show all</button>
+  </div>
+</div>
+<main class="gallery wrap" id="gallery">
+
+<!-- ══════════ 01 · YOSUN II ══════════ -->
+<style>
+.d01{--paper:oklch(93% .016 128);--ink:oklch(24% .036 132);--muted:oklch(50% .028 132);
+  --rule:oklch(81% .018 128);--accent:oklch(47% .108 138);--onink:oklch(94% .015 128);
+  --short:oklch(52% .118 42);
+  background:var(--ink);color:var(--ink);font-size:13.5px;font-weight:400}
+.d01 .band{color:var(--onink);padding:26px 26px 24px}
+.d01 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d01 .mark{font-weight:700;font-size:18px;letter-spacing:-.025em}
+.d01 .mo{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.d01 .k{margin-top:22px;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
+.d01 .fig{font-weight:700;font-size:68px;line-height:1;letter-spacing:-.04em;margin-top:4px}
+.d01 .fig i{font-style:normal;font-size:28px;opacity:.6;vertical-align:.52em;margin-right:1px}
+.d01 .three{display:grid;grid-template-columns:repeat(3,1fr);margin-top:20px;
+  border-top:1px solid oklch(45% .04 132);padding-top:11px}
+.d01 .three dt{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;opacity:.66}
+.d01 .three dd{margin-top:3px;font-weight:500;font-size:18px}
+.d01 .sheet{background:var(--paper);border-radius:24px 24px 0 0;flex:1;margin-top:auto;
+  padding:20px 26px 0;display:flex;flex-direction:column}
+.d01 .logbtn{display:flex;justify-content:space-between;align-items:center;width:100%;
+  background:var(--accent);color:var(--paper);border-radius:12px;padding:14px 16px}
+.d01 .logbtn em{font-style:normal;display:block;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;opacity:.72}
+.d01 .logbtn b{font-weight:700;font-size:16px;letter-spacing:-.01em}
+.d01 .logbtn .n{font-size:11px;opacity:.8}
+.d01 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:20px 0 7px}
+.d01 .pick li{display:flex;justify-content:space-between;align-items:center;padding:7px 0;
+  font-size:13px;color:var(--muted)}
+.d01 .pick li+li{border-top:1px solid var(--rule)}
+.d01 .pick .on{color:var(--ink);font-weight:600}
+.d01 .pick .on::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--accent);margin-right:8px;vertical-align:.18em}
+.d01 .pick .on span:first-child{margin-left:-13px;padding-left:13px}
+.d01 .states{margin-top:18px;padding-top:14px;border-top:1px solid var(--rule)}
+.d01 .states li{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0}
+.d01 .states .lab{font-size:12.5px}
+.d01 .states .val{font-weight:600;font-size:13px;color:var(--accent)}
+.d01 .states .no .val{color:var(--short)}
+.d01 .states .no .lab{color:var(--muted)}
+.d01 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:15px 0 19px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d01 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">01</span><h2 class="slot__t">Yosun II</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · six stacked, dotted current · states as a ruled trio<br>the winner's own posture, carrying the new load</p>
+  <div class="screen d01">
+    <div class="band">
+      <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <dl class="three">
+        <div><dt>Max</dt><dd>₺1.303</dd></div>
+        <div><dt>Strict</dt><dd>₺894</dd></div>
+        <div><dt>Min</dt><dd>₺794</dd></div>
+      </dl>
+    </div>
+    <div class="sheet">
+      <button class="logbtn" type="button">
+        <span><em>Log spending</em><b>Sunday 24 August</b></span>
+        <span class="n">2 days back</span>
+      </button>
+      <h2>Project the rest of the month at</h2>
+      <ul class="pick">
+        <li><span>Max allowance</span><span>₺1.303</span></li>
+        <li class="on"><span>Daily allowance</span><span>₺1.203</span></li>
+        <li><span>Strict allowance</span><span>₺894</span></li>
+        <li><span>Minimum allowance</span><span>₺794</span></li>
+        <li><span>Average, this month</span><span>₺1.052</span></li>
+        <li><span>Average, 90 days</span><span>₺1.147</span></li>
+      </ul>
+      <ul class="states">
+        <li><span class="lab">Stays solvent</span><span class="val">₺6.580 clear</span></li>
+        <li><span class="lab">Buffer intact</span><span class="val">₺3.480 clear</span></li>
+        <li class="no"><span class="lab">Wishlist covered</span><span class="val">₺6.120 short</span></li>
+      </ul>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 02 · TERAZİ ══════════ -->
+<style>
+.d02{--paper:oklch(95% .012 126);--ink:oklch(22% .034 134);--muted:oklch(52% .026 132);
+  --rule:oklch(85% .015 126);--accent:oklch(45% .11 140);--short:oklch(53% .12 40);
+  background:var(--paper);color:var(--ink);font-size:13.5px;padding:28px 24px 0;
+  display:flex;flex-direction:column}
+.d02 .top{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.d02 .mark{font-weight:800;font-size:16px;letter-spacing:-.03em}
+.d02 .mo{font-size:11px;color:var(--muted);letter-spacing:.1em}
+.d02 .hero{padding:26px 0 8px}
+.d02 .k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d02 .fig{font-weight:800;font-size:64px;line-height:.96;letter-spacing:-.045em;margin-top:6px}
+.d02 .fig i{font-style:normal;font-size:26px;color:var(--muted);vertical-align:.55em}
+.d02 .sub{margin-top:8px;font-size:12.5px;color:var(--muted)}
+.d02 .sub b{color:var(--accent);font-weight:600}
+.d02 .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);
+  border-block:1px solid var(--rule);margin-top:20px}
+.d02 .row3 div{background:var(--paper);padding:10px 0 11px}
+.d02 .row3 dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d02 .row3 dd{margin-top:2px;font-weight:600;font-size:16px}
+/* the scale itself */
+.d02 .scale{margin-top:26px;position:relative;padding-left:96px}
+.d02 .scale h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:14px;padding-left:0}
+.d02 .beam{position:absolute;left:104px;top:32px;bottom:8px;width:2px;background:var(--rule)}
+.d02 .mk{position:relative;display:flex;align-items:center;gap:12px;height:56px}
+.d02 .mk .amt{position:absolute;left:-96px;width:84px;text-align:right;font-size:11.5px;
+  color:var(--muted);font-variant-numeric:tabular-nums}
+.d02 .mk .pip{width:10px;height:10px;border-radius:50%;border:2px solid var(--rule);
+  background:var(--paper);flex:none;margin-left:-4px}
+.d02 .mk.pass .pip{border-color:var(--accent);background:var(--accent)}
+.d02 .mk.fail .pip{border-color:var(--short)}
+.d02 .mk .lab{font-size:13px;font-weight:500}
+.d02 .mk.fail .lab{color:var(--muted)}
+.d02 .mk .gap{display:block;font-size:11px;font-weight:400;color:var(--accent)}
+.d02 .mk.fail .gap{color:var(--short)}
+.d02 .here{position:relative;height:0}
+.d02 .here span{position:absolute;left:-96px;right:0;top:-11px;display:flex;align-items:center;gap:12px;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.d02 .here span::before{content:"";position:absolute;left:84px;right:0;height:1px;
+  background:var(--accent);opacity:.35}
+.d02 .here b{position:absolute;left:112px;background:var(--paper);padding-right:6px}
+.d02 .foot{margin-top:auto;display:flex;gap:10px;align-items:stretch;padding:16px 0 14px;
+  border-top:1px solid var(--rule)}
+.d02 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d02 nav .on{color:var(--accent);font-weight:700}
+.d02 .foot .pj{flex:1;font-size:11.5px;color:var(--muted)}
+.d02 .foot .pj b{display:block;color:var(--ink);font-weight:600;font-size:13px;margin-top:2px}
+.d02 .foot button{background:var(--accent);color:var(--paper);border-radius:9px;
+  padding:10px 16px;font-weight:600;font-size:12.5px;display:flex;flex-direction:column;justify-content:center}
+.d02 .foot button em{font-style:normal;font-size:9.5px;opacity:.75;letter-spacing:.12em;text-transform:uppercase}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">02</span><h2 class="slot__t">Terazi</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · projection reduced to a footer line<br>the three states drawn as one measured beam, marked where the month lands</p>
+  <div class="screen d02">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">Aug 2026 · day 26/31</span></div>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="sub"><b>₺3.473 ahead</b> of plan so far</p>
+    </div>
+    <dl class="row3">
+      <div><dt>Max</dt><dd>₺1.303</dd></div>
+      <div><dt>Strict</dt><dd>₺894</dd></div>
+      <div><dt>Min</dt><dd>₺794</dd></div>
+    </dl>
+    <section class="scale">
+      <h2>Where the month lands</h2>
+      <div class="beam"></div>
+      <div class="mk fail">
+        <span class="amt">₺12.700</span><span class="pip"></span>
+        <span class="lab">Wishlist covered<span class="gap">₺6.120 short</span></span>
+      </div>
+      <div class="here"><span><b>₺6.580 projected</b></span></div>
+      <div class="mk pass">
+        <span class="amt">₺3.100</span><span class="pip"></span>
+        <span class="lab">Buffer intact<span class="gap">₺3.480 clear</span></span>
+      </div>
+      <div class="mk pass">
+        <span class="amt">₺0</span><span class="pip"></span>
+        <span class="lab">Stays solvent<span class="gap">₺6.580 clear</span></span>
+      </div>
+    </section>
+    <div class="foot">
+      <span class="pj">Projecting at<b>Daily allowance ⇅</b></span>
+      <button type="button"><em>Log</em>24 Aug</button>
+    </div>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 03 · OCAK ══════════ -->
+<style>
+.d03{--paper:oklch(94% .014 128);--ink:oklch(21% .038 134);--muted:oklch(51% .028 132);
+  --rule:oklch(83% .016 128);--accent:oklch(58% .126 136);--onink:oklch(95% .014 128);
+  --short:oklch(60% .13 44);
+  background:var(--paper);color:var(--ink);font-size:13.5px;display:flex;flex-direction:column}
+.d03 .hearth{background:var(--ink);color:var(--onink);padding:26px 24px 26px;
+  border-radius:0 0 28px 28px}
+.d03 .top{display:flex;justify-content:space-between;align-items:center}
+.d03 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d03 .mo{font-size:11px;opacity:.65;letter-spacing:.08em}
+.d03 .k{margin-top:24px;font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.65}
+.d03 .fig{font-weight:800;font-size:74px;line-height:.95;letter-spacing:-.05em;margin-top:2px}
+.d03 .fig i{font-style:normal;font-size:28px;opacity:.55;vertical-align:.6em}
+.d03 .fig small{font-size:14px;font-weight:400;opacity:.6;letter-spacing:0;margin-left:8px}
+.d03 .chips{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
+.d03 .chips button{border:1px solid oklch(42% .04 134);border-radius:999px;
+  padding:6px 12px;font-size:11px;opacity:.72}
+.d03 .chips .on{background:var(--accent);border-color:var(--accent);color:var(--ink);
+  font-weight:700;opacity:1}
+.d03 .body{padding:22px 24px 0;flex:1;display:flex;flex-direction:column}
+.d03 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:9px}
+.d03 .tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.d03 .tri div{background:oklch(97% .01 128);border-radius:14px;padding:13px 12px 14px;
+  border:1px solid var(--rule)}
+.d03 .tri dt{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  line-height:1.35;min-height:2.7em}
+.d03 .tri dd{margin-top:6px;font-weight:700;font-size:15px;color:var(--accent);letter-spacing:-.02em}
+.d03 .tri .no dd{color:var(--short)}
+.d03 .tri .st{display:block;font-size:9.5px;font-weight:500;color:var(--muted);
+  letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.d03 .allow{display:grid;grid-template-columns:repeat(3,1fr);margin-top:24px;
+  border-block:1px solid var(--rule);padding:12px 0}
+.d03 .allow div+div{border-left:1px solid var(--rule);padding-left:12px}
+.d03 .allow dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d03 .allow dd{margin-top:3px;font-weight:600;font-size:17px}
+.d03 .avg{display:flex;justify-content:space-between;margin-top:14px;font-size:12px;color:var(--muted)}
+.d03 .avg b{color:var(--ink);font-weight:600}
+.d03 .log{margin-top:auto;margin-bottom:14px;display:flex;align-items:center;
+  justify-content:space-between;width:100%;background:var(--ink);color:var(--onink);
+  border-radius:16px;padding:16px 18px}
+.d03 .log em{font-style:normal;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  opacity:.6;display:block}
+.d03 .log b{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.d03 .log .ar{font-size:20px;opacity:.6}
+.d03 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.d03 nav .on{color:var(--ink);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">03</span><h2 class="slot__t">Ocak</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · six chips inside the dark hearth<br>states promoted to three tiles above the allowances they depend on</p>
+  <div class="screen d03">
+    <div class="hearth">
+      <div class="top"><span class="mark">GurgoBudget</span><span class="mo">26 Aug · 5 days left</span></div>
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203<small>₺3.473 ahead</small></p>
+      <div class="chips">
+        <button class="on" type="button">Daily</button>
+        <button type="button">Max</button>
+        <button type="button">Strict</button>
+        <button type="button">Min</button>
+        <button type="button">Avg mo.</button>
+        <button type="button">Avg 90d</button>
+      </div>
+    </div>
+    <div class="body">
+      <h2>At that rate, the month ends</h2>
+      <dl class="tri">
+        <div><dt>Stays solvent</dt><dd>₺6.580<span class="st">clear</span></dd></div>
+        <div><dt>Buffer intact</dt><dd>₺3.480<span class="st">clear</span></dd></div>
+        <div class="no"><dt>Wishlist covered</dt><dd>₺6.120<span class="st">short</span></dd></div>
+      </dl>
+      <dl class="allow">
+        <div><dt>Max</dt><dd>₺1.303</dd></div>
+        <div><dt>Strict</dt><dd>₺894</dd></div>
+        <div><dt>Minimum</dt><dd>₺794</dd></div>
+      </dl>
+      <p class="avg"><span>Avg this month <b>₺1.052</b></span><span>Avg 90 days <b>₺1.147</b></span></p>
+      <button class="log" type="button">
+        <span><em>Next to log</em><b>Sun 24 August</b></span><span class="ar">→</span>
+      </button>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 04 · KÜTÜK ══════════ -->
+<style>
+.d04{--paper:oklch(96% .009 124);--ink:oklch(23% .032 132);--muted:oklch(54% .024 130);
+  --rule:oklch(86% .013 124);--accent:oklch(44% .105 140);--short:oklch(50% .115 42);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 0 0;
+  display:flex;flex-direction:column}
+.d04 .pad{padding-inline:24px}
+.d04 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d04 .mark{font-weight:700;font-size:15px;letter-spacing:-.02em}
+.d04 .sel{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.02em}
+.d04 .hero{padding:24px 0 18px}
+.d04 .k{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d04 .fig{font-weight:700;font-size:60px;line-height:1;letter-spacing:-.045em;margin-top:5px}
+.d04 .fig i{font-style:normal;font-size:24px;color:var(--muted);vertical-align:.55em}
+.d04 .ledger{border-top:1px solid var(--ink)}
+.d04 .ledger li{display:flex;justify-content:space-between;align-items:baseline;
+  padding:9px 24px;border-bottom:1px solid var(--rule)}
+.d04 .ledger .lab{font-size:12.5px;color:var(--muted)}
+.d04 .ledger .num{font-weight:500;font-size:14px;font-variant-numeric:tabular-nums}
+.d04 .ledger .hd{background:oklch(92% .014 126);padding-block:6px;border-bottom:1px solid var(--rule)}
+.d04 .ledger .hd .lab{font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink);font-weight:600}
+.d04 .ledger .cur{background:oklch(92% .022 132)}
+.d04 .ledger .cur .lab{color:var(--ink);font-weight:600}
+.d04 .ledger .cur .num{font-weight:700;color:var(--accent)}
+.d04 .ledger .pass .num{color:var(--accent);font-weight:600}
+.d04 .ledger .fail .num{color:var(--short);font-weight:600}
+.d04 .ledger .tot .lab{color:var(--ink);font-weight:600;font-size:13px}
+.d04 .ledger .tot .num{font-weight:700;font-size:16px}
+.d04 .log{margin:auto 24px 16px;display:flex;justify-content:space-between;align-items:center;
+  border:1.5px solid var(--ink);border-radius:8px;padding:13px 16px}
+.d04 .log b{font-weight:700;font-size:14px}
+.d04 .log span{font-size:11px;color:var(--muted)}
+.d04 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  border-top:1px solid var(--rule);padding:14px 0 18px;font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.d04 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">04</span><h2 class="slot__t">Kütük</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · six become ledger rows, one highlighted<br>everything is a ruled row — allowances, projections and outcomes share one grammar</p>
+  <div class="screen d04">
+    <div class="pad">
+      <div class="top"><span class="mark">GurgoBudget</span><span class="sel">August 2026</span></div>
+      <div class="hero">
+        <p class="k">Daily allowance</p>
+        <p class="fig"><i>₺</i>1.203</p>
+      </div>
+    </div>
+    <ul class="ledger">
+      <li class="hd"><span class="lab">Project remaining 8 days at</span></li>
+      <li><span class="lab">Max allowance</span><span class="num">₺1.303</span></li>
+      <li class="cur"><span class="lab">Daily allowance</span><span class="num">₺1.203</span></li>
+      <li><span class="lab">Strict allowance</span><span class="num">₺894</span></li>
+      <li><span class="lab">Minimum allowance</span><span class="num">₺794</span></li>
+      <li><span class="lab">Average, this month</span><span class="num">₺1.052</span></li>
+      <li><span class="lab">Average, 90 days</span><span class="num">₺1.147</span></li>
+      <li class="hd"><span class="lab">Month ends</span></li>
+      <li class="pass"><span class="lab">Stays solvent</span><span class="num">₺6.580 clear</span></li>
+      <li class="pass"><span class="lab">Buffer intact</span><span class="num">₺3.480 clear</span></li>
+      <li class="fail"><span class="lab">Wishlist covered</span><span class="num">₺6.120 short</span></li>
+      <li class="tot"><span class="lab">Surplus remaining</span><span class="num">₺16.204</span></li>
+    </ul>
+    <button class="log" type="button"><b>Log Sunday 24 August</b><span>2 days back</span></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 05 · FENER ══════════ -->
+<style>
+.d05{--paper:oklch(92% .018 130);--ink:oklch(20% .04 134);--muted:oklch(49% .03 132);
+  --rule:oklch(80% .02 130);--accent:oklch(46% .112 140);--onink:oklch(94% .016 130);
+  --short:oklch(51% .12 41);
+  background:var(--paper);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.d05 .top{display:flex;justify-content:space-between;align-items:baseline;padding:26px 26px 0}
+.d05 .mark{font-weight:800;font-size:14px;letter-spacing:-.03em;text-transform:uppercase}
+.d05 .mo{font-size:11px;color:var(--muted)}
+.d05 .beam{flex:1;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:0 26px}
+.d05 .k{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+.d05 .fig{font-weight:800;font-size:96px;line-height:.9;letter-spacing:-.06em;margin-top:10px}
+.d05 .fig i{font-style:normal;font-size:34px;color:var(--muted);vertical-align:.72em;
+  letter-spacing:0;margin-right:2px}
+.d05 .swap{margin-top:20px;display:inline-flex;align-items:center;gap:14px;
+  border:1px solid var(--rule);border-radius:999px;padding:7px 8px 7px 16px;background:oklch(96% .012 130)}
+.d05 .swap span{font-size:11.5px;color:var(--muted)}
+.d05 .swap b{font-size:12.5px;font-weight:600}
+.d05 .swap .arr{width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--onink);
+  display:grid;place-items:center;font-size:12px}
+.d05 .ahead{margin-top:26px;font-size:13px;color:var(--muted)}
+.d05 .ahead b{color:var(--accent);font-weight:700;font-size:15px}
+.d05 .rail{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);
+  border-top:1px solid var(--rule)}
+.d05 .rail div{background:var(--paper);padding:14px 0 15px;text-align:center}
+.d05 .rail dt{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.d05 .rail dd{margin-top:3px;font-weight:600;font-size:16px}
+.d05 .out{background:var(--ink);color:var(--onink);padding:18px 26px 16px}
+.d05 .out h2{font-size:9px;letter-spacing:.2em;text-transform:uppercase;opacity:.55;
+  font-weight:500;margin-bottom:10px}
+.d05 .out li{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;font-size:12.5px}
+.d05 .out li+li{border-top:1px solid oklch(30% .04 134)}
+.d05 .out .v{font-weight:700;color:oklch(78% .13 138)}
+.d05 .out .no .v{color:oklch(72% .13 44)}
+.d05 .log{display:flex;justify-content:space-between;align-items:center;width:100%;
+  background:var(--accent);color:var(--paper);padding:17px 26px}
+.d05 .log b{font-size:15px;font-weight:700}
+.d05 .log em{font-style:normal;font-size:11px;opacity:.8}
+.d05 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding:13px 0 17px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d05 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">05</span><h2 class="slot__t">Fener</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · a single swap pill under the figure<br>maximum air up top; outcomes exiled to a dark footer band</p>
+  <div class="screen d05">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="beam">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <button class="swap" type="button">
+        <span>Projecting at</span><b>Daily allowance</b><span class="arr">⇅</span>
+      </button>
+      <p class="ahead"><b>₺3.473</b> ahead of plan · day 26 of 31</p>
+    </div>
+    <dl class="rail">
+      <div><dt>Max</dt><dd>₺1.303</dd></div>
+      <div><dt>Strict</dt><dd>₺894</dd></div>
+      <div><dt>Minimum</dt><dd>₺794</dd></div>
+    </dl>
+    <section class="out">
+      <h2>How the month ends</h2>
+      <ul>
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+    </section>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 days back</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 06 · SÜRGÜ ══════════ -->
+<style>
+.d06{--paper:oklch(95% .013 127);--ink:oklch(23% .035 133);--muted:oklch(53% .026 131);
+  --rule:oklch(84% .015 127);--track:oklch(89% .016 127);--accent:oklch(46% .11 139);
+  --short:oklch(53% .12 41);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 22px 0;
+  display:flex;flex-direction:column}
+.d06 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d06 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d06 .mo{font-size:11px;color:var(--muted);letter-spacing:.06em}
+.d06 .hero{padding:22px 0 4px}
+.d06 .k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d06 .fig{font-weight:800;font-size:62px;line-height:.98;letter-spacing:-.05em;margin-top:4px}
+.d06 .fig i{font-style:normal;font-size:25px;color:var(--muted);vertical-align:.58em}
+.d06 .fig small{display:block;font-size:12px;font-weight:400;color:var(--muted);
+  letter-spacing:0;margin-top:7px}
+.d06 .fig small b{color:var(--accent);font-weight:700}
+/* segmented control */
+.d06 .seg{margin-top:20px;display:grid;grid-template-columns:repeat(6,1fr);
+  background:var(--track);border-radius:10px;padding:3px;gap:2px}
+.d06 .seg button{border-radius:8px;padding:8px 0 9px;text-align:center;font-size:9.5px;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);line-height:1.3}
+.d06 .seg .on{background:var(--accent);color:var(--paper);font-weight:700}
+.d06 .seg b{display:block;font-size:11px;font-weight:600;letter-spacing:-.02em;
+  text-transform:none;margin-top:2px}
+.d06 .seg .on b{font-weight:800}
+.d06 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:26px 0 12px}
+/* threshold bars */
+.d06 .bar{margin-bottom:18px}
+.d06 .bar .lg{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.d06 .bar .lg span{font-size:12.5px;font-weight:500}
+.d06 .bar .lg em{font-style:normal;font-size:11.5px;color:var(--accent);font-weight:600}
+.d06 .bar.no .lg em{color:var(--short)}
+.d06 .bar.no .lg span{color:var(--muted)}
+.d06 .trk{height:7px;border-radius:4px;background:var(--track);position:relative;overflow:hidden}
+.d06 .trk i{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:4px}
+.d06 .bar.no .trk i{background:var(--short)}
+.d06 .bar .cap{display:flex;justify-content:space-between;margin-top:5px;
+  font-size:10px;color:var(--muted)}
+.d06 .log{margin-top:auto;margin-bottom:14px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--ink);color:var(--paper);
+  border-radius:11px;padding:15px 18px}
+.d06 .log b{font-size:15px;font-weight:700}
+.d06 .log em{font-style:normal;font-size:11px;opacity:.7}
+.d06 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d06 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">06</span><h2 class="slot__t">Sürgü</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · a six-wide segmented control, all values legible at once<br>outcomes as filled tracks — the only specimen that draws the gap rather than naming it</p>
+  <div class="screen d06">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">26 Aug 2026</span></div>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203<small><b>₺3.473 ahead</b> · 8 days left to project</small></p>
+    </div>
+    <div class="seg">
+      <button type="button">Max<b>1.303</b></button>
+      <button class="on" type="button">Daily<b>1.203</b></button>
+      <button type="button">Strict<b>894</b></button>
+      <button type="button">Min<b>794</b></button>
+      <button type="button">Mo.<b>1.052</b></button>
+      <button type="button">90d<b>1.147</b></button>
+    </div>
+    <h2>Month-end at that rate · ₺6.580</h2>
+    <div class="bar">
+      <div class="lg"><span>Stays solvent</span><em>₺6.580 clear</em></div>
+      <div class="trk"><i style="width:100%"></i></div>
+      <div class="cap"><span>needs ₺0</span><span>have ₺6.580</span></div>
+    </div>
+    <div class="bar">
+      <div class="lg"><span>Buffer intact</span><em>₺3.480 clear</em></div>
+      <div class="trk"><i style="width:100%"></i></div>
+      <div class="cap"><span>needs ₺3.100</span><span>have ₺6.580</span></div>
+    </div>
+    <div class="bar no">
+      <div class="lg"><span>Wishlist covered</span><em>₺6.120 short</em></div>
+      <div class="trk"><i style="width:52%"></i></div>
+      <div class="cap"><span>needs ₺12.700</span><span>have ₺6.580</span></div>
+    </div>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 days back →</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 07 · BAHÇE ══════════ -->
+<style>
+.d07{--paper:oklch(91% .019 130);--card:oklch(97% .009 128);--ink:oklch(23% .036 133);
+  --muted:oklch(52% .028 131);--rule:oklch(87% .014 128);--accent:oklch(45% .108 139);
+  --short:oklch(52% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 20px 0;
+  display:flex;flex-direction:column;gap:12px}
+.d07 .top{display:flex;justify-content:space-between;align-items:baseline;padding-inline:4px}
+.d07 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d07 .mo{font-size:11px;color:var(--muted)}
+.d07 .c{background:var(--card);border-radius:18px;padding:18px 18px 19px}
+.d07 .hero .k{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d07 .hero .fig{font-weight:800;font-size:58px;line-height:1;letter-spacing:-.05em;margin-top:4px}
+.d07 .hero .fig i{font-style:normal;font-size:23px;color:var(--muted);vertical-align:.58em}
+.d07 .hero .sub{margin-top:9px;padding-top:11px;border-top:1px solid var(--rule);
+  display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.d07 .hero .sub b{color:var(--accent);font-weight:700}
+.d07 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.d07 .trio .c{padding:13px 12px 14px;text-align:center}
+.d07 .trio dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d07 .trio dd{margin-top:4px;font-weight:700;font-size:17px;letter-spacing:-.03em}
+.d07 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:10px}
+.d07 .pick li{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 10px;border-radius:9px;font-size:12.5px;color:var(--muted)}
+.d07 .pick .on{background:var(--accent);color:var(--card);font-weight:700}
+.d07 .pick .on .v{font-weight:700}
+.d07 .pick .v{font-variant-numeric:tabular-nums}
+.d07 .st li{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:12.5px}
+.d07 .st li+li{border-top:1px solid var(--rule)}
+.d07 .st .v{font-weight:700;color:var(--accent);font-size:12.5px}
+.d07 .st .no .v{color:var(--short)}
+.d07 .st .no span:first-child{color:var(--muted)}
+.d07 .log{display:flex;justify-content:space-between;align-items:center;width:100%;
+  background:var(--ink);color:var(--card);border-radius:18px;padding:17px 20px}
+.d07 .log em{font-style:normal;display:block;font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;opacity:.6}
+.d07 .log b{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.d07 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:12px 0 18px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d07 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">07</span><h2 class="slot__t">Bahçe</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · six as soft rows in their own bed, selection filled<br>no dark band at all — sage ground, everything raised on pale cards</p>
+  <div class="screen d07">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="c hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="sub"><span>Day 26 of 31</span><span><b>₺3.473</b> ahead</span></p>
+    </div>
+    <dl class="trio">
+      <div class="c"><dt>Max</dt><dd>₺1.303</dd></div>
+      <div class="c"><dt>Strict</dt><dd>₺894</dd></div>
+      <div class="c"><dt>Min</dt><dd>₺794</dd></div>
+    </dl>
+    <section class="c">
+      <h2>Project remaining days at</h2>
+      <ul class="pick">
+        <li><span>Max allowance</span><span class="v">₺1.303</span></li>
+        <li class="on"><span>Daily allowance</span><span class="v">₺1.203</span></li>
+        <li><span>Strict allowance</span><span class="v">₺894</span></li>
+        <li><span>Minimum allowance</span><span class="v">₺794</span></li>
+        <li><span>Average this month</span><span class="v">₺1.052</span></li>
+        <li><span>Average 90 days</span><span class="v">₺1.147</span></li>
+      </ul>
+    </section>
+    <section class="c">
+      <h2>Month ends at ₺6.580</h2>
+      <ul class="st">
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+    </section>
+    <button class="log" type="button"><span><em>Next unlogged</em><b>Sunday 24 August</b></span><span>→</span></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 08 · KIYI ══════════ -->
+<style>
+.d08{--paper:oklch(94% .015 128);--ink:oklch(19% .04 136);--muted:oklch(51% .028 131);
+  --rule:oklch(83% .016 128);--accent:oklch(47% .11 139);--onink:oklch(93% .017 130);
+  --onmute:oklch(70% .03 132);--short:oklch(51% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.d08 .sea{background:var(--ink);color:var(--onink);padding:26px 24px 24px;
+  display:flex;flex-direction:column;flex:1}
+.d08 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d08 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d08 .mo{font-size:11px;color:var(--onmute)}
+.d08 .k{margin-top:26px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--onmute)}
+.d08 .fig{font-weight:800;font-size:70px;line-height:.96;letter-spacing:-.05em;margin-top:4px}
+.d08 .fig i{font-style:normal;font-size:27px;color:var(--onmute);vertical-align:.6em}
+.d08 h2{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--onmute);
+  font-weight:500;margin:24px 0 4px}
+.d08 .pick li{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;font-size:12.5px;color:var(--onmute)}
+.d08 .pick li+li{border-top:1px solid oklch(28% .04 136)}
+.d08 .pick .on{color:var(--onink);font-weight:700}
+.d08 .pick .on .v{color:oklch(80% .13 138)}
+.d08 .pick .tag{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:oklch(80% .13 138);margin-left:8px;font-weight:600}
+.d08 .land{background:var(--paper);padding:20px 24px 0;display:flex;flex-direction:column}
+.d08 .land .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.d08 .land .h em{font-style:normal;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d08 .land .h b{font-weight:800;font-size:18px;letter-spacing:-.03em}
+.d08 .st{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.d08 .st div{background:var(--paper);padding:11px 10px 12px}
+.d08 .st dt{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);line-height:1.4}
+.d08 .st dd{margin-top:5px;font-weight:700;font-size:13.5px;color:var(--accent);letter-spacing:-.02em}
+.d08 .st .no dd{color:var(--short)}
+.d08 .log{margin:16px 0 14px;display:flex;justify-content:space-between;align-items:center;
+  width:100%;background:var(--accent);color:var(--paper);border-radius:10px;padding:15px 18px}
+.d08 .log b{font-size:15px;font-weight:700}
+.d08 .log em{font-style:normal;font-size:11px;opacity:.8}
+.d08 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d08 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">08</span><h2 class="slot__t">Kıyı</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · all six live in the dark, allowances folded into the same list<br>a hard waterline: choosing above, consequences below</p>
+  <div class="screen d08">
+    <div class="sea">
+      <div class="top"><span class="mark">GurgoBudget</span><span class="mo">Aug 2026 · 8 days left</span></div>
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <h2>Project the rest at</h2>
+      <ul class="pick">
+        <li><span>Max allowance</span><span class="v">₺1.303</span></li>
+        <li class="on"><span>Daily allowance<span class="tag">in use</span></span><span class="v">₺1.203</span></li>
+        <li><span>Strict allowance</span><span class="v">₺894</span></li>
+        <li><span>Minimum allowance</span><span class="v">₺794</span></li>
+        <li><span>Average, this month</span><span class="v">₺1.052</span></li>
+        <li><span>Average, 90 days</span><span class="v">₺1.147</span></li>
+      </ul>
+    </div>
+    <div class="land">
+      <div class="h"><em>Month ends at</em><b>₺6.580</b></div>
+      <dl class="st">
+        <div><dt>Stays solvent</dt><dd>₺6.580</dd></div>
+        <div><dt>Buffer intact</dt><dd>₺3.480</dd></div>
+        <div class="no"><dt>Wishlist covered</dt><dd>−₺6.120</dd></div>
+      </dl>
+      <button class="log" type="button"><b>Log 24 August</b><em>2 days back</em></button>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 09 · ZEYTİN ══════════ -->
+<style>
+.d09{--paper:oklch(96% .011 126);--ink:oklch(22% .034 133);--muted:oklch(55% .024 130);
+  --rule:oklch(88% .012 126);--accent:oklch(43% .112 141);--short:oklch(50% .12 42);
+  background:var(--paper);color:var(--ink);font-size:14px;font-weight:400;
+  padding:32px 28px 0;display:flex;flex-direction:column;line-height:1.55}
+.d09 .top{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  display:flex;justify-content:space-between}
+.d09 .top b{color:var(--ink);font-weight:600;letter-spacing:.16em}
+.d09 .hero{padding:44px 0 0}
+.d09 .k{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.d09 .fig{font-weight:300;font-size:82px;line-height:.92;letter-spacing:-.05em;margin-top:10px}
+.d09 .fig i{font-style:normal;font-weight:300;font-size:30px;color:var(--muted);vertical-align:.65em}
+.d09 .say{margin-top:34px;font-size:16px;line-height:1.75;max-width:26ch;font-weight:400}
+.d09 .say b{font-weight:600}
+.d09 .say .ok{color:var(--accent);font-weight:600}
+.d09 .say .no{color:var(--short);font-weight:600}
+.d09 .say .q{color:var(--muted)}
+.d09 .rules{margin-top:38px;border-top:1px solid var(--rule)}
+.d09 .rules li{display:flex;justify-content:space-between;align-items:baseline;
+  padding:11px 0;border-bottom:1px solid var(--rule);font-size:13px;color:var(--muted)}
+.d09 .rules li b{font-weight:500;font-size:15px;color:var(--ink)}
+.d09 .rules .swap{padding-block:13px}
+.d09 .rules .swap span{color:var(--ink)}
+.d09 .rules .swap b{color:var(--accent);font-weight:600}
+.d09 .rules .swap b::after{content:" ⇅";font-size:12px;opacity:.6}
+.d09 .log{margin-top:auto;margin-bottom:18px;padding:16px 0;border-top:1.5px solid var(--ink);
+  display:flex;justify-content:space-between;align-items:baseline;width:100%}
+.d09 .log b{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.d09 .log span{font-size:12px;color:var(--muted)}
+.d09 nav{display:flex;justify-content:space-between;padding-bottom:20px;font-size:11px;
+  color:var(--muted)}
+.d09 nav .on{color:var(--ink);font-weight:600;border-bottom:1.5px solid var(--accent);padding-bottom:2px}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">09</span><h2 class="slot__t">Zeytin</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · demoted to one ruled row near the bottom<br>the three states written as a sentence — the only specimen that reads rather than tabulates</p>
+  <div class="screen d09">
+    <p class="top"><span>GurgoBudget</span><b>26 · 08 · 26</b></p>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+    </div>
+    <p class="say">
+      Keep this up and August ends with <b>₺6.580</b>.
+      That <span class="ok">stays solvent</span>, <span class="ok">keeps the buffer</span>,
+      and comes up <span class="no">₺6.120 short</span> <span class="q">of the wishlist.</span>
+    </p>
+    <ul class="rules">
+      <li><span>Max allowance</span><b>₺1.303</b></li>
+      <li><span>Strict allowance</span><b>₺894</b></li>
+      <li><span>Minimum allowance</span><b>₺794</b></li>
+      <li class="swap"><span>Projecting at</span><b>Daily allowance</b></li>
+    </ul>
+    <button class="log" type="button"><b>Log Sunday 24 August</b><span>2 days back</span></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 10 · DUVAR ══════════ -->
+<style>
+.d10{--ink:oklch(17% .038 136);--ink2:oklch(22% .04 136);--onink:oklch(93% .017 130);
+  --onmute:oklch(66% .032 132);--rule:oklch(28% .038 136);--accent:oklch(80% .135 137);
+  --short:oklch(72% .135 45);
+  background:var(--ink);color:var(--onink);font-size:13px;padding:28px 24px 0;
+  display:flex;flex-direction:column}
+.d10 .top{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:18px;border-bottom:1px solid var(--rule)}
+.d10 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d10 .mo{font-size:11px;color:var(--onmute);letter-spacing:.08em}
+.d10 .hero{padding:28px 0 22px}
+.d10 .k{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--onmute)}
+.d10 .fig{font-weight:800;font-size:76px;line-height:.94;letter-spacing:-.055em;
+  margin-top:6px;color:var(--accent)}
+.d10 .fig i{font-style:normal;font-size:29px;color:var(--onmute);vertical-align:.62em;letter-spacing:0}
+.d10 .ah{margin-top:10px;font-size:12.5px;color:var(--onmute)}
+.d10 .ah b{color:var(--onink);font-weight:700}
+.d10 h2{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--onmute);
+  font-weight:500;margin-bottom:6px}
+.d10 .pick{border-top:1px solid var(--rule)}
+.d10 .pick li{display:flex;align-items:center;gap:12px;padding:9px 0;
+  border-bottom:1px solid var(--rule);font-size:12.5px;color:var(--onmute)}
+.d10 .pick .box{width:14px;height:14px;border:1px solid var(--rule);border-radius:4px;flex:none}
+.d10 .pick .nm{flex:1}
+.d10 .pick .v{font-variant-numeric:tabular-nums}
+.d10 .pick .on{color:var(--onink);font-weight:600}
+.d10 .pick .on .box{background:var(--accent);border-color:var(--accent)}
+.d10 .pick .on .v{color:var(--accent);font-weight:700}
+.d10 .out{margin-top:22px}
+.d10 .out .big{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.d10 .out .big span{font-size:12px;color:var(--onmute)}
+.d10 .out .big b{font-weight:800;font-size:26px;letter-spacing:-.035em}
+.d10 .out li{display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;font-size:12.5px}
+.d10 .out li+li{border-top:1px solid var(--rule)}
+.d10 .out .v{font-weight:700;color:var(--accent)}
+.d10 .out .no .v{color:var(--short)}
+.d10 .out .no span:first-child{color:var(--onmute)}
+.d10 .log{margin-top:auto;margin-bottom:14px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--accent);color:var(--ink);
+  border-radius:10px;padding:16px 18px}
+.d10 .log b{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.d10 .log em{font-style:normal;font-size:11px;opacity:.7;font-weight:600}
+.d10 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--onmute)}
+.d10 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">10</span><h2 class="slot__t">Duvar</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · checkbox grammar, one ticked<br>no sheet, no band — a single dark wall, sage reduced to the accent alone</p>
+  <div class="screen d10">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">AUGUST 2026</span></div>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="ah"><b>₺3.473 ahead</b> of plan · day 26 of 31</p>
+    </div>
+    <h2>Project remaining 8 days at</h2>
+    <ul class="pick">
+      <li><span class="box"></span><span class="nm">Max allowance</span><span class="v">₺1.303</span></li>
+      <li class="on"><span class="box"></span><span class="nm">Daily allowance</span><span class="v">₺1.203</span></li>
+      <li><span class="box"></span><span class="nm">Strict allowance</span><span class="v">₺894</span></li>
+      <li><span class="box"></span><span class="nm">Minimum allowance</span><span class="v">₺794</span></li>
+      <li><span class="box"></span><span class="nm">Average, this month</span><span class="v">₺1.052</span></li>
+      <li><span class="box"></span><span class="nm">Average, 90 days</span><span class="v">₺1.147</span></li>
+    </ul>
+    <section class="out">
+      <div class="big"><span>Month ends at</span><b>₺6.580</b></div>
+      <ul>
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+    </section>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 DAYS BACK</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 11 · KATMAN ══════════ -->
+<style>
+.d11{--paper:oklch(90% .021 131);--l1:oklch(94% .015 129);--l2:oklch(97% .008 127);
+  --ink:oklch(22% .036 134);--muted:oklch(52% .028 131);--rule:oklch(85% .015 128);
+  --accent:oklch(45% .11 139);--onink:oklch(94% .015 129);--short:oklch(52% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.d11 .cap{padding:26px 24px 20px;display:flex;justify-content:space-between;align-items:baseline}
+.d11 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d11 .mo{font-size:11px;color:var(--muted)}
+.d11 .lay{border-radius:26px 26px 0 0;padding:22px 24px}
+.d11 .lay h2{font-size:9px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;
+  opacity:.55;margin-bottom:12px}
+.d11 .z1{background:var(--ink);color:var(--onink);margin-top:-4px}
+.d11 .z1 .k{font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+.d11 .z1 .fig{font-weight:800;font-size:64px;line-height:1;letter-spacing:-.05em;margin-top:3px}
+.d11 .z1 .fig i{font-style:normal;font-size:25px;opacity:.55;vertical-align:.6em}
+.d11 .z1 .row{display:grid;grid-template-columns:repeat(3,1fr);margin-top:18px;
+  border-top:1px solid oklch(32% .04 134);padding-top:11px}
+.d11 .z1 dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;opacity:.6}
+.d11 .z1 dd{margin-top:2px;font-weight:600;font-size:16px}
+.d11 .z2{background:var(--l1);margin-top:-18px;position:relative;z-index:2}
+.d11 .z2 .cur{display:flex;justify-content:space-between;align-items:center;
+  background:var(--accent);color:var(--l2);border-radius:10px;padding:11px 14px;font-size:13px}
+.d11 .z2 .cur b{font-weight:700}
+.d11 .z2 .rest{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.d11 .z2 .rest button{border:1px solid var(--rule);background:var(--l2);border-radius:8px;
+  padding:7px 10px;font-size:11px;color:var(--muted)}
+.d11 .z2 .rest b{color:var(--ink);font-weight:600;margin-left:5px}
+.d11 .z3{background:var(--l2);margin-top:-18px;position:relative;z-index:3;flex:1;
+  display:flex;flex-direction:column}
+.d11 .z3 .tot{display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:11px;border-bottom:1px solid var(--rule)}
+.d11 .z3 .tot span{font-size:11.5px;color:var(--muted)}
+.d11 .z3 .tot b{font-weight:800;font-size:24px;letter-spacing:-.035em}
+.d11 .z3 li{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0;font-size:12.5px}
+.d11 .z3 li+li{border-top:1px solid var(--rule)}
+.d11 .z3 .v{font-weight:700;color:var(--accent)}
+.d11 .z3 .no .v{color:var(--short)}
+.d11 .z3 .no span:first-child{color:var(--muted)}
+.d11 .log{margin-top:auto;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--ink);color:var(--onink);
+  border-radius:14px;padding:15px 18px}
+.d11 .log b{font-size:15px;font-weight:700}
+.d11 .log em{font-style:normal;font-size:11px;opacity:.65}
+.d11 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d11 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">11</span><h2 class="slot__t">Katman</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · current choice held out, the other five tucked behind it<br>three overlapping shelves, each lighter than the last — depth instead of dividers</p>
+  <div class="screen d11">
+    <div class="cap"><span class="mark">GurgoBudget</span><span class="mo">August 2026 · day 26</span></div>
+    <section class="lay z1">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <dl class="row">
+        <div><dt>Max</dt><dd>₺1.303</dd></div>
+        <div><dt>Strict</dt><dd>₺894</dd></div>
+        <div><dt>Min</dt><dd>₺794</dd></div>
+      </dl>
+    </section>
+    <section class="lay z2">
+      <h2>Projecting at</h2>
+      <div class="cur"><span>Daily allowance</span><b>₺1.203 / day</b></div>
+      <div class="rest">
+        <button type="button">Max<b>1.303</b></button>
+        <button type="button">Strict<b>894</b></button>
+        <button type="button">Min<b>794</b></button>
+        <button type="button">Avg mo.<b>1.052</b></button>
+        <button type="button">Avg 90d<b>1.147</b></button>
+      </div>
+    </section>
+    <section class="lay z3">
+      <h2>Month ends</h2>
+      <div class="tot"><span>Left over on 31 August</span><b>₺6.580</b></div>
+      <ul>
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+      <button class="log" type="button"><b>Log 24 August</b><em>2 days back →</em></button>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </section>
+  </div>
+</section>
+
+<!-- ══════════ 12 · PUSULA ══════════ -->
+<style>
+.d12{--paper:oklch(95% .013 127);--ink:oklch(21% .037 134);--muted:oklch(53% .026 131);
+  --rule:oklch(85% .015 127);--track:oklch(89% .017 129);--accent:oklch(45% .11 139);
+  --short:oklch(52% .12 41);--onink:oklch(95% .012 127);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 24px 0;
+  display:flex;flex-direction:column}
+.d12 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d12 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d12 .mo{font-size:11px;color:var(--muted)}
+.d12 .hero{padding:22px 0 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:14px}
+.d12 .k{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d12 .fig{font-weight:800;font-size:58px;line-height:.96;letter-spacing:-.05em;margin-top:4px}
+.d12 .fig i{font-style:normal;font-size:23px;color:var(--muted);vertical-align:.58em}
+.d12 .ah{text-align:right;font-size:11px;color:var(--muted);line-height:1.5}
+.d12 .ah b{display:block;color:var(--accent);font-weight:800;font-size:17px;letter-spacing:-.02em}
+/* the axis */
+.d12 .axis{margin-top:6px;padding:20px 0 4px;border-top:1px solid var(--rule)}
+.d12 .axis h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:26px}
+.d12 .line{position:relative;height:8px;border-radius:5px;background:var(--track);margin-bottom:8px}
+.d12 .line .fill{position:absolute;inset:0 auto 0 0;width:52%;background:var(--accent);border-radius:5px}
+.d12 .line .tick{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink);opacity:.75}
+.d12 .line .you{position:absolute;top:-9px;left:52%;transform:translateX(-50%);
+  width:16px;height:26px;border-radius:8px;background:var(--ink);border:3px solid var(--paper)}
+.d12 .marks{position:relative;height:52px}
+.d12 .marks span{position:absolute;top:0;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);line-height:1.5;width:72px}
+.d12 .marks b{display:block;font-size:11px;letter-spacing:0;text-transform:none;
+  color:var(--ink);font-weight:600}
+.d12 .marks .m0{left:0}
+.d12 .marks .m1{left:24.4%}
+.d12 .marks .m2{right:0;text-align:right}
+.d12 .verdict{margin-top:2px;display:grid;gap:8px}
+.d12 .verdict li{display:flex;justify-content:space-between;align-items:center;
+  border:1px solid var(--rule);border-radius:9px;padding:10px 13px;font-size:12.5px}
+.d12 .verdict .v{font-weight:700;color:var(--accent)}
+.d12 .verdict .no{border-color:oklch(80% .05 41);background:oklch(96% .018 45)}
+.d12 .verdict .no .v{color:var(--short)}
+.d12 .pj{margin-top:16px;display:flex;justify-content:space-between;align-items:center;
+  width:100%;border:1px dashed var(--rule);border-radius:9px;padding:11px 13px;font-size:12px;
+  color:var(--muted)}
+.d12 .pj b{color:var(--ink);font-weight:600;font-size:13px}
+.d12 .log{margin-top:auto;margin-bottom:13px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--ink);color:var(--onink);
+  border-radius:10px;padding:15px 18px}
+.d12 .log b{font-size:15px;font-weight:700}
+.d12 .log em{font-style:normal;font-size:11px;opacity:.65}
+.d12 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d12 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">12</span><h2 class="slot__t">Pusula</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · a dashed strip, deliberately quiet<br>the three thresholds laid on one axis so the distances between them are visible, not just stated</p>
+  <div class="screen d12">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="hero">
+      <div><p class="k">Daily allowance</p><p class="fig"><i>₺</i>1.203</p></div>
+      <p class="ah">ahead by<b>₺3.473</b>day 26 / 31</p>
+    </div>
+    <section class="axis">
+      <h2>Month ends at ₺6.580</h2>
+      <div class="line">
+        <span class="fill"></span>
+        <span class="tick" style="left:0"></span>
+        <span class="tick" style="left:24.4%"></span>
+        <span class="tick" style="right:0"></span>
+        <span class="you"></span>
+      </div>
+      <div class="marks">
+        <span class="m0">Solvent<b>₺0</b></span>
+        <span class="m1">Buffer<b>₺3.100</b></span>
+        <span class="m2">Wishlist<b>₺12.700</b></span>
+      </div>
+      <ul class="verdict">
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+      <button class="pj" type="button"><span>Projecting remaining days at</span><b>Daily ⇅</b></button>
+    </section>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 days back</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 13 · DEFTER ══════════ -->
+<style>
+.d13{--paper:oklch(96% .012 124);--ink:oklch(22% .033 132);--muted:oklch(54% .025 130);
+  --rule:oklch(87% .013 124);--margin:oklch(76% .05 40);--accent:oklch(44% .108 140);
+  --short:oklch(51% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;display:flex;flex-direction:column;
+  background-image:linear-gradient(var(--rule) 1px,transparent 1px);
+  background-size:100% 34px;background-position:0 96px}
+.d13 .top{padding:24px 24px 18px 54px;display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:1px solid var(--rule)}
+.d13 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d13 .mo{font-size:11px;color:var(--muted)}
+.d13 .body{padding:0 24px 0 54px;flex:1;display:flex;flex-direction:column;position:relative}
+.d13 .body::before{content:"";position:absolute;left:38px;top:-1px;bottom:0;width:1px;background:var(--margin);opacity:.55}
+.d13 .hero{height:102px;display:flex;flex-direction:column;justify-content:center}
+.d13 .k{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d13 .fig{font-weight:700;font-size:56px;line-height:1;letter-spacing:-.045em}
+.d13 .fig i{font-style:normal;font-size:22px;color:var(--muted);vertical-align:.58em}
+.d13 h2{height:34px;display:flex;align-items:center;font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+.d13 .pick li{height:34px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+.d13 .pick .n{width:15px;font-size:10px;color:var(--margin);font-weight:700;
+  margin-left:-31px;text-align:right}
+.d13 .pick .nm{flex:1}
+.d13 .pick .v{font-variant-numeric:tabular-nums}
+.d13 .pick .on{color:var(--ink);font-weight:700}
+.d13 .pick .on .v{color:var(--accent)}
+.d13 .pick .on .nm::after{content:" ✓";color:var(--accent);font-size:11px}
+.d13 .st li{height:34px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px}
+.d13 .st .v{font-weight:700;color:var(--accent)}
+.d13 .st .no .v{color:var(--short)}
+.d13 .st .no span:first-child{color:var(--muted)}
+.d13 .log{margin-top:auto;margin-bottom:16px;height:52px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;border:1.5px solid var(--ink);border-radius:7px;padding:0 16px;
+  background:var(--paper)}
+.d13 .log b{font-size:14.5px;font-weight:700}
+.d13 .log em{font-style:normal;font-size:11px;color:var(--muted)}
+.d13 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--paper)}
+.d13 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">13</span><h2 class="slot__t">Defter</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · numbered in the red margin, ticked where chosen<br>every element snapped to a 34px rule — a ledger book, not a screen</p>
+  <div class="screen d13">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026 · 26th</span></div>
+    <div class="body">
+      <div class="hero">
+        <p class="k">Daily allowance</p>
+        <p class="fig"><i>₺</i>1.203</p>
+      </div>
+      <h2>Project remaining days at</h2>
+      <ul class="pick">
+        <li><span class="n">1</span><span class="nm">Max allowance</span><span class="v">₺1.303</span></li>
+        <li class="on"><span class="n">2</span><span class="nm">Daily allowance</span><span class="v">₺1.203</span></li>
+        <li><span class="n">3</span><span class="nm">Strict allowance</span><span class="v">₺894</span></li>
+        <li><span class="n">4</span><span class="nm">Minimum allowance</span><span class="v">₺794</span></li>
+        <li><span class="n">5</span><span class="nm">Average, this month</span><span class="v">₺1.052</span></li>
+        <li><span class="n">6</span><span class="nm">Average, 90 days</span><span class="v">₺1.147</span></li>
+      </ul>
+      <h2>Then the month ends at ₺6.580</h2>
+      <ul class="st">
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+      <button class="log" type="button"><b>Log Sunday 24 August</b><em>2 days back</em></button>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 14 · GÖLGE ══════════ -->
+<style>
+.d14{--paper:oklch(93% .017 129);--card:oklch(98% .006 127);--ink:oklch(22% .036 133);
+  --muted:oklch(54% .026 131);--rule:oklch(88% .013 127);--accent:oklch(45% .11 139);
+  --short:oklch(52% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:34px 22px 0;
+  display:flex;flex-direction:column;gap:16px}
+.d14 .top{display:flex;justify-content:space-between;align-items:baseline;padding-inline:6px}
+.d14 .mark{font-weight:700;font-size:14px;letter-spacing:-.02em;color:var(--muted)}
+.d14 .mo{font-size:11px;color:var(--muted)}
+.d14 .c{background:var(--card);border-radius:22px;
+  box-shadow:0 1px 2px oklch(60% .03 132 / .16),0 12px 28px oklch(50% .04 134 / .1)}
+.d14 .hero{padding:30px 26px 26px;text-align:center}
+.d14 .hero .k{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.d14 .hero .fig{font-weight:800;font-size:70px;line-height:1;letter-spacing:-.055em;margin-top:8px}
+.d14 .hero .fig i{font-style:normal;font-size:27px;color:var(--muted);vertical-align:.62em}
+.d14 .hero .ah{margin-top:12px;font-size:12px;color:var(--muted)}
+.d14 .hero .ah b{color:var(--accent);font-weight:700}
+.d14 .swap{margin-top:20px;display:inline-flex;align-items:center;gap:10px;
+  border:1px solid var(--rule);border-radius:999px;padding:8px 14px;font-size:11.5px;color:var(--muted)}
+.d14 .swap b{color:var(--ink);font-weight:600;font-size:12.5px}
+.d14 .st{padding:20px 24px 21px}
+.d14 .st h2{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin-bottom:14px}
+.d14 .st li{display:flex;justify-content:space-between;align-items:baseline;padding:9px 0}
+.d14 .st li+li{border-top:1px solid var(--rule)}
+.d14 .st .lab{font-size:13px}
+.d14 .st .v{font-weight:700;font-size:13px;color:var(--accent)}
+.d14 .st .no .v{color:var(--short)}
+.d14 .st .no .lab{color:var(--muted)}
+.d14 .more{display:flex;justify-content:space-between;align-items:center;width:100%;
+  padding:16px 24px;font-size:12.5px;color:var(--muted)}
+.d14 .more b{color:var(--ink);font-weight:600}
+.d14 .log{display:flex;justify-content:space-between;align-items:center;width:100%;
+  background:var(--ink);color:var(--card);border-radius:22px;padding:20px 24px}
+.d14 .log em{font-style:normal;display:block;font-size:9.5px;letter-spacing:.18em;
+  text-transform:uppercase;opacity:.55}
+.d14 .log b{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.d14 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:8px 0 20px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d14 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">14</span><h2 class="slot__t">Gölge</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · one pill, everything else out of sight<br>the austerity test: only the headline, the three states and the log survive the fold</p>
+  <div class="screen d14">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="c hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="ah"><b>₺3.473 ahead</b> · 8 days to go</p>
+      <button class="swap" type="button"><span>projecting at</span><b>Daily allowance ⇅</b></button>
+    </div>
+    <section class="c st">
+      <h2>Month ends at ₺6.580</h2>
+      <ul>
+        <li><span class="lab">Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span class="lab">Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span class="lab">Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+    </section>
+    <button class="c more" type="button"><span>Max, Strict, Minimum & averages</span><b>Show →</b></button>
+    <button class="log" type="button"><span><em>Next unlogged</em><b>Sunday 24 August</b></span><span>→</span></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 15 · TIRTIL ══════════ -->
+<style>
+.d15{--paper:oklch(95% .013 127);--ink:oklch(21% .037 134);--muted:oklch(53% .027 131);
+  --rule:oklch(85% .015 127);--track:oklch(89% .016 128);--accent:oklch(45% .11 139);
+  --short:oklch(53% .12 41);--onink:oklch(95% .013 127);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 22px 0;
+  display:flex;flex-direction:column}
+.d15 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d15 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d15 .mo{font-size:11px;color:var(--muted)}
+/* the day track */
+.d15 .track{margin-top:20px}
+.d15 .track .days{display:grid;grid-template-columns:repeat(31,1fr);gap:2px;height:26px}
+.d15 .track .days i{background:var(--track);border-radius:2px}
+.d15 .track .days .lg{background:var(--accent);opacity:.55}
+.d15 .track .days .miss{background:var(--short)}
+.d15 .track .days .now{background:var(--ink)}
+.d15 .track .leg{display:flex;justify-content:space-between;margin-top:7px;
+  font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.d15 .gap{margin-top:12px;display:flex;justify-content:space-between;align-items:center;
+  width:100%;background:var(--short);color:oklch(97% .01 40);border-radius:10px;padding:13px 16px}
+.d15 .gap b{font-size:14.5px;font-weight:700}
+.d15 .gap em{font-style:normal;font-size:11px;opacity:.85}
+.d15 .hero{padding:24px 0 18px;border-bottom:1px solid var(--rule)}
+.d15 .k{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d15 .fig{font-weight:800;font-size:60px;line-height:.98;letter-spacing:-.05em;margin-top:4px}
+.d15 .fig i{font-style:normal;font-size:24px;color:var(--muted);vertical-align:.58em}
+.d15 .fig small{display:block;font-size:12px;font-weight:400;color:var(--muted);
+  letter-spacing:0;margin-top:8px}
+.d15 .fig small b{color:var(--accent);font-weight:700}
+.d15 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:18px 0 6px}
+.d15 .pick{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--rule);
+  border:1px solid var(--rule);border-radius:9px;overflow:hidden}
+.d15 .pick button{background:var(--paper);padding:9px 11px;font-size:11px;color:var(--muted)}
+.d15 .pick b{display:block;font-size:13px;color:var(--ink);font-weight:600;
+  letter-spacing:-.02em;margin-top:1px}
+.d15 .pick .on{background:var(--ink);color:oklch(72% .03 132)}
+.d15 .pick .on b{color:var(--onink);font-weight:800}
+.d15 .st{margin-top:16px;padding-top:13px;border-top:1px solid var(--rule)}
+.d15 .st li{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;font-size:12.5px}
+.d15 .st .v{font-weight:700;color:var(--accent)}
+.d15 .st .no .v{color:var(--short)}
+.d15 .st .no span:first-child{color:var(--muted)}
+.d15 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:12px 0 18px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d15 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">15</span><h2 class="slot__t">Tırtıl</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · six as a two-column grid, chosen one inverted<br>the month's 31 days drawn as a strip — the gap in it <em>is</em> the log button</p>
+  <div class="screen d15">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="track">
+      <div class="days">
+        <i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i>
+        <i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i>
+        <i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i>
+        <i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i><i class="lg"></i>
+        <i class="lg"></i><i class="lg"></i><i class="lg"></i>
+        <i class="miss"></i><i class="miss"></i>
+        <i class="now"></i>
+        <i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <p class="leg"><span>1 Aug</span><span>23 logged · 2 missing</span><span>31 Aug</span></p>
+    </div>
+    <button class="gap" type="button"><span><b>Log 24 &amp; 25 August</b></span><em>2 days missing →</em></button>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203<small><b>₺3.473 ahead</b> of plan across 23 logged days</small></p>
+    </div>
+    <h2>Project the remaining 8 days at</h2>
+    <div class="pick">
+      <button type="button">Max<b>₺1.303</b></button>
+      <button class="on" type="button">Daily<b>₺1.203</b></button>
+      <button type="button">Strict<b>₺894</b></button>
+      <button type="button">Minimum<b>₺794</b></button>
+      <button type="button">Avg this month<b>₺1.052</b></button>
+      <button type="button">Avg 90 days<b>₺1.147</b></button>
+    </div>
+    <ul class="st">
+      <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+      <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+      <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+    </ul>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 16 · HAVUZ ══════════ -->
+<style>
+.d16{--paper:oklch(94% .015 128);--ink:oklch(20% .039 135);--muted:oklch(52% .028 131);
+  --rule:oklch(84% .016 128);--accent:oklch(46% .112 139);--onink:oklch(94% .015 128);
+  --water:oklch(58% .095 142);--short:oklch(52% .12 41);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 22px 0;
+  display:flex;flex-direction:column}
+.d16 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d16 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d16 .mo{font-size:11px;color:var(--muted)}
+.d16 .hero{padding:20px 0 16px}
+.d16 .k{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.d16 .fig{font-weight:800;font-size:58px;line-height:.98;letter-spacing:-.05em;margin-top:3px}
+.d16 .fig i{font-style:normal;font-size:23px;color:var(--muted);vertical-align:.58em}
+/* the tank */
+.d16 .tank{position:relative;height:250px;border:1px solid var(--rule);border-radius:12px;
+  background:oklch(97% .008 128);overflow:hidden}
+.d16 .tank .fill{position:absolute;left:0;right:0;bottom:0;height:16.3%;background:var(--water);
+  opacity:.42}
+.d16 .tank .fill::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--accent)}
+.d16 .tank .lvl{position:absolute;left:0;right:0;border-top:1px dashed var(--rule);
+  display:flex;justify-content:space-between;align-items:center;padding:0 11px;height:0}
+.d16 .tank .lvl span{transform:translateY(-50%);background:oklch(97% .008 128);padding:0 5px;
+  font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.d16 .tank .lvl b{transform:translateY(-50%);background:oklch(97% .008 128);padding:0 5px;
+  font-size:11px;font-weight:600}
+.d16 .tank .now{position:absolute;left:0;right:0;bottom:16.3%;display:flex;
+  justify-content:space-between;align-items:center;padding:0 11px;height:0}
+.d16 .tank .now span,.d16 .tank .now b{transform:translateY(-50%);background:var(--accent);
+  color:var(--onink);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.04em}
+.d16 .tank .cap{position:absolute;left:11px;top:10px;font-size:9px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted)}
+.d16 .verd{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.d16 .verd div{border:1px solid var(--rule);border-radius:9px;padding:9px 10px;background:oklch(97% .008 128)}
+.d16 .verd dt{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);line-height:1.4}
+.d16 .verd dd{margin-top:4px;font-weight:700;font-size:13px;color:var(--accent);letter-spacing:-.02em}
+.d16 .verd .no dd{color:var(--short)}
+.d16 .foot{margin-top:auto;display:flex;gap:9px;padding-bottom:12px}
+.d16 .foot .pj{flex:1;border:1px solid var(--rule);border-radius:10px;padding:10px 12px;
+  font-size:10.5px;color:var(--muted);text-align:left}
+.d16 .foot .pj b{display:block;color:var(--ink);font-weight:600;font-size:12.5px;margin-top:2px}
+.d16 .foot .log{background:var(--ink);color:var(--onink);border-radius:10px;padding:10px 16px;
+  font-size:10.5px;opacity:.95}
+.d16 .foot .log b{display:block;font-size:13px;font-weight:700;margin-top:2px}
+.d16 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d16 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">16</span><h2 class="slot__t">Havuz</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · a footer half, sharing its row with the log<br>the surplus drawn as a tank with the three thresholds ruled across it at true height</p>
+  <div class="screen d16">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026 · day 26</span></div>
+    <div class="hero">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+    </div>
+    <div class="tank">
+      <span class="cap">Surplus ₺40.400</span>
+      <span class="fill"></span>
+      <span class="lvl" style="bottom:31.4%"><span>Wishlist covered</span><b>₺12.700</b></span>
+      <span class="lvl" style="bottom:7.7%"><span>Buffer intact</span><b>₺3.100</b></span>
+      <span class="now"><span>PROJECTED</span><b>₺6.580</b></span>
+    </div>
+    <dl class="verd">
+      <div><dt>Stays solvent</dt><dd>₺6.580</dd></div>
+      <div><dt>Buffer intact</dt><dd>₺3.480</dd></div>
+      <div class="no"><dt>Wishlist covered</dt><dd>−₺6.120</dd></div>
+    </dl>
+    <div class="foot">
+      <button class="pj" type="button">Projecting at<b>Daily allowance ⇅</b></button>
+      <button class="log" type="button">Next unlogged<b>24 August →</b></button>
+    </div>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 17 · KEMER ══════════ -->
+<style>
+.d17{--paper:oklch(93% .017 129);--sheet:oklch(97% .008 127);--ink:oklch(20% .039 135);
+  --muted:oklch(52% .028 131);--rule:oklch(86% .014 127);--accent:oklch(46% .112 139);
+  --onink:oklch(94% .015 129);--short:oklch(52% .118 41);
+  background:var(--ink);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.d17 .arch{color:var(--onink);padding:24px 26px 40px;text-align:center;
+  border-radius:0 0 50% 50% / 0 0 64px 64px}
+.d17 .top{display:flex;justify-content:space-between;align-items:baseline;text-align:left}
+.d17 .mark{font-weight:800;font-size:14px;letter-spacing:-.03em}
+.d17 .mo{font-size:11px;opacity:.6}
+.d17 .k{margin-top:26px;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;opacity:.6}
+.d17 .fig{font-weight:800;font-size:76px;line-height:.95;letter-spacing:-.055em;margin-top:5px}
+.d17 .fig i{font-style:normal;font-size:29px;opacity:.5;vertical-align:.62em}
+.d17 .ah{margin-top:9px;font-size:12px;opacity:.66}
+.d17 .ah b{opacity:1;font-weight:700}
+.d17 .sheet{background:var(--sheet);border-radius:64px 64px 0 0;margin-top:-28px;flex:1;
+  padding:26px 24px 0;display:flex;flex-direction:column;position:relative;z-index:2}
+.d17 .three{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;
+  padding-bottom:16px;border-bottom:1px solid var(--rule)}
+.d17 .three div+div{border-left:1px solid var(--rule)}
+.d17 .three dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d17 .three dd{margin-top:3px;font-weight:600;font-size:16px}
+.d17 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:16px 0 4px}
+.d17 .pick li{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 12px;border-radius:999px;font-size:12.5px;color:var(--muted)}
+.d17 .pick .on{background:oklch(91% .026 134);color:var(--ink);font-weight:700}
+.d17 .pick .on .v{color:var(--accent)}
+.d17 .st{margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.d17 .st .hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.d17 .st .hd em{font-style:normal;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d17 .st .hd b{font-weight:800;font-size:19px;letter-spacing:-.03em}
+.d17 .st li{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:12.5px}
+.d17 .st .v{font-weight:700;color:var(--accent)}
+.d17 .st .no .v{color:var(--short)}
+.d17 .st .no span:first-child{color:var(--muted)}
+.d17 .log{margin-top:auto;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--accent);color:var(--sheet);
+  border-radius:999px;padding:15px 22px}
+.d17 .log b{font-size:15px;font-weight:700}
+.d17 .log em{font-style:normal;font-size:11px;opacity:.8}
+.d17 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d17 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">17</span><h2 class="slot__t">Kemer</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · pill rows, selection filled rather than ticked<br>the band curves and the sheet curves back — one arch, centred, everything else flush left</p>
+  <div class="screen d17">
+    <div class="arch">
+      <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="ah"><b>₺3.473 ahead</b> · day 26 of 31</p>
+    </div>
+    <div class="sheet">
+      <dl class="three">
+        <div><dt>Max</dt><dd>₺1.303</dd></div>
+        <div><dt>Strict</dt><dd>₺894</dd></div>
+        <div><dt>Minimum</dt><dd>₺794</dd></div>
+      </dl>
+      <h2>Project remaining days at</h2>
+      <ul class="pick">
+        <li><span>Max allowance</span><span class="v">₺1.303</span></li>
+        <li class="on"><span>Daily allowance</span><span class="v">₺1.203</span></li>
+        <li><span>Strict allowance</span><span class="v">₺894</span></li>
+        <li><span>Minimum allowance</span><span class="v">₺794</span></li>
+        <li><span>Average, this month</span><span class="v">₺1.052</span></li>
+        <li><span>Average, 90 days</span><span class="v">₺1.147</span></li>
+      </ul>
+      <section class="st">
+        <div class="hd"><em>Month ends at</em><b>₺6.580</b></div>
+        <ul>
+          <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+          <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+          <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+        </ul>
+      </section>
+      <button class="log" type="button"><b>Log 24 August</b><em>2 days back</em></button>
+      <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 18 · SIRA ══════════ -->
+<style>
+.d18{--paper:oklch(96% .011 126);--ink:oklch(22% .034 133);--muted:oklch(55% .024 130);
+  --rule:oklch(88% .012 126);--accent:oklch(43% .112 141);--onink:oklch(96% .011 126);
+  --short:oklch(51% .118 41);
+  background:var(--paper);color:var(--ink);font-size:13px;display:flex;flex-direction:column}
+.d18 .r{display:flex;justify-content:space-between;align-items:center;
+  padding:0 24px;height:52px;border-bottom:1px solid var(--rule);width:100%;text-align:left}
+.d18 .r .l{font-size:13px;color:var(--muted)}
+.d18 .r .v{font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.d18 .hd{height:34px;background:oklch(93% .013 126)}
+.d18 .hd .l{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink);font-weight:700}
+.d18 .hd .v{font-size:10.5px;color:var(--muted);font-weight:400}
+.d18 .brand{height:62px;border-bottom:1px solid var(--ink)}
+.d18 .brand .l{font-weight:800;font-size:16px;letter-spacing:-.03em;color:var(--ink)}
+.d18 .brand .v{font-size:11px;color:var(--muted);font-weight:400}
+.d18 .hero{height:132px;flex-direction:column;align-items:flex-start;justify-content:center;
+  gap:0;border-bottom:1px solid var(--ink)}
+.d18 .hero .l{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase}
+.d18 .hero .v{font-weight:800;font-size:62px;line-height:1.05;letter-spacing:-.05em}
+.d18 .hero .v i{font-style:normal;font-size:24px;color:var(--muted);vertical-align:.58em}
+.d18 .hero .v small{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:10px}
+.d18 .on{background:oklch(93% .026 136)}
+.d18 .on .l{color:var(--ink);font-weight:700}
+.d18 .on .v{color:var(--accent);font-weight:700}
+.d18 .on .l::before{content:"● ";color:var(--accent);font-size:9px;vertical-align:.15em}
+.d18 .pass .v{color:var(--accent);font-weight:600}
+.d18 .fail .v{color:var(--short);font-weight:600}
+.d18 .log{height:64px;background:var(--ink);color:var(--onink);border-bottom:0}
+.d18 .log .l{color:var(--onink);font-weight:700;font-size:15px}
+.d18 .log .v{font-size:11px;color:oklch(70% .03 132);font-weight:400}
+.d18 nav{margin-top:auto;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding:14px 0 18px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border-top:1px solid var(--rule)}
+.d18 nav .cur{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">18</span><h2 class="slot__t">Sıra</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · indistinguishable from every other row, which is the point<br>no cards, no bands, no hierarchy but size — one column of 52px rows, top to bottom</p>
+  <div class="screen d18">
+    <div class="r brand"><span class="l">GurgoBudget</span><span class="v">August 2026 · day 26</span></div>
+    <div class="r hero"><span class="l">Daily allowance</span><span class="v"><i>₺</i>1.203<small>₺3.473 ahead</small></span></div>
+    <div class="r hd"><span class="l">Also available</span><span class="v">per day</span></div>
+    <div class="r"><span class="l">Max allowance</span><span class="v">₺1.303</span></div>
+    <div class="r"><span class="l">Strict allowance</span><span class="v">₺894</span></div>
+    <div class="r"><span class="l">Minimum allowance</span><span class="v">₺794</span></div>
+    <div class="r hd"><span class="l">Project 8 days at</span><span class="v">tap to switch</span></div>
+    <button class="r on" type="button"><span class="l">Daily allowance</span><span class="v">₺1.203</span></button>
+    <button class="r" type="button"><span class="l">Average, this month</span><span class="v">₺1.052</span></button>
+    <button class="r" type="button"><span class="l">Average, 90 days</span><span class="v">₺1.147</span></button>
+    <div class="r hd"><span class="l">Month ends at ₺6.580</span></div>
+    <div class="r pass"><span class="l">Stays solvent</span><span class="v">₺6.580 clear</span></div>
+    <div class="r pass"><span class="l">Buffer intact</span><span class="v">₺3.480 clear</span></div>
+    <div class="r fail"><span class="l">Wishlist covered</span><span class="v">₺6.120 short</span></div>
+    <button class="r log" type="button"><span class="l">Log 24 August</span><span class="v">2 days back →</span></button>
+    <nav><span class="cur">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 19 · MÜHÜR ══════════ -->
+<style>
+.d19{--paper:oklch(91% .02 130);--ink:oklch(19% .04 136);--muted:oklch(51% .03 132);
+  --rule:oklch(84% .017 128);--accent:oklch(46% .112 139);--onink:oklch(94% .016 129);
+  --short:oklch(52% .12 41);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 24px 0;
+  display:flex;flex-direction:column;align-items:center}
+.d19 .top{display:flex;justify-content:space-between;align-items:baseline;width:100%}
+.d19 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d19 .mo{font-size:11px;color:var(--muted)}
+/* the seal */
+.d19 .seal{margin-top:26px;width:246px;height:246px;border-radius:50%;background:var(--ink);
+  color:var(--onink);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;position:relative;flex:none}
+.d19 .seal::after{content:"";position:absolute;inset:9px;border-radius:50%;
+  border:1px solid oklch(38% .05 136)}
+.d19 .seal .k{font-size:9px;letter-spacing:.26em;text-transform:uppercase;opacity:.58}
+.d19 .seal .fig{font-weight:800;font-size:60px;line-height:1;letter-spacing:-.05em;margin-top:5px}
+.d19 .seal .fig i{font-style:normal;font-size:23px;opacity:.5;vertical-align:.62em}
+.d19 .seal .ah{margin-top:8px;font-size:11px;opacity:.6}
+.d19 .seal .ah b{opacity:1;font-weight:700}
+.d19 .ring{display:flex;justify-content:center;gap:22px;margin-top:20px;width:100%}
+.d19 .ring div{text-align:center}
+.d19 .ring dt{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d19 .ring dd{margin-top:2px;font-weight:600;font-size:15px}
+.d19 .swap{margin-top:20px;display:flex;justify-content:space-between;align-items:center;
+  width:100%;background:oklch(96% .01 128);border:1px solid var(--rule);border-radius:999px;
+  padding:11px 18px;font-size:11.5px;color:var(--muted)}
+.d19 .swap b{color:var(--ink);font-weight:700;font-size:12.5px}
+.d19 .st{width:100%;margin-top:20px;padding-top:14px;border-top:1px solid var(--rule)}
+.d19 .st .hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.d19 .st .hd em{font-style:normal;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.d19 .st .hd b{font-weight:800;font-size:19px;letter-spacing:-.03em}
+.d19 .st li{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;font-size:12.5px}
+.d19 .st li+li{border-top:1px solid var(--rule)}
+.d19 .st .v{font-weight:700;color:var(--accent)}
+.d19 .st .no .v{color:var(--short)}
+.d19 .st .no span:first-child{color:var(--muted)}
+.d19 .log{margin-top:auto;margin-bottom:12px;width:100%;display:flex;justify-content:space-between;
+  align-items:center;background:var(--accent);color:var(--paper);border-radius:999px;padding:15px 22px}
+.d19 .log b{font-size:15px;font-weight:700}
+.d19 .log em{font-style:normal;font-size:11px;opacity:.8}
+.d19 nav{width:100%;display:grid;grid-template-columns:repeat(5,1fr);text-align:center;
+  padding-bottom:18px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d19 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">19</span><h2 class="slot__t">Mühür</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>toggle</span> · a wide pill directly beneath the seal<br>the day's number struck as a stamp — the only round form in the set</p>
+  <div class="screen d19">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026</span></div>
+    <div class="seal">
+      <p class="k">Daily allowance</p>
+      <p class="fig"><i>₺</i>1.203</p>
+      <p class="ah"><b>₺3.473</b> ahead · day 26/31</p>
+    </div>
+    <dl class="ring">
+      <div><dt>Max</dt><dd>₺1.303</dd></div>
+      <div><dt>Strict</dt><dd>₺894</dd></div>
+      <div><dt>Minimum</dt><dd>₺794</dd></div>
+    </dl>
+    <button class="swap" type="button"><span>Projecting remaining days at</span><b>Daily ⇅</b></button>
+    <section class="st">
+      <div class="hd"><em>Month ends at</em><b>₺6.580</b></div>
+      <ul>
+        <li><span>Stays solvent</span><span class="v">₺6.580 clear</span></li>
+        <li><span>Buffer intact</span><span class="v">₺3.480 clear</span></li>
+        <li class="no"><span>Wishlist covered</span><span class="v">₺6.120 short</span></li>
+      </ul>
+    </section>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 days back</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+<!-- ══════════ 20 · EŞİK ══════════ -->
+<style>
+.d20{--paper:oklch(95% .013 127);--ink:oklch(20% .038 135);--muted:oklch(53% .027 131);
+  --rule:oklch(85% .015 127);--accent:oklch(45% .11 139);--onink:oklch(95% .013 127);
+  --short:oklch(52% .12 41);--wash:oklch(91% .028 137);--washno:oklch(93% .03 48);
+  background:var(--paper);color:var(--ink);font-size:13px;padding:26px 22px 0;
+  display:flex;flex-direction:column}
+.d20 .top{display:flex;justify-content:space-between;align-items:baseline}
+.d20 .mark{font-weight:800;font-size:15px;letter-spacing:-.03em}
+.d20 .mo{font-size:11px;color:var(--muted)}
+.d20 .lede{margin-top:22px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.d20 .end{font-weight:800;font-size:52px;line-height:1;letter-spacing:-.05em;margin-top:4px}
+.d20 .end i{font-style:normal;font-size:21px;color:var(--muted);vertical-align:.58em}
+.d20 .end small{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0;margin-left:9px}
+/* the three thresholds, full width, as the main event */
+.d20 .gates{margin-top:20px;display:grid;gap:9px}
+.d20 .gate{border-radius:13px;padding:14px 16px;display:flex;justify-content:space-between;
+  align-items:center;background:var(--wash)}
+.d20 .gate.no{background:var(--washno)}
+.d20 .gate .nm{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+.d20 .gate .need{display:block;font-size:10.5px;font-weight:400;color:var(--muted);margin-top:2px}
+.d20 .gate .v{text-align:right}
+.d20 .gate .v b{display:block;font-weight:800;font-size:17px;letter-spacing:-.03em;color:var(--accent)}
+.d20 .gate.no .v b{color:var(--short)}
+.d20 .gate .v em{font-style:normal;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.d20 h2{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  font-weight:500;margin:22px 0 6px}
+.d20 .pick li{display:flex;justify-content:space-between;align-items:center;padding:6px 0;
+  font-size:12.5px;color:var(--muted)}
+.d20 .pick li+li{border-top:1px solid var(--rule)}
+.d20 .pick .on{color:var(--ink);font-weight:700}
+.d20 .pick .on .v{color:var(--accent)}
+.d20 .pick .on .nm::after{content:" — driving the numbers above";font-weight:400;
+  font-size:10px;color:var(--muted)}
+.d20 .today{margin-top:18px;padding-top:13px;border-top:1px solid var(--rule);
+  display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted)}
+.d20 .today b{color:var(--ink);font-weight:700;font-size:15px}
+.d20 .log{margin-top:auto;margin-bottom:12px;display:flex;justify-content:space-between;
+  align-items:center;width:100%;background:var(--ink);color:var(--onink);
+  border-radius:12px;padding:16px 18px}
+.d20 .log b{font-size:15px;font-weight:700}
+.d20 .log em{font-style:normal;font-size:11px;opacity:.65}
+.d20 nav{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;padding-bottom:18px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.d20 nav .on{color:var(--accent);font-weight:700}
+</style>
+<section class="slot">
+  <header class="slot__h"><span class="slot__n">20</span><h2 class="slot__t">Eşik</h2><button class="slot__hide" type="button">Hide</button></header>
+  <p class="slot__meta"><span>tap-list</span> · demoted below the outcomes it drives<br>the one specimen where the daily allowance is <em>not</em> the headline — the three gates are</p>
+  <div class="screen d20">
+    <div class="top"><span class="mark">GurgoBudget</span><span class="mo">August 2026 · 8 days left</span></div>
+    <p class="lede">August ends with</p>
+    <p class="end"><i>₺</i>6.580<small>at ₺1.203 a day</small></p>
+    <div class="gates">
+      <div class="gate">
+        <span class="nm">Stays solvent<span class="need">needs to clear ₺0</span></span>
+        <span class="v"><b>₺6.580</b><em>clear</em></span>
+      </div>
+      <div class="gate">
+        <span class="nm">Buffer intact<span class="need">needs to clear ₺3.100</span></span>
+        <span class="v"><b>₺3.480</b><em>clear</em></span>
+      </div>
+      <div class="gate no">
+        <span class="nm">Wishlist covered<span class="need">needs to clear ₺12.700</span></span>
+        <span class="v"><b>₺6.120</b><em>short</em></span>
+      </div>
+    </div>
+    <h2>Because you're projecting at</h2>
+    <ul class="pick">
+      <li><span class="nm">Max allowance</span><span class="v">₺1.303</span></li>
+      <li class="on"><span class="nm">Daily allowance</span><span class="v">₺1.203</span></li>
+      <li><span class="nm">Strict allowance</span><span class="v">₺894</span></li>
+      <li><span class="nm">Minimum allowance</span><span class="v">₺794</span></li>
+      <li><span class="nm">Average, this month</span><span class="v">₺1.052</span></li>
+      <li><span class="nm">Average, 90 days</span><span class="v">₺1.147</span></li>
+    </ul>
+    <p class="today"><span>Today's allowance</span><b>₺1.203</b></p>
+    <button class="log" type="button"><b>Log 24 August</b><em>2 days back →</em></button>
+    <nav><span class="on">Today</span><span>Items</span><span>Wish</span><span>Log</span><span>Stats</span></nav>
+  </div>
+</section>
+
+</main>
+
+<footer class="close wrap">
+  <h2 class="close__t">Twenty postures, one job.</h2>
+  <p class="close__p">Pick by feel, not by feature count — every specimen carries the same load, so whatever separates them is the thing actually worth choosing. The projection <em>toggle-versus-tap-list</em> fork runs right through the set; that one wants deciding before anything gets built for real.</p>
+</footer>
+
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "gurgobudget-dashboard-exhibition-hidden";
+  var gallery = document.getElementById("gallery");
+  var slots = Array.prototype.slice.call(gallery.querySelectorAll(".slot"));
+  var countEl = document.getElementById("bar-count");
+  var cutEl = document.getElementById("bar-cut");
+  var tidyBtn = document.getElementById("bar-tidy");
+  var resetBtn = document.getElementById("bar-reset");
+
+  // each slot is keyed by its printed number, so a reordering of the file can't shuffle a cull
+  slots.forEach(function(slot){
+    var n = slot.querySelector(".slot__n");
+    slot.dataset.key = n ? n.textContent.trim() : "";
+  });
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function save(list){
+    try{ localStorage.setItem(KEY, JSON.stringify(list)); }catch(e){}
+  }
+
+  function hiddenKeys(){
+    return slots.filter(function(s){ return s.classList.contains("is-hidden"); })
+                .map(function(s){ return s.dataset.key; });
+  }
+
+  function sync(persist){
+    var cut = hiddenKeys();
+    var showing = slots.length - cut.length;
+    countEl.textContent = showing;
+    cutEl.textContent = cut.length ? " \u00b7 " + cut.length + " hidden" : "";
+    resetBtn.disabled = cut.length === 0;
+    tidyBtn.disabled = cut.length === 0;
+    if(cut.length === 0 && gallery.classList.contains("is-tidy")){
+      gallery.classList.remove("is-tidy");
+      tidyBtn.setAttribute("aria-pressed", "false");
+    }
+    if(persist) save(cut);
+  }
+
+  function setHidden(slot, hide){
+    slot.classList.toggle("is-hidden", hide);
+    var btn = slot.querySelector(".slot__hide");
+    if(btn){
+      btn.textContent = hide ? "Show" : "Hide";
+      btn.setAttribute("aria-label", (hide ? "Show" : "Hide") + " specimen " + slot.dataset.key);
+    }
+  }
+
+  slots.forEach(function(slot){
+    var btn = slot.querySelector(".slot__hide");
+    if(!btn) return;
+    btn.addEventListener("click", function(){
+      setHidden(slot, !slot.classList.contains("is-hidden"));
+      sync(true);
+    });
+  });
+
+  tidyBtn.addEventListener("click", function(){
+    var on = !gallery.classList.contains("is-tidy");
+    gallery.classList.toggle("is-tidy", on);
+    tidyBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+
+  resetBtn.addEventListener("click", function(){
+    slots.forEach(function(slot){ setHidden(slot, false); });
+    sync(true);
+  });
+
+  // restore a previous cull
+  var stored = load();
+  if(stored.length){
+    slots.forEach(function(slot){
+      if(stored.indexOf(slot.dataset.key) !== -1) setHidden(slot, true);
+    });
+  }
+  sync(false);
+})();
+</script>
+</body>
+</html>

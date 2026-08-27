@@ -16,6 +16,8 @@ A personal budget website that plans monthly transactions and tells you how much
 
 All items (Base and Flex/Wishlist alike) are just a **name + amount** — no due dates, categories, or notes. Amounts can be entered as rough estimates and freely edited later.
 
+**Currency formatting:** every TRY figure displays as **whole lira** — no kuruş, no decimals, anywhere in the app (added Dashboard Round 3).
+
 ## Core Formula
 
 ```
@@ -40,8 +42,10 @@ The Wishlist figure used here is the sum of whatever is **currently in the Wishl
 ## Ahead/Behind Indicator (added Dashboard Round 1)
 
 - There are **six candidate figures** for "how much should I be spending" going forward: the four allowances (Max, Daily, Strict, Minimum) plus the two averages (this-month average, trailing-90-day average). The user selects which one drives the projection for the remaining days of the month.
-- Two candidate UI approaches for that selection are still open and will be prototyped side by side in the eventual dashboard component exhibition (same process used to pick Yosun): **(a)** a toggle/switcher cycling through the six, or **(b)** all six stacked in a visible list, tapped to mark one as "projected." Not decided yet — build both, then choose.
-- Ahead/behind should surface **three always-visible states**, stacked rather than toggled: a **bankruptcy** threshold, a **buffer** threshold, and an **"affords the full current Wishlist"** threshold.
+- **Decided (Dashboard Exhibuild, 2026-08-27):** all six values sit visible at once, tapped directly to select — resolved in favor of option (b) from the original fork. Rendered as a **segmented control** (06 Sürgü's component, not a stacked list) — six cells in one bar, tap any cell to project at that rate.
+- Ahead/behind should surface **three always-visible states**, stacked rather than toggled: a **bankruptcy** threshold, a **buffer** threshold, and an **"affords the full current Wishlist"** threshold. **Decided:** rendered as 06 Sürgü's progress-track bars — a label, a filled track, and a paired "needs X / have Y" caption, one per threshold.
+- This six-way selector is **independent** from Money Saved's own "single global toggle" for its remaining-days projection (added Dashboard Round 2) — two separate settings, not one dial driving both.
+- The six-way selection **resets to Daily Allowance** (the default) at the start of every new month — it does not carry over from the prior month (added Dashboard Round 2).
 
 ## Additional Stats (added Round 6)
 
@@ -57,6 +61,7 @@ Alongside the four allowances, also show:
 - A day can have both a raw balance log **and** an independent Wishlist-purchase action (see below) — they don't conflict; each day is not restricted to "exactly one number."
 - **Logging is the app's single most frequent action and must be near-frictionless.** The primary entry point is a tap that jumps straight to the earliest unlogged day — no date picking, no navigating a calendar to find where you left off.
 - The user will **never** log the current day in real time (e.g. late-night orders land after the day is functionally "closed" for them) — logging is inherently retrospective, catching up on past unlogged days. No same-day "log today" fast path is needed; the earliest-unlogged-day flow above is the actual fast path.
+- After submitting one day's entry, the flow returns to the main/Today screen — it does **not** auto-advance straight into the next unlogged day (added Dashboard Round 2). Catching up on a backlog is a repeated tap-log-return, not one continuous streak.
 
 ## Retroactive Recalculation & Data Model
 
@@ -75,13 +80,17 @@ A distinct sub-system, deliberately semi-separate from the core allowance math (
 - Within that view, the user can mark a Wishlist item as **purchased**. This consumes some of the projected Money Saved, but does **not** touch the Wishlist total used in the Strict/Minimum Allowance formula, and does not touch the daily log.
 - A purchased item **stays visible in the Wishlist list**, shown crossed out — it isn't moved to a separate list.
 - Marking a Wishlist item purchased is **reversible** — it can be un-marked/uncrossed if done by mistake.
+- Marking purchased simply deducts the item's **existing stored amount** from Money Saved — no separate "confirm/adjust actual amount paid" step. If the estimate was off, edit the item's amount the normal way, same as any other item (added Dashboard Round 2).
 
 ## Screens & Design Philosophy
 
+- **"The dashboard" means the Today screen alone** (clarified Dashboard Round 3). Item lists and Wishlist↔Flex Spend conversion, the Graphs/Stats page, and History each live on their **own separate page**. Pages are designed and built **independently**, then joined in a later **integration run** — cross-page navigation and interaction are deliberately not specified while a single page is being designed.
 - Screen/section structure is delegated to Claude's judgment (a "Today" view, a Setup/Items view, and a History view are the working assumption).
 - Stated design philosophy: **important/primary numbers stay easily accessible on the main screens; deeper pages exist for graphs, stats, and other detail** — nothing is permanently hidden, everything is reachable somewhere. A full day-by-day log view should exist.
 - **The dashboard should not feel busy** — a deliberately low-density, uncluttered read on the main screens (added Dashboard Round 1, sharpens the philosophy above).
+- **Copy is minimal, permanently, on every screen from here on** (set 2026-08-27, applies to all future design work, not just Today): labels and bare words only. **No sentences, ever.** Strip everything down — if a phrase can lose a word and still be understood, lose it.
 - Editing a Base or Flex item (e.g. bumping rent): tapping the value opens a small separate editor for that item, rather than editing inline in place (added Dashboard Round 1).
+- The Setup/Items screen's five lists (Base Income, Flex Income, Base Spend, Flex Spend, Wishlist) live across **separate tabs/pages**, not stacked on one scrolling screen (added Dashboard Round 2).
 - Graphs/stats page contents are delegated to Claude.
 - A month closes automatically the instant the calendar flips — no manual "close month" action.
 - Offline behavior: if the app can't reach Firestore, a plain "can't reach the server" message is sufficient — no requirement to fall back to cached/last-known numbers (added Dashboard Round 1).
@@ -191,9 +200,52 @@ A second, shorter Q&A pass (5 questions/round, ~7 rounds anticipated) covering t
 - Offline behavior: plain error is fine, no cached fallback (folded into [Screens & Design Philosophy](#screens--design-philosophy)).
 - Primary daily action is logging spend, which must jump straight to the earliest unlogged day; the user never logs same-day (folded into [The Daily Log](#the-daily-log)).
 
+**Round 2 — One dial or two, and the daily grind:**
+- The ahead/behind six-way selector and Money Saved's remaining-days projection toggle are independent settings, not one dial (folded into [Ahead/Behind Indicator](#aheadbehind-indicator-added-dashboard-round-1)).
+- The six-way selector resets to Daily Allowance at the start of every new month (folded into [Ahead/Behind Indicator](#aheadbehind-indicator-added-dashboard-round-1)).
+- Setup/Items screen's five lists live on separate tabs/pages, not one scroll (folded into [Screens & Design Philosophy](#screens--design-philosophy)).
+- Marking a Wishlist item purchased just deducts its existing stored amount — no confirm/adjust-actual-paid step (folded into [Wishlist & Money Saved](#wishlist--money-saved-needs-more-detail)).
+- After logging a day, the flow returns to the main screen rather than auto-advancing to the next unlogged day (folded into [The Daily Log](#the-daily-log)).
+
+**Round 3 — Money format, motion between screens:**
+- All TRY figures display as whole lira, no kuruş (folded into [Transaction Categories](#transaction-categories)).
+- Two questions were rejected as out of scope — item conversion and the Graphs/Stats page "won't be on the dashboard." This established that **the dashboard = the Today screen only**, and that pages are built separately then integrated (folded into [Screens & Design Philosophy](#screens--design-philosophy)).
+- Month navigation in History, and whether the two averages belong on Today: both answered "try different things in the exhib" — deliberately deferred to an Exhibuild rather than decided in Q&A. The averages question is now live across the dashboard specimens; History month-nav belongs to a later Exhibuild for that page.
+
+## The Exhibuild
+
+The project's standing method for settling a visual/structural question: **build the options, don't describe them.** Named by the user, 2026-08-27.
+
+**How it runs:**
+1. A questionnaire round hits a question best answered by seeing it. The answer is *"try different things in the exhib"* — the question is deliberately left open rather than guessed at.
+2. Those open questions are collected into a single-page HTML exhibition of **hand-built specimens** — each with its own token block and markup, laid out in a gallery. See `exhibition.html` (36 specimens, chose the Yosun identity) and `dashboard-exhibition.html` (20 specimens, dashboard structure).
+3. The user picks a winner — by eye, or via a head-to-head bracket like `tournament.html` when the field is large. **The pick doesn't have to be a single specimen** — the dashboard round was resolved as a hybrid, naming individual components from different specimens plus one component neither had.
+4. The winning palette, scale and component voice carry into the real build — never a specimen's literal markup.
+
+### Dashboard Exhibuild — outcome (2026-08-27)
+
+No single winner. The Today screen build combines:
+- **From 06 Sürgü:** the six-way segmented control (all values visible in one bar, tap any cell to project at that rate), and the three threshold bars (label, filled track, paired "needs X / have Y" caption).
+- **From 15 Tırtıl:** the whole top block — day-track strip across the month (logged / missing / today / future), the log-gap button folded into that strip, and the daily-allowance hero line.
+- **New, in neither specimen:** a box grid showing every day's spend for the month at once — past, current, and future together. Distinct from the day-track strip above, which only encodes logged/missing/today, not amounts.
+
+This combination, plus the permanent minimal-copy rule below, is the actual Today-screen build target. See `gurgobudget/HANDOVER.md` for the build brief.
+
+**Standing rules (set by the user, apply to every Exhibuild):**
+- **Hand-built only.** No templating, no loops, no generating specimens from a data array. Each one is written out individually — that's the entire point; templated variants converge on the same design.
+- **One page per Exhibuild.** Scope is a single screen. Cross-page flow is not designed here and not speculated about.
+- **Locked constants stay locked.** Inter throughout (standing user override of the usual Inter ban); the settled Yosun palette; whatever the questionnaires have already decided. Only the genuinely open question varies.
+- **Every specimen carries the full load.** Same sample data, same required elements, same viewport (390×844, clipped) — so differences between specimens are real design differences, not different content.
+- **No animation, no tests, no browser verification** unless asked. These are static specimens for looking at.
+- Sample data is invented but **internally consistent**, so a specimen can be read for sense as well as feel.
+
 ## Status
 
 - Q&A phase: **complete** (6 rounds + chat follow-up). Spec is fully settled — no outstanding open questions.
-- Visual design phase: **direction chosen** (Yosun, sage/moss, dark-band-plus-sheet, Inter). Next: build the real dashboard in this direction — palette, scale, and component voice carried over from the specimen, not the specimen's literal markup.
-- Dashboard questionnaire phase: **in progress** — round 1 of ~7 recorded (see [Dashboard Build — Round Notes](#dashboard-build--round-notes)). One open item pending user confirmation (new-month rollover behavior).
+- Identity Exhibuild: **complete** — Yosun chosen (sage/moss, dark-band-plus-sheet, Inter) from 36 specimens via `tournament.html`.
+- Dashboard questionnaire phase: **closed after 3 rounds** (user called it: *"I think that's enough"*) — see [Dashboard Build — Round Notes](#dashboard-build--round-notes). Rounds 4–7 were never run; the remaining questions were better answered by building.
+- Dashboard Exhibuild: **decided** — hybrid pick from `dashboard-exhibition.html`'s 20 specimens (06 Sürgü + 15 Tırtıl + one new component). See [Dashboard Exhibuild — outcome](#dashboard-exhibuild--outcome-2026-08-27) and `gurgobudget/HANDOVER.md`.
+- Standing rule set (applies everywhere from here on): **copy is minimal, no sentences ever.**
+- One open item still pending user confirmation: new-month rollover behavior (blank Today vs. one-time recap) — Round 1 Q4 was ambiguous.
+- Next: **build the real Today screen** per `gurgobudget/HANDOVER.md`. After that, repeat the cycle per remaining page (Items, Wishlist, Log, History, Stats), then the integration run.
 - Last updated: 2026-08-27
