@@ -2,8 +2,9 @@
 
 Personal budget tracker. Plans monthly income/spend, tells the user a safe
 daily allowance, logs actual spend one raw balance-delta per day. Single
-hardcoded user, Firebase + Google Sign-In, TRY, mobile-first. Nothing is
-built yet — this repo has spec and design artifacts only, no app code.
+hardcoded user, Firebase + Google Sign-In, TRY, mobile-first. The **Today
+screen is built** (`gurgobudget/app/`, entry `gurgobudget/index.html`); every
+other page, and the whole backend, is not.
 
 This doc is for picking up the build cold. `PROJECT.md` is the authoritative
 spec and decision log; this file is the narrower "what to build right now"
@@ -28,15 +29,23 @@ match, not the other way around.
   `PROJECT.md`'s "Dashboard Build — Round Notes" for what got folded in.
 - **Dashboard Exhibuild**: 20 hand-built Today-screen structures in
   `dashboard-exhibition.html`. No single winner — see below.
-- **Nothing coded yet.** No framework, no Firebase project, no repo
-  scaffolding for the actual app. This handover is the bridge from "design
-  decided" to "first line of app code."
+- **Today screen: built** (2026-08-27). Static ES modules, no build step,
+  no framework — `app/seed.js`, `app/store.js`, `app/compute.js`,
+  `app/view.js`, `app/app.js`, `app/styles.css`. Real arithmetic against real
+  stored data, verified to reproduce every figure the specimens were drawn
+  against. Full record in `PROJECT.md` under "Today Screen — Built".
+- **Backend: still nothing.** No Firebase project, no Firestore schema, no
+  security rules, no Google Sign-In. `store.js` holds the seam — it persists
+  to localStorage and marks exactly what changes when Firestore arrives.
 
 ---
 
-## 2. What to build: the Today screen
+## 2. The Today screen — what was built
 
-This is the only screen in scope right now. Per `PROJECT.md`, "the
+**This section is now a record, not a brief.** It is kept because it names
+which component came from where. The screen exists; run it before changing it.
+
+This was the only screen in scope. Per `PROJECT.md`, "the
 dashboard" = Today alone; Items, Wishlist, Log, History, and Stats are
 separate pages, each built and (eventually) Exhibuild'd on its own, joined
 in a later integration run. Don't design cross-page nav yet.
@@ -68,9 +77,17 @@ picked component-by-component, not a single winning screen:
   grid of day-boxes, no other structure implied — build it in the Yosun
   system, not copied from anywhere.
 
-**Layout order isn't decided** — the four pieces above need arranging on
-one 390×844 screen. That's implementation judgment, not an open question to
-re-ask.
+**Layout — decided during the build.** The four pieces are split across
+Yosun's identity structure rather than laid flat as in specimens 06 and 15:
+the **dark band** carries the state of the month (brand/date, day-track
+strip, log-gap button, allowance hero) and the **rounded-top light sheet**
+carries what to do about it (segmented control, threshold bars, spend grid).
+That keeps 06's and 15's components exactly as picked while restoring the
+band-and-sheet split that won the *identity* Exhibuild — which neither
+dashboard specimen carried.
+
+The spend grid is five columns, not seven: wide enough for a grouped figure,
+and narrow enough that it does not read as a week calendar.
 
 ### Copy rule — permanent, all screens from here on
 **No sentences. Ever.** Labels and bare words only. If a phrase can lose a
@@ -100,9 +117,8 @@ model to match.
 - **New-month rollover**: blank Today screen vs. a one-time recap of last
   month, the first time the app opens in a new month. Round 1's answer
   ("yeah sure") was ambiguous and never resolved — ask before building it,
-  don't guess.
-- **Layout arrangement** of the four Today-screen pieces (see above) —
-  this is a build decision, not a question.
+  don't guess. The built screen drops straight into a blank month, which is
+  the no-extra-work reading; no recap exists.
 - **Everything past Today** — Items, Wishlist, Log, History, Stats have no
   structural decisions at all yet. Each gets its own Exhibuild if/when a
   structural question comes up worth seeing rather than describing.

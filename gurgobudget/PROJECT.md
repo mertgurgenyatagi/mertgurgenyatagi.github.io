@@ -239,6 +239,72 @@ This combination, plus the permanent minimal-copy rule below, is the actual Toda
 - **No animation, no tests, no browser verification** unless asked. These are static specimens for looking at.
 - Sample data is invented but **internally consistent**, so a specimen can be read for sense as well as feel.
 
+## Today Screen — Built (2026-08-27)
+
+The first real app code. Static ES modules under `gurgobudget/app/`, no build
+step, no framework — matching how `eventportal` and `kupatakip` are served from
+this repo. Entry point is `gurgobudget/index.html`.
+
+| File | Holds |
+|---|---|
+| `app/seed.js` | Sample data. Stand-in for Firestore until the project exists. |
+| `app/store.js` | Persistence. localStorage today, with the Firestore swap seam marked. |
+| `app/compute.js` | Every formula. Nothing derived is ever cached. |
+| `app/view.js` | Pure snapshot → HTML. No DOM, no events. |
+| `app/app.js` | Mount and wiring only. |
+| `app/styles.css` | The Yosun system. |
+
+**Layout — the open arrangement question, decided.** The four pieces are split
+across Yosun's identity structure (dark band over a rounded-top light sheet)
+rather than laid flat as in specimens 06 and 15:
+
+- **Band (dark)** — the state of the month: brand/date, the day-track strip,
+  the log-gap button folded into it, the daily-allowance hero.
+- **Sheet (light, rounded top)** — what to do about it: the six-way segmented
+  control, the three threshold bars, the spend grid.
+
+This keeps 06's and 15's components exactly as picked while restoring the
+band-and-sheet split that won the identity Exhibuild — which neither dashboard
+specimen carried.
+
+**Spend grid.** The new component. Five columns, one box per day, day number
+plus amount. Five (not seven) so a box is wide enough for a grouped figure and
+so the grid does not read as a week calendar — the handover asked for a plain
+grid with no other structure implied. States: logged, zero, missing, today,
+still-to-come. Tapping any past-or-present box opens the log editor for that
+day; the strip cells above are tappable the same way.
+
+**Log editor.** A bottom sheet over Today, not a page. Opens on the earliest
+unlogged day from the gap button, or on any specific day from the strip or the
+grid. Saves and returns to Today — no auto-advance to the next unlogged day.
+
+**Two judgment calls made during the build, both worth knowing:**
+
+1. **Whole lira is a real quantum, not a display filter.** The allowance
+   division rounds once, and everything downstream uses that rounded figure.
+   Otherwise the stated Daily Allowance times the logged days does not equal
+   the stated ahead/behind figure, and a user checking the arithmetic by hand
+   finds the screen off by a few lira. All fourteen figures now reproduce the
+   Exhibuild specimens exactly.
+2. **The projection rate is floored at zero — only in the month-end
+   arithmetic.** Negative Surplus still shows negative allowances as-is in the
+   hero and the six-way control, per spec. But projecting the remaining days at
+   a negative rate assumes every future day *pays* the user, which turned a
+   ₺25.200 shortfall into a healthy-looking ₺3.103 month-end. Nothing is spent
+   below zero, so nothing is projected below zero.
+
+**Not wired, deliberately:** no cross-page navigation. Today has no nav bar —
+that belongs to the integration run, per the one-page-at-a-time rule.
+
+**Backend still absent.** `store.js` is the whole seam: `load` and `save` become
+a Firestore document read/write at `users/{uid}/budget/state`, with rules pinning
+uid to the single hardcoded account. Nothing else in the app changes. The stored
+shape is already the shape Firestore should hold.
+
+**Running it locally** needs a static server — ES modules will not load over
+`file://`. `npx serve gurgobudget` or `python -m http.server`. On GitHub Pages
+it just works.
+
 ## Status
 
 - Q&A phase: **complete** (6 rounds + chat follow-up). Spec is fully settled — no outstanding open questions.
@@ -246,6 +312,8 @@ This combination, plus the permanent minimal-copy rule below, is the actual Toda
 - Dashboard questionnaire phase: **closed after 3 rounds** (user called it: *"I think that's enough"*) — see [Dashboard Build — Round Notes](#dashboard-build--round-notes). Rounds 4–7 were never run; the remaining questions were better answered by building.
 - Dashboard Exhibuild: **decided** — hybrid pick from `dashboard-exhibition.html`'s 20 specimens (06 Sürgü + 15 Tırtıl + one new component). See [Dashboard Exhibuild — outcome](#dashboard-exhibuild--outcome-2026-08-27) and `gurgobudget/HANDOVER.md`.
 - Standing rule set (applies everywhere from here on): **copy is minimal, no sentences ever.**
-- One open item still pending user confirmation: new-month rollover behavior (blank Today vs. one-time recap) — Round 1 Q4 was ambiguous.
-- Next: **build the real Today screen** per `gurgobudget/HANDOVER.md`. After that, repeat the cycle per remaining page (Items, Wishlist, Log, History, Stats), then the integration run.
+- Today screen: **built** — see [Today Screen — Built](#today-screen--built-2026-08-27). Real arithmetic, real persistence, all four picked components in place.
+- One open item still pending user confirmation: new-month rollover behavior (blank Today vs. one-time recap) — Round 1 Q4 was ambiguous. Today currently drops straight into a blank month, which is the no-extra-work reading; the recap was not built.
+- Still absent: **the entire backend** (Firebase project, Firestore schema, security rules, Google Sign-In), and **every page past Today** (Items, Wishlist, Log, History, Stats).
+- Next: confirm the rollover question, then either stand up Firebase or repeat the design cycle on the next page — then the integration run that joins them.
 - Last updated: 2026-08-27
